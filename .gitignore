@@ -23,3 +23,6 @@ venv/
 env/
 .mypy_cache/
 .pytest_cache/
+
+# Генерируемый файл для ручной вставки (Способ 1)
+kontent/kp/_dlya_vstavki.txt
