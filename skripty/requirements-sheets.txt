@@ -1,0 +1,5 @@
+# Зависимости ТОЛЬКО для skripty/sheets_sync.py (синхронизация с Google-таблицей).
+# Остальные скрипты проекта работают на стандартной библиотеке.
+# Установка: python3 -m pip install -r skripty/requirements-sheets.txt
+google-api-python-client>=2.0
+google-auth>=2.0

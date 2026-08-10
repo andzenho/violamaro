@@ -10,6 +10,10 @@ desktop.ini
 *.bak
 *~
 
+# Ключ сервис-аккаунта Google для sheets_sync.py — НИКОГДА не коммитить
+skripty/.google-creds.json
+.google-creds.json
+
 # Python
 __pycache__/
 *.py[cod]
