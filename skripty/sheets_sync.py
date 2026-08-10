@@ -189,15 +189,29 @@ def build_service():
             "Нет библиотек google-api-python-client / google-auth.\n"
             "Установи: python3 -m pip install -r skripty/requirements-sheets.txt"
         )
-    if not os.path.isfile(CREDS_PATH):
+
+    # Ключ можно передать двумя способами:
+    #  1) переменной окружения VIOLA_SHEETS_CREDS_JSON — сам JSON строкой
+    #     (удобно и безопасно: в репозиторий ничего не кладём);
+    #  2) файлом по пути CREDS_PATH (по умолчанию skripty/.google-creds.json).
+    creds_json = os.environ.get("VIOLA_SHEETS_CREDS_JSON")
+    if creds_json:
+        import json
+        info = json.loads(creds_json)
+        creds = service_account.Credentials.from_service_account_info(
+            info, scopes=SCOPES
+        )
+    elif os.path.isfile(CREDS_PATH):
+        creds = service_account.Credentials.from_service_account_file(
+            CREDS_PATH, scopes=SCOPES
+        )
+    else:
         sys.exit(
-            "Нет ключа сервис-аккаунта: %s\n"
-            "Создай его и расшарь таблицу на email сервис-аккаунта. "
+            "Нет ключа сервис-аккаунта.\n"
+            "Задай переменную VIOLA_SHEETS_CREDS_JSON (содержимое JSON) "
+            "или положи файл: %s\n"
             "Инструкция — kontent/kp/README.md." % CREDS_PATH
         )
-    creds = service_account.Credentials.from_service_account_file(
-        CREDS_PATH, scopes=SCOPES
-    )
     return build("sheets", "v4", credentials=creds, cache_discovery=False)
 
 
