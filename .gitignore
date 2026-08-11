@@ -14,6 +14,10 @@ desktop.ini
 skripty/.google-creds.json
 .google-creds.json
 
+# Node (зависимости для skripty/sait.js ставятся локально, не коммитим)
+node_modules/
+skripty/package-lock.json
+
 # Python
 __pycache__/
 *.py[cod]
