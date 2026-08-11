@@ -33,3 +33,5 @@ analitika/kommentarii/*.jsonl
 analitika/kommentarii/*.txt
 analitika/kommentarii/**/*.jsonl
 analitika/kommentarii/**/*.txt
+analitika/kommentarii/*.json
+analitika/kommentarii/**/*.json
