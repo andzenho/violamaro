@@ -178,6 +178,9 @@
   button.go.big:active { transform: translateY(0); }
   button.go.big span { margin-left: .2rem; }
 
+  a.go { display: block; text-align: center; text-decoration: none; }
+  a.go.big { color: #FFF; }
+
   .fields { display: flex; flex-direction: column; gap: .8rem; }
   .fields label {
     display: flex; flex-direction: column; gap: .35rem;
@@ -684,7 +687,7 @@ function result(prev) {
       ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}<span class="anchor">${ANCHOR}</span></p>` : ""}
       <div class="foot">
         ${t.bridge && CONFIG.formUrl ? `<button class="go" id="offer">Что за программа?</button>` : ""}
-        ${!t.bridge && CONFIG.publicChannel ? `<button class="go big" id="channel">Читать Виолу в Телеграме <span aria-hidden="true">→</span></button>
+        ${!t.bridge && CONFIG.publicChannel ? `<a class="go big" id="channel" href="${CONFIG.publicChannel}" target="_blank" rel="noopener">Читать Виолу в Телеграме <span aria-hidden="true">→</span></a>
         <p class="cta-note">Каждый день — про людей, границы и чувствительность.</p>` : ""}
         <button class="ghost" id="share">Поделиться результатом</button>
         <button class="ghost" id="again">Пройти заново</button>
@@ -695,7 +698,10 @@ function result(prev) {
   const toOffer = n.querySelector("#offer");
   if (toOffer) toOffer.addEventListener("click", () => offer(r));
   const toChannel = n.querySelector("#channel");
-  if (toChannel) toChannel.addEventListener("click", () => open_(CONFIG.publicChannel));
+  if (toChannel) toChannel.addEventListener("click", (e) => {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink(CONFIG.publicChannel); }
+  });
 
   const share = n.querySelector("#share");
   share.addEventListener("click", () => {
@@ -747,10 +753,7 @@ function offer(r) {
         <button class="ghost" id="back-res">← Вернуться к результату</button>
       </div>
     </div>`);
-  n.querySelector("#form").addEventListener("click", () => {
-    if (CONFIG.sheetUrl) lead(r);                 // пишем к себе в таблицу
-    else open_(formLink(r));                      // запасной путь, пока таблица не подключена
-  });
+  n.querySelector("#form").addEventListener("click", () => lead(r));
   n.querySelector("#back-res").addEventListener("click", () => result(r));
   render(n);
 }
@@ -799,25 +802,32 @@ function lead(r) {
     btn.disabled = true;
     btn.textContent = "Записываю…";
     sendLead(r, name, contact);
-    done();
+    done(r, name, contact);
   });
   n.querySelector("#back-offer").addEventListener("click", () => offer(r));
   render(n);
 }
 
-function done() {
+function done(r, name, contact) {
+  /* Пока таблица не подключена, страницу некуда сохранять — тогда просим
+     подтвердить запись в форме, чтобы контакт не потерялся. */
+  const needForm = !CONFIG.sheetUrl && CONFIG.formUrl;
   const n = el(`
     <div class="card">
       <h2>Готово. Вы в списке первых.</h2>
       <p class="lede">Когда откроем набор, напишем вам раньше остальных и по самой низкой цене.</p>
       ${CONFIG.channelUrl ? `
         <div class="foot">
-          <button class="go big" id="ch">Забрать доступ в канал Виолы <span aria-hidden="true">→</span></button>
+          <a class="go big" id="ch" href="${CONFIG.channelUrl}" target="_blank" rel="noopener">Забрать доступ в канал Виолы <span aria-hidden="true">→</span></a>
           <p class="cta-note">Материалы и подкасты. Там же спросим, что включить в программу.</p>
         </div>` : ""}
+      ${needForm ? `<p class="quiet">Подтвердите запись в короткой форме — <a href="${formLink(r)}" target="_blank" rel="noopener">открыть</a>.</p>` : ""}
     </div>`);
   const ch = n.querySelector("#ch");
-  if (ch) ch.addEventListener("click", () => open_(CONFIG.channelUrl));
+  if (ch) ch.addEventListener("click", (e) => {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink(CONFIG.channelUrl); }
+  });
   render(n);
 }
 
