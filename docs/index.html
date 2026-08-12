@@ -245,6 +245,9 @@
   }
   .inside .format { color: var(--ink-mute); font-size: .88rem; }
 
+  .intro-voice p { font-size: 1.02rem; }
+  .intro-voice p:first-child { color: var(--ink-mute); }
+
   .bridge .anchor {
     display: block; margin-top: .7rem;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -554,8 +557,14 @@ function intro() {
   const n = el(`
     <div class="card">
       <h1>Есть у вас способности эмпата?</h1>
-      <p class="lede">24 коротких утверждения. Три минуты. В конце вы увидите, насколько совпадаете с портретом эмпата и как именно это у вас устроено.</p>
-      <p class="quiet">Отвечайте первым, что приходит в голову. Так точнее.<br>Это не диагностика и не диагноз. Это зеркало.</p>
+      <div class="body-copy intro-voice">
+        <p>Добрый день, дорогие мои.</p>
+        <p>Здесь двадцать четыре утверждения о том, как вы чувствуете других людей и что с вами при этом происходит.</p>
+        <p>Отвечайте первым, что придёт в голову, — так честнее, чем если начнёте примерять к себе каждое слово.</p>
+        <p>И вот в конце вы увидите, какая у вас настройка и чего она вам стоит.</p>
+        <p>Правильных ответов здесь нет, и оценивать вас никто не будет. Три минуты. Поехали.</p>
+      </div>
+      <p class="quiet">Это не диагностика и не диагноз. Это зеркало.</p>
       <button class="go" id="start">Начать</button>
     </div>`);
   n.querySelector("#start").addEventListener("click", () => { idx = 0; question(); });
