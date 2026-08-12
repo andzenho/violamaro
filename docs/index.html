@@ -197,6 +197,20 @@
   }
   .fields input:focus { border-color: var(--accent); outline: none; }
 
+  .ask { display: flex; flex-direction: column; gap: .5rem; }
+  .ask-q { font-size: 1rem; line-height: 1.4; }
+  .ask-note { font-size: .86rem; color: var(--ink-mute); line-height: 1.45; }
+  .chips { display: flex; gap: .5rem; margin-top: .2rem; }
+  .chip {
+    flex: 1; appearance: none; font: inherit; font-size: .95rem;
+    color: var(--ink); background: var(--surface);
+    border: 1px solid var(--line-strong); border-radius: 3px;
+    padding: .7rem .6rem; cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .chip.on { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+
   .promise {
     background: var(--accent-soft);
     border-radius: 3px;
@@ -783,6 +797,14 @@ function lead(r) {
           <input id="f-tg" type="text" value="${tgName}" placeholder="@имя" autocomplete="off">
         </label>
       </div>
+      <div class="ask">
+        <div class="ask-q">Готовы двадцать минут поговорить с командой о программе?</div>
+        <p class="ask-note">Спросим, чего вам не хватает и что важно включить в программу. Спишемся или созвонимся, когда вам удобно.</p>
+        <div class="chips">
+          <button class="chip" data-v="да">Да, поговорю</button>
+          <button class="chip" data-v="нет">Пока нет</button>
+        </div>
+      </div>
       <p class="promise">Сразу после записи откроем закрытый канал Виолы — с материалами и подкастами, которых нет нигде больше.</p>
       <div class="foot">
         <button class="go big" id="send">Записаться <span aria-hidden="true">→</span></button>
@@ -795,6 +817,13 @@ function lead(r) {
   const tgEl = n.querySelector("#f-tg");
   const btn = n.querySelector("#send");
   const hint = n.querySelector("#hint");
+  let talk = "";
+
+  n.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
+    talk = c.dataset.v;
+    n.querySelectorAll(".chip").forEach(x => x.className = "chip");
+    c.className = "chip on";
+  }));
 
   btn.addEventListener("click", () => {
     const name = (nameEl.value || "").trim();
@@ -803,9 +832,13 @@ function lead(r) {
       hint.textContent = "Заполните оба поля — иначе не сможем вас позвать.";
       return;
     }
+    if (!talk) {
+      hint.textContent = "Ответьте про разговор — одним касанием.";
+      return;
+    }
     btn.disabled = true;
     btn.textContent = "Записываю…";
-    sendLead(r, name, contact);
+    sendLead(r, name, contact, talk);
     done();
   });
   n.querySelector("#back-offer").addEventListener("click", () => offer(r));
@@ -841,12 +874,12 @@ function send_(payload) {
 
 /* Запись сначала кладём в буфер, потом отправляем. Не дошло — полежит
    и уйдёт при следующем открытии страницы. Иначе обрыв связи = потерянный лид. */
-function sendLead(r, name, contact) {
+function sendLead(r, name, contact, talk) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
   const lead = {
     type: "lead",
-    name: name, contact: contact,
+    name: name, contact: contact, talk: talk || "",
     rank: r.key, percent: r.pct,
     userId: u.id || "", forks: forks
   };

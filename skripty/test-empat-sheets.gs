@@ -32,7 +32,7 @@ var HEADERS = [
 
 var LEAD_HEADERS = [
   'Дата', 'Имя', 'Телеграм', 'ID в Телеграме',
-  'Тип', 'Процент', 'Что менять первым', 'Где съедает'
+  'Тип', 'Процент', 'Что менять первым', 'Где съедает', 'Готов поговорить'
 ];
 
 function doPost(e) {
@@ -96,7 +96,8 @@ function saveLead_(d) {
     rankName_(d.rank),
     d.percent || '',
     pick_(d.forks, 'zapros'),
-    pick_(d.forks, 'bol')
+    pick_(d.forks, 'bol'),
+    d.talk || ''
   ]);
   return json_({ ok: true });
 }
