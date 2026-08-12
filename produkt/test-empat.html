@@ -193,6 +193,23 @@
 
   .foot { display: flex; flex-direction: column; gap: .6rem; }
 
+  .bridge {
+    background: var(--accent-soft);
+    border-radius: 3px;
+    padding: 1rem 1.05rem;
+    font-family: Georgia, "Iowan Old Style", serif;
+    font-size: 1.05rem;
+    line-height: 1.45;
+  }
+
+  .perks { display: flex; flex-direction: column; gap: 1rem; }
+  .perk { display: flex; flex-direction: column; gap: .2rem; }
+  .perk-h {
+    font-size: .74rem; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .perk p { color: var(--ink-soft); font-size: .95rem; }
+
   .disclaim {
     font-size: .8rem; color: var(--ink-mute);
     border-top: 1px solid var(--line); padding-top: .9rem;
@@ -224,8 +241,11 @@
    sheetUrl — адрес приёмника из skripty/test-empat-sheets.gs.
    Пусто — страница просто ничего никуда не шлёт, тест при этом работает. */
 const CONFIG = {
-  sheetUrl: "",
-  botLink: ""   // https://t.me/имя_бота — кнопка возврата в чат
+  sheetUrl: "",     // приёмник из skripty/test-empat-sheets.gs
+  formUrl: "",      // https://docs.google.com/forms/d/e/…/viewform
+  formCode: "",     // entry.1234567890 — поле «Код теста» из предзаполненной ссылки
+  channelUrl: "",   // закрытый канал Виолы
+  botLink: ""       // https://t.me/имя_бота — возврат в чат
 };
 
 /* ——— вопросы ———
@@ -286,7 +306,8 @@ const RESULTS = {
       "Ваш приёмник настроен на всех, кроме вас. Вы знаете, кому что нужно, кого поддержать, кого сегодня не трогать. А что нужно вам — вопрос, на который ответа нет. Вы отдаёте время, силы, знания даром и потом жалеете.",
       "Дар работает. Просто не на вашу жизнь."
     ],
-    voice: "Вы остаётесь таким же тёплым человеком, такой же тёплой. Меняется одно. Сколько сил уходит на всех и сколько остаётся вам."
+    voice: "Вы остаётесь таким же тёплым человеком, такой же тёплой. Меняется одно. Сколько сил уходит на всех и сколько остаётся вам.",
+    bridge: "Ваша сила уже работает. Просто не на вас. Осенью у Виолы выходит программа ровно про это: как развернуть её на свою жизнь — на отношения и на деньги."
   },
   filter: {
     name: "Эмпат без фильтра",
@@ -296,7 +317,8 @@ const RESULTS = {
       "Вы считываете людей раньше, чем они открыли рот. Платит за это тело: тяжёлая голова, ком в груди, вечер выключен. Вы устаёте не от дел. Вы устаёте от людей.",
       "Приёмник вам выдали. Выключатель — нет."
     ],
-    voice: "Вы всё чувствуете правильно. Вопрос один: кто это выдержит без отдыха. Вот с этого и начинаем."
+    voice: "Вы всё чувствуете правильно. Вопрос один: кто это выдержит без отдыха. Вот с этого и начинаем.",
+    bridge: "Выключатель вам не выдали. Осенью у Виолы выходит программа, где его собирают — и разбирают, куда девать силы, которые перестанут утекать."
   },
   sleeping: {
     name: "Спящий эмпат",
@@ -306,7 +328,8 @@ const RESULTS = {
       "Тишина, сериал, еда, бокал — лишь бы не чувствовать. Это не слабость, это усталость. Вы годами всё замечали и делали вид, что не заметили.",
       "Приёмник от этого не сломался. Он работает в фоне и забирает силы, а вы даже не слышите, на что."
     ],
-    voice: "Розовые очки снимают не для того, чтобы стало холодно. А чтобы наконец видеть."
+    voice: "Розовые очки снимают не для того, чтобы стало холодно. А чтобы наконец видеть.",
+    bridge: "Глушить — не единственный вариант. Есть другой: включить приёмник и не сгорать. Осенью у Виолы выходит программа про это."
   },
   awake: {
     name: "Проснувшийся эмпат",
@@ -316,7 +339,8 @@ const RESULTS = {
       "Было время, когда вы жили чужой жизнью: видели красные флажки и всё равно оставались. Носили в себе чужие разговоры неделями. Сейчас нет. Вы видите людей так же ясно, только внутрь больше не пускаете кого попало.",
       "Это самая редкая настройка из всех. Она не даётся от рождения — до неё доходят.",
       "Ваш вопрос теперь другой. Куда девать эту силу. Дар есть, гигиена есть, а дело, отношения и деньги пока живут отдельно от него."
-    ]
+    ],
+    bridge: "Вы спросили, куда девать эту силу. Осенью у Виолы выходит программа ровно с этим ответом: в отношения и в деньги."
   },
   reader: {
     name: "Считывающий",
@@ -346,6 +370,21 @@ const RESULTS = {
       "Что можно сказать точно: вы чувствуете больше среднего. Это не диагноз и не приговор."
     ]
   }
+};
+
+const OFFER = {
+  title: "Любовь и деньги",
+  lead: "Практическая программа Виолы для тех, кто чувствует людей глубже других.",
+  body: [
+    "Про то, как перестать растворяться в чужих жизнях и вернуть себе силы — чтобы они работали на вашу: на отношения и на деньги.",
+    "Старт осенью. Сейчас открыта предзапись."
+  ],
+  perks: [
+    ["Самая низкая цена", "Тем, кто в списке, программа откроется по самой низкой цене."],
+    ["Право сказать, что включить", "Мы спросим, чего вам не хватает, и соберём часть программы из ваших ответов. Вы всю жизнь угадываете, что нужно другим. Здесь спрашивают вас."],
+    ["Закрытый канал Виолы", "Материалы и подкасты, которых нет нигде больше. Доступ — сразу после анкеты."]
+  ],
+  time: "Анкета короткая: минута. Половину мы уже знаем из вашего теста."
 };
 
 const FON_NOTE = "Отдельно: часть того, что вас грузит, идёт не от людей, а от общего фона — шум, свет, слишком много всего. Это не про эмпатию, и в тесте оно не решается.";
@@ -484,9 +523,9 @@ function fork() {
   render(n);
 }
 
-function result() {
+function result(prev) {
   stage = "result";
-  const r = score();
+  const r = prev || score();
   const t = RESULTS[r.key];
 
   const n = el(`
@@ -499,12 +538,20 @@ function result() {
       <div class="body-copy">${t.body.map(p => `<p>${p}</p>`).join("")}</div>
       ${t.voice ? `<p class="voice">${t.voice}</p>` : ""}
       ${r.fon ? `<p class="addendum">${FON_NOTE}</p>` : ""}
+      ${t.bridge ? `<p class="bridge">${t.bridge}</p>` : ""}
       <div class="foot">
-        <button class="go" id="share">Поделиться результатом</button>
+        ${t.bridge && CONFIG.formUrl ? `<button class="go" id="offer">Что за программа</button>` : ""}
+        ${!t.bridge && CONFIG.channelUrl ? `<button class="go" id="channel">Забрать материалы Виолы</button>` : ""}
+        <button class="ghost" id="share">Поделиться результатом</button>
         <button class="ghost" id="again">Пройти заново</button>
       </div>
       <p class="disclaim">Это не диагностика и не диагноз. Это зеркало: сверить, как у вас устроено.</p>
     </div>`);
+
+  const toOffer = n.querySelector("#offer");
+  if (toOffer) toOffer.addEventListener("click", () => offer(r));
+  const toChannel = n.querySelector("#channel");
+  if (toChannel) toChannel.addEventListener("click", () => open_(CONFIG.channelUrl));
 
   const share = n.querySelector("#share");
   share.addEventListener("click", () => {
@@ -516,7 +563,59 @@ function result() {
   });
   n.querySelector("#again").addEventListener("click", () => { answers.length = 0; intro(); });
 
-  send(r);
+  if (!prev) send(r);
+  render(n);
+}
+
+/* ——— экран программы и переход в анкету ——— */
+function open_(url) {
+  if (!url) return;
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (tg && tg.openLink) tg.openLink(url); else window.open(url, "_blank", "noopener");
+}
+
+function formLink(r) {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const user = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+  const code = (user.id || "web") + "-" + r.key + "-" + r.pct;
+  if (!CONFIG.formCode) return CONFIG.formUrl;
+  return CONFIG.formUrl + "?usp=pp_url&" + CONFIG.formCode + "=" + encodeURIComponent(code);
+}
+
+function offer(r) {
+  const n = el(`
+    <div class="card">
+      <div class="step">Что дальше</div>
+      <h2>${OFFER.title}</h2>
+      <p class="lede">${OFFER.lead}</p>
+      <div class="body-copy">${OFFER.body.map(p => `<p>${p}</p>`).join("")}</div>
+      <div class="perks">
+        ${OFFER.perks.map(([h, d]) => `<div class="perk"><div class="perk-h">${h}</div><p>${d}</p></div>`).join("")}
+      </div>
+      <p class="quiet">${OFFER.time}</p>
+      <div class="foot">
+        <button class="go" id="form">Заполнить анкету</button>
+        <button class="ghost" id="back-res">← Вернуться к результату</button>
+      </div>
+    </div>`);
+  n.querySelector("#form").addEventListener("click", () => { open_(formLink(r)); thanks(); });
+  n.querySelector("#back-res").addEventListener("click", () => result(r));
+  render(n);
+}
+
+function thanks() {
+  const n = el(`
+    <div class="card">
+      <h2>Анкета открыта в новом окне</h2>
+      <p class="lede">Заполните её — и вы в списке первых. Когда откроем набор, напишем вам раньше остальных и с самой низкой ценой.</p>
+      ${CONFIG.channelUrl ? `<button class="go" id="ch">Забрать доступ в канал Виолы</button>` : ""}
+      ${CONFIG.botLink ? `<button class="ghost" id="bot">← Вернуться в чат</button>` : ""}
+      <p class="quiet">То, что вы напишете в анкете, мы прочитаем. Это и есть та часть программы, которую соберём из ваших ответов.</p>
+    </div>`);
+  const ch = n.querySelector("#ch");
+  if (ch) ch.addEventListener("click", () => open_(CONFIG.channelUrl));
+  const bot = n.querySelector("#bot");
+  if (bot) bot.addEventListener("click", () => open_(CONFIG.botLink));
   render(n);
 }
 
