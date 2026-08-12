@@ -469,6 +469,7 @@ let stage = "intro";      // intro | q | fork | result
 let idx = 0;
 const answers = [];        // баллы 3..0 по каждому вопросу
 const forks = {};
+let startedAt = 0;   // засекаем на первом вопросе — чтобы отличить честное прохождение от прокликанного
 
 const screen = document.getElementById("screen");
 const dial = document.getElementById("dial");
@@ -556,7 +557,7 @@ function intro() {
       <p class="quiet">Это не диагностика и не диагноз. Это способ посмотреть на себя со стороны.</p>
       <button class="go" id="start">Начать</button>
     </div>`);
-  n.querySelector("#start").addEventListener("click", () => { idx = 0; question(); });
+  n.querySelector("#start").addEventListener("click", () => { idx = 0; startedAt = Date.now(); question(); });
   render(n);
 }
 
@@ -699,7 +700,13 @@ function send(r) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const user = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
 
+  const seconds = startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0;
+  const same = answers.length && answers.every(x => x === answers[0]);
+
   const payload = {
+    seconds: seconds,
+    fast: seconds > 0 && seconds < 25,   // 24 вопроса быстрее 25 секунд — читать человек не успевал
+    monotone: same,                      // одна и та же кнопка на всё
     rank: r.key,
     percent: r.pct,
     scales: r.scales,

@@ -25,7 +25,8 @@ var HEADERS = [
   'Ранг', 'Процент',
   'Дар', 'Прилипание', 'История', 'Тело', 'Адресат', 'Гигиена', 'Люди', 'Фон', 'Контроль',
   'Где съедает', 'Что менять первым', 'Что уже делали', 'Давно смотрит',
-  'Ответы (1–24)'
+  'Ответы (1–24)',
+  'Секунд', 'Быстро', 'Одна кнопка'
 ];
 
 function doPost(e) {
@@ -43,7 +44,8 @@ function doPost(e) {
       s.A, s.P, s.I, s.B, s.C, s.G, s.L, s.F, s.K,
       pick_(d.forks, 'bol'), pick_(d.forks, 'zapros'),
       pick_(d.forks, 'opyt'), pick_(d.forks, 'davno'),
-      (d.answers || []).join(',')
+      (d.answers || []).join(','),
+      d.seconds || '', d.fast ? 'да' : '', d.monotone ? 'да' : ''
     ]);
 
     return json_({ ok: true });
