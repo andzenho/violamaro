@@ -611,6 +611,17 @@ function el(html) {
 function render(node) {
   screen.replaceChildren(node);
   paintDial();
+  toTop();
+}
+
+/* Каждый новый экран показываем с начала — иначе человек попадает
+   на середину длинного текста и не понимает, что сменилось. */
+function toTop() {
+  try {
+    window.scrollTo(0, 0);
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
+  } catch (e) {}
 }
 
 function intro() {
