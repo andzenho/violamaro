@@ -697,7 +697,6 @@ function result(prev) {
         ${t.bridge ? `<button class="go big" id="offer">Что за программа? <span aria-hidden="true">→</span></button>` : ""}
         ${!t.bridge && CONFIG.publicChannel ? `<a class="go big" id="channel" href="${CONFIG.publicChannel}" target="_blank" rel="noopener">Читать Виолу в Телеграме <span aria-hidden="true">→</span></a>
         <p class="cta-note">Каждый день — про людей, границы и чувствительность.</p>` : ""}
-        <button class="ghost" id="share">Поделиться результатом</button>
         <button class="ghost" id="again">Пройти заново</button>
       </div>
       <p class="disclaim">Это не диагностика и не диагноз. Это способ посмотреть на себя со стороны.</p>
@@ -711,14 +710,6 @@ function result(prev) {
     if (tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink(CONFIG.publicChannel); }
   });
 
-  const share = n.querySelector("#share");
-  share.addEventListener("click", () => {
-    const line = `Мой тип по тесту Виолы Маро — ${t.name.toLowerCase()}. А у тебя?`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(line).then(() => { share.textContent = "Скопировано"; },
-        () => { share.textContent = line; });
-    } else { share.textContent = line; }
-  });
   n.querySelector("#again").addEventListener("click", () => { answers.length = 0; flush();   // если в прошлый раз что-то не ушло
 intro(); });
 
