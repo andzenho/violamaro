@@ -329,7 +329,8 @@ const CONFIG = {
   sheetUrl: "",     // приёмник из skripty/test-empat-sheets.gs
   formUrl: "https://docs.google.com/forms/d/e/1FAIpQLSdI1u8kJvIUNBqaSlLUtyDAj67Ic8-ClzBmHiKzImNLPJ6j6g/viewform",
   formCode: "entry.978626268",   // поле «Код теста» в форме предзаписи
-  channelUrl: "https://t.me/+ot1pJz8KHlo2YTky",
+  channelUrl: "https://t.me/+ot1pJz8KHlo2YTky",   // закрытый — для записавшихся
+  publicChannel: "https://t.me/violamaro1",        // открытый — для тех, кто не эмпат
   botLink: ""       // https://t.me/имя_бота — возврат в чат
 };
 
@@ -623,7 +624,8 @@ function result(prev) {
       ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}<span class="anchor">${ANCHOR}</span></p>` : ""}
       <div class="foot">
         ${t.bridge && CONFIG.formUrl ? `<button class="go" id="offer">Что за программа?</button>` : ""}
-        ${!t.bridge && CONFIG.channelUrl ? `<button class="go" id="channel">Забрать материалы Виолы</button>` : ""}
+        ${!t.bridge && CONFIG.publicChannel ? `<button class="go big" id="channel">Читать Виолу в Телеграме <span aria-hidden="true">→</span></button>
+        <p class="cta-note">Каждый день — про людей, границы и чувствительность.</p>` : ""}
         <button class="ghost" id="share">Поделиться результатом</button>
         <button class="ghost" id="again">Пройти заново</button>
       </div>
@@ -633,7 +635,7 @@ function result(prev) {
   const toOffer = n.querySelector("#offer");
   if (toOffer) toOffer.addEventListener("click", () => offer(r));
   const toChannel = n.querySelector("#channel");
-  if (toChannel) toChannel.addEventListener("click", () => open_(CONFIG.channelUrl));
+  if (toChannel) toChannel.addEventListener("click", () => open_(CONFIG.publicChannel));
 
   const share = n.querySelector("#share");
   share.addEventListener("click", () => {
