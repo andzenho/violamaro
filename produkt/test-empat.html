@@ -1,0 +1,522 @@
+<title>Есть у вас способности эмпата</title>
+<style>
+  :root {
+    --ground: #F6F2F4;
+    --surface: #FFFFFF;
+    --surface-2: #F0EAEE;
+    --ink: #241D28;
+    --ink-soft: #5C5162;
+    --ink-mute: #8B7F92;
+    --line: #E0D6DD;
+    --line-strong: #C9BBC6;
+    --accent: #A2703C;
+    --accent-soft: #E8D9C6;
+    --deep: #4B3556;
+    --shadow: 0 1px 2px rgba(36, 29, 40, .06), 0 8px 24px -12px rgba(36, 29, 40, .18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #16121A;
+      --surface: #1E1922;
+      --surface-2: #262030;
+      --ink: #F2EBF2;
+      --ink-soft: #BCAFC2;
+      --ink-mute: #8B7F92;
+      --line: #322A38;
+      --line-strong: #473C50;
+      --accent: #D9A163;
+      --accent-soft: #3A2C22;
+      --deep: #C4A5D6;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #16121A;
+    --surface: #1E1922;
+    --surface-2: #262030;
+    --ink: #F2EBF2;
+    --ink-soft: #BCAFC2;
+    --ink-mute: #8B7F92;
+    --line: #322A38;
+    --line-strong: #473C50;
+    --accent: #D9A163;
+    --accent-soft: #3A2C22;
+    --deep: #C4A5D6;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 34rem;
+    margin: 0 auto;
+    padding: 1.25rem 1.15rem 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-height: 100vh;
+  }
+
+  /* — шкала приёмника — */
+  .top { display: flex; flex-direction: column; gap: .75rem; }
+
+  .brand {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: .7rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  .dial { display: flex; gap: 3px; height: 22px; align-items: flex-end; }
+
+  .tick {
+    flex: 1;
+    height: 7px;
+    border-radius: 1px;
+    background: var(--line);
+    transition: height .25s ease, background-color .25s ease;
+  }
+  .tick.done { background: var(--line-strong); }
+  .tick.now { height: 22px; background: var(--accent); }
+
+  /* — карточка — */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1.6rem 1.4rem;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 1.4rem;
+  }
+
+  .step {
+    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-mute); font-variant-numeric: tabular-nums;
+  }
+
+  h1, h2 {
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    font-weight: 400;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+  h1 { font-size: 1.9rem; line-height: 1.25; }
+  h2 { font-size: 1.4rem; line-height: 1.35; }
+
+  p { margin: 0; }
+  .lede { color: var(--ink-soft); }
+  .quiet { color: var(--ink-mute); font-size: .88rem; line-height: 1.5; }
+
+  .voice {
+    border-left: 2px solid var(--accent);
+    padding-left: .9rem;
+    font-family: Georgia, "Iowan Old Style", serif;
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 1rem;
+  }
+
+  .answers { display: flex; flex-direction: column; gap: .55rem; }
+
+  button.ans {
+    appearance: none;
+    text-align: left;
+    font: inherit;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    padding: .85rem 1rem;
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease, transform .08s ease;
+  }
+  button.ans:hover { background: var(--surface-2); border-color: var(--accent); }
+  button.ans:active { transform: scale(.99); }
+
+  button.go {
+    appearance: none;
+    font: inherit;
+    font-weight: 600;
+    color: var(--ground);
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    padding: .9rem 1.2rem;
+    cursor: pointer;
+    transition: opacity .15s ease;
+  }
+  button.go:hover { opacity: .88; }
+
+  .ghost {
+    appearance: none; font: inherit; font-size: .85rem;
+    background: none; border: none; color: var(--ink-mute);
+    cursor: pointer; padding: .4rem 0; text-align: left;
+    align-self: flex-start;
+  }
+  .ghost:hover { color: var(--ink); }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* — результат — */
+  .score { display: flex; align-items: baseline; gap: .7rem; }
+  .score .num {
+    font-family: Georgia, "Iowan Old Style", serif;
+    font-size: 4.2rem; line-height: .9; color: var(--accent);
+    font-variant-numeric: tabular-nums; letter-spacing: -.03em;
+  }
+  .score .cap {
+    font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-mute); max-width: 11rem;
+  }
+
+  .body-copy { display: flex; flex-direction: column; gap: .85rem; }
+
+  .addendum {
+    background: var(--surface-2);
+    border-radius: 3px;
+    padding: .9rem 1rem;
+    font-size: .93rem;
+    color: var(--ink-soft);
+  }
+
+  .foot { display: flex; flex-direction: column; gap: .6rem; }
+
+  .disclaim {
+    font-size: .8rem; color: var(--ink-mute);
+    border-top: 1px solid var(--line); padding-top: .9rem;
+  }
+
+  .fade { animation: fade .18s ease-out; }
+  @keyframes fade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .fade { animation: none; }
+    .tick { transition: none; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <span>Виола Маро</span>
+      <span id="counter"></span>
+    </div>
+    <div class="dial" id="dial"></div>
+  </div>
+  <div id="screen"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ——— вопросы ———
+   scale: шкала · inv: обратный вопрос · ctrl: контрольный, в баллы не идёт */
+const Q = [
+  { t: "Вы понимаете, что человек чувствует, раньше, чем он это скажет.", s: "A" },
+  { t: "Вы слышите, когда человек говорит «всё хорошо», а внутри у него другое.", s: "A" },
+  { t: "Вы заходите к людям и сразу чувствуете, что здесь только что был тяжёлый разговор.", s: "A" },
+  { t: "Когда рядом человек расстроен, вам это не мешает спокойно заниматься своими делами.", s: "P", inv: true },
+  { t: "Вы почти всегда точно знаете, о чём человек думает.", s: "K", ctrl: true },
+  { t: "Вы легко говорите «нет» и потом об этом не думаете.", s: "P", inv: true },
+  { t: "Чужие эмоции вы видите, но они остаются чужими и в вас не переходят.", s: "P", inv: true,
+    note: "Вот. Дальше будет про то, во что вам это обходится." },
+  { t: "Было время, когда вы жили чужой жизнью и почти не помнили, чего хотите сами.", s: "I" },
+  { t: "Вы видели красные флажки — двойное дно, ложь на лице — и всё равно закрывали глаза и оставались.", s: "I" },
+  { t: "Раньше вы могли неделю носить в себе один чужой разговор.", s: "I" },
+  { t: "Чужая беда отзывается в вас как своя — иногда сильнее, чем у самого человека.", s: "B" },
+  { t: "Рядом с тяжёлым человеком отзывается тело: сжимается в груди, тяжелеет голова, крутит живот.", s: "B" },
+  { t: "После разговора, где вы кого-то поддерживали, вы выжаты, будто работали физически.", s: "B",
+    note: "Половину прошли. Тут дальше самое важное." },
+  { t: "Малознакомые люди быстро начинают рассказывать вам свою жизнь.", s: "C" },
+  { t: "Ваши радары настроены на всех, кроме себя: что нужно вам — вопрос, который ставит в тупик.", s: "C" },
+  { t: "Вам трудно отказать, даже когда у вас самих сил не осталось.", s: "C" },
+  { t: "Вы отдаёте своё время, помощь, знания даром — и потом об этом жалеете.", s: "C" },
+  { t: "Обмануть вас невозможно: ложь вы видите всегда.", s: "K", ctrl: true },
+  { t: "У вас есть свой способ восстанавливаться, и вы им пользуетесь заранее, а не когда уже накрыло.", s: "G", inv: true,
+    note: "И вот последнее. Это про то, откуда берётся усталость." },
+  { t: "Бывает, что хочется просто выключить приёмник — тишиной, сериалом, едой, бокалом, лишь бы не чувствовать.", s: "G" },
+  { t: "Ваше состояние зависит от того, кто именно рядом: с одним человеком легко, после другого вы разбиты.", s: "L" },
+  { t: "Когда рядом никого нет, вы приходите в себя: в тишине и одиночестве голова проясняется.", s: "L" },
+  { t: "Вас перегружает сама обстановка — шум, свет, слишком много всего вокруг, — даже когда людей рядом нет.", s: "F" },
+  { t: "Дела рассыпаются сами по себе: трудно начать, трудно закончить, теряется время и вещи — и так с детства.", s: "F" }
+];
+
+const SCALE = ["Да, прямо про меня", "Часто", "Редко", "Нет, это не про меня"];
+
+/* вилки — в баллы не идут, уходят в CRM */
+const FORKS = [
+  { k: "bol", q: "Где вас съедает сильнее всего?",
+    a: ["Близкие и семья", "Партнёр", "Работа и коллеги", "Клиенты и чужие люди", "Везде понемногу"] },
+  { k: "zapros", q: "Что хотите поменять первым?",
+    a: ["Отношения — чтобы рядом было тепло, а не выжимание",
+        "Деньги — перестать отдавать даром, начать зарабатывать своим",
+        "Энергию — перестать быть выжатым и выжатой к вечеру",
+        "Себя — наконец понять, чего хочу я"] },
+  { k: "opyt", q: "Что уже делали с этим?",
+    a: ["Смотрю видео, читаю сам и сама", "Была терапия", "Проходил и проходила курсы", "Пока ничего"] },
+  { k: "davno", q: "Давно смотрите Виолу?",
+    a: ["Больше года", "Несколько месяцев", "Пару недель", "Попал и попала сюда случайно"] }
+];
+
+const RESULTS = {
+  donor: {
+    name: "Эмпат-донор",
+    cap: "совпадение с портретом эмпата",
+    body: [
+      "Да, вы эмпат. Таких примерно каждый пятый, и вы из них.",
+      "Ваш приёмник настроен на всех, кроме вас. Вы знаете, кому что нужно, кого поддержать, кого сегодня не трогать. А что нужно вам — вопрос, на который ответа нет. Вы отдаёте время, силы, знания даром и потом жалеете.",
+      "Дар работает. Просто не на вашу жизнь."
+    ],
+    voice: "Вы остаётесь таким же тёплым человеком, такой же тёплой. Меняется одно. Сколько сил уходит на всех и сколько остаётся вам."
+  },
+  filter: {
+    name: "Эмпат без фильтра",
+    cap: "совпадение с портретом эмпата",
+    body: [
+      "Вы эмпат, и приёмник у вас включён круглосуточно.",
+      "Вы считываете людей раньше, чем они открыли рот. Платит за это тело: тяжёлая голова, ком в груди, вечер выключен. Вы устаёте не от дел. Вы устаёте от людей.",
+      "Приёмник вам выдали. Выключатель — нет."
+    ],
+    voice: "Вы всё чувствуете правильно. Вопрос один: кто это выдержит без отдыха. Вот с этого и начинаем."
+  },
+  sleeping: {
+    name: "Спящий эмпат",
+    cap: "совпадение с портретом эмпата",
+    body: [
+      "Вы эмпат, который научился себя глушить.",
+      "Тишина, сериал, еда, бокал — лишь бы не чувствовать. Это не слабость, это усталость. Вы годами всё замечали и делали вид, что не заметили.",
+      "Приёмник от этого не сломался. Он работает в фоне и забирает силы, а вы даже не слышите, на что."
+    ],
+    voice: "Розовые очки снимают не для того, чтобы стало холодно. А чтобы наконец видеть."
+  },
+  awake: {
+    name: "Проснувшийся эмпат",
+    cap: "совпадение с портретом эмпата",
+    body: [
+      "Вы эмпат, и вы через это уже прошли.",
+      "Было время, когда вы жили чужой жизнью: видели красные флажки и всё равно оставались. Носили в себе чужие разговоры неделями. Сейчас нет. Вы видите людей так же ясно, только внутрь больше не пускаете кого попало.",
+      "Это самая редкая настройка из всех. Она не даётся от рождения — до неё доходят.",
+      "Ваш вопрос теперь другой. Куда девать эту силу. Дар есть, гигиена есть, а дело, отношения и деньги пока живут отдельно от него."
+    ]
+  },
+  reader: {
+    name: "Считывающий",
+    cap: "совпадение с портретом эмпата",
+    body: [
+      "Эмпат в том смысле, о котором говорит Виола, — это не про вас. И это не хуже.",
+      "Вы читаете людей лучше многих: видите фальшь, считываете настроение, понимаете, кто чего хочет. Но внутрь вы это не пропускаете — и, судя по ответам, не пропускали никогда. Чужое всегда оставалось чужим.",
+      "Это не то же самое, что эмпат, который научился держать дистанцию: тот сначала годами жил чужой жизнью и выбирался. Вам не пришлось. Там, где эмпат выжимается досуха, вы просто уходите домой.",
+      "И вы здесь не случайно. Людей вы понимаете лучше, чем они себя, — поэтому Виолу вы и слушаете. Просто вам она про других, а не про вас."
+    ]
+  },
+  caring: {
+    name: "Сочувствующий",
+    cap: "совпадение с портретом эмпата",
+    body: [
+      "Похоже, эмпат — это не ваша история.",
+      "Вы нормально чувствуете людей: сопереживаете, замечаете, поддерживаете. Так устроено большинство, и с этим всё в порядке. Разговор Виолы — про другую громкость приёмника, когда чужое состояние входит внутрь и остаётся там на весь день.",
+      "Если вы пришли сюда из-за близкого человека, у которого именно так, — вы по адресу, только с другой стороны. Рядом с эмпатом жить тоже надо уметь, и об этом здесь говорят не реже."
+    ]
+  },
+  other: {
+    name: "Другая настройка",
+    cap: "совпадение с портретом эмпата",
+    body: [
+      "Вас выбивают не люди, а фон: шум, свет, слишком много всего сразу. Вы устаёте не от человека рядом, а от количества всего, что на вас сыпется.",
+      "Такую картину часто описывают как СДВГ. Может быть и не так — по тесту это не решается, и заочно вам этого никто не скажет. Если это мешает жить, посмотрите очно со специалистом.",
+      "Что можно сказать точно: вы чувствуете больше среднего. Это не диагноз и не приговор."
+    ]
+  }
+};
+
+const FON_NOTE = "Отдельно: часть того, что вас грузит, идёт не от людей, а от общего фона — шум, свет, слишком много всего. Это не про эмпатию, и в тесте оно не решается.";
+
+/* ——— состояние ——— */
+let stage = "intro";      // intro | q | fork | result
+let idx = 0;
+const answers = [];        // баллы 3..0 по каждому вопросу
+const forks = {};
+
+const screen = document.getElementById("screen");
+const dial = document.getElementById("dial");
+const counter = document.getElementById("counter");
+
+Q.forEach(() => {
+  const t = document.createElement("div");
+  t.className = "tick";
+  dial.appendChild(t);
+});
+
+function paintDial() {
+  const ticks = dial.children;
+  for (let i = 0; i < ticks.length; i++) {
+    ticks[i].className = "tick" +
+      (stage === "q" && i === idx ? " now" : (i < answers.length ? " done" : ""));
+  }
+  counter.textContent = stage === "q" ? (idx + 1) + " / " + Q.length
+    : stage === "fork" ? "почти всё"
+    : stage === "result" ? "результат" : "";
+}
+
+/* ——— подсчёт ——— */
+function inv(v) { return 3 - v; }
+
+function score() {
+  const v = answers;
+  const A = v[0] + v[1] + v[2];
+  const P = inv(v[3]) + inv(v[5]) + inv(v[6]);
+  const I = v[7] + v[8] + v[9];
+  const B = v[10] + v[11] + v[12];
+  const C = v[13] + v[14] + v[15] + v[16];
+  const G = inv(v[18]) + v[19];
+  const L = v[20] + v[21];
+  const F = v[22] + v[23];
+  const K = (v[4] === 3 ? 1 : 0) + (v[17] === 3 ? 1 : 0);
+
+  const dar = A / 9;
+  const prox = Math.max(P, I) / 9;
+  const price = Math.max(B / 9, C / 12, I / 9);
+  let pct = Math.round(dar * 40 + prox * 30 + price * 30);
+  if (K === 2) pct -= 10;
+  pct = Math.max(20, Math.min(97, pct));
+
+  let key;
+  if (P <= 3 && I <= 4 && B <= 3) key = "reader";
+  else if (F >= 5 && L <= 1 && A <= 5) key = "other";
+  else if (A <= 3 && C <= 4) key = "caring";
+  else if (I >= 6 && B / 9 < .5 && C / 12 < .5 && G <= 2 && K < 2) key = "awake";
+  else {
+    const b = B / 9, c = C / 12, g = G / 6;
+    key = (c >= b && c >= g) ? "donor" : (b >= g ? "filter" : "sleeping");
+  }
+
+  const empath = ["donor", "filter", "sleeping", "awake"].includes(key);
+  return { key, pct, fon: empath && F >= 4, scales: { A, P, I, B, C, G, L, F, K } };
+}
+
+/* ——— экраны ——— */
+function el(html) {
+  const d = document.createElement("div");
+  d.className = "fade";
+  d.innerHTML = html;
+  return d;
+}
+
+function render(node) {
+  screen.replaceChildren(node);
+  paintDial();
+}
+
+function intro() {
+  stage = "intro";
+  const n = el(`
+    <div class="card">
+      <h1>Есть у вас способности эмпата?</h1>
+      <p class="lede">24 коротких утверждения. Три минуты. В конце вы увидите, насколько совпадаете с портретом эмпата и как именно это у вас устроено.</p>
+      <p class="quiet">Отвечайте первым, что приходит в голову. Так точнее.<br>Это не диагностика и не диагноз. Это зеркало.</p>
+      <button class="go" id="start">Начать</button>
+    </div>`);
+  n.querySelector("#start").addEventListener("click", () => { idx = 0; question(); });
+  render(n);
+}
+
+function question() {
+  stage = "q";
+  const q = Q[idx];
+  const n = el(`
+    <div class="card">
+      ${q.note ? `<p class="voice">${q.note}</p>` : ""}
+      <div class="step">Утверждение ${idx + 1}</div>
+      <h2>${q.t}</h2>
+      <div class="answers">
+        ${SCALE.map((s, i) => `<button class="ans" data-v="${3 - i}">${s}</button>`).join("")}
+      </div>
+      ${idx > 0 ? `<button class="ghost" id="back">← Назад</button>` : ""}
+    </div>`);
+
+  n.querySelectorAll(".ans").forEach(b => b.addEventListener("click", () => {
+    answers[idx] = Number(b.dataset.v);
+    idx++;
+    if (idx < Q.length) question(); else { idx = 0; fork(); }
+  }));
+  const back = n.querySelector("#back");
+  if (back) back.addEventListener("click", () => { idx--; answers.length = idx; question(); });
+  render(n);
+}
+
+function fork() {
+  stage = "fork";
+  const f = FORKS[idx];
+  const n = el(`
+    <div class="card">
+      <div class="step">Ещё ${FORKS.length - idx} ${FORKS.length - idx === 1 ? "вопрос" : "вопроса"}</div>
+      <h2>${f.q}</h2>
+      <div class="answers">
+        ${f.a.map((s, i) => `<button class="ans" data-i="${i}">${s}</button>`).join("")}
+      </div>
+    </div>`);
+  n.querySelectorAll(".ans").forEach(b => b.addEventListener("click", () => {
+    forks[f.k] = f.a[Number(b.dataset.i)];
+    idx++;
+    if (idx < FORKS.length) fork(); else result();
+  }));
+  render(n);
+}
+
+function result() {
+  stage = "result";
+  const r = score();
+  const t = RESULTS[r.key];
+
+  const n = el(`
+    <div class="card">
+      <div class="score">
+        <div class="num">${r.pct}<span style="font-size:2rem">%</span></div>
+        <div class="cap">${t.cap}</div>
+      </div>
+      <h2>${t.name}</h2>
+      <div class="body-copy">${t.body.map(p => `<p>${p}</p>`).join("")}</div>
+      ${t.voice ? `<p class="voice">${t.voice}</p>` : ""}
+      ${r.fon ? `<p class="addendum">${FON_NOTE}</p>` : ""}
+      <div class="foot">
+        <button class="go" id="share">Поделиться результатом</button>
+        <button class="ghost" id="again">Пройти заново</button>
+      </div>
+      <p class="disclaim">Это не диагностика и не диагноз. Это зеркало: сверить, как у вас устроено.</p>
+    </div>`);
+
+  const share = n.querySelector("#share");
+  share.addEventListener("click", () => {
+    const line = `Совпадение с портретом эмпата — ${r.pct}%. ${t.name}. А у тебя?`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(line).then(() => { share.textContent = "Скопировано"; },
+        () => { share.textContent = line; });
+    } else { share.textContent = line; }
+  });
+  n.querySelector("#again").addEventListener("click", () => { answers.length = 0; intro(); });
+
+  // сюда же — отправка в бота: результат, шкалы и вилки
+  window.__result = { rank: r.key, percent: r.pct, scales: r.scales, forks: forks, answers: answers.slice() };
+  if (window.Telegram && window.Telegram.WebApp) {
+    try { window.Telegram.WebApp.sendData(JSON.stringify(window.__result)); } catch (e) {}
+  }
+  render(n);
+}
+
+if (window.Telegram && window.Telegram.WebApp) {
+  window.Telegram.WebApp.ready();
+  window.Telegram.WebApp.expand();
+}
+intro();
+</script>
