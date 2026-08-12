@@ -684,7 +684,7 @@ function result(prev) {
       ${r.fon ? `<p class="addendum">${FON_NOTE}</p>` : ""}
       ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}<span class="anchor">${ANCHOR}</span></p>` : ""}
       <div class="foot">
-        ${t.bridge && CONFIG.formUrl ? `<button class="go" id="offer">Что за программа?</button>` : ""}
+        ${t.bridge ? `<button class="go big" id="offer">Что за программа? <span aria-hidden="true">→</span></button>` : ""}
         ${!t.bridge && CONFIG.publicChannel ? `<a class="go big" id="channel" href="${CONFIG.publicChannel}" target="_blank" rel="noopener">Читать Виолу в Телеграме <span aria-hidden="true">→</span></a>
         <p class="cta-note">Каждый день — про людей, границы и чувствительность.</p>` : ""}
         <button class="ghost" id="share">Поделиться результатом</button>
