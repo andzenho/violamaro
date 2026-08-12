@@ -820,6 +820,12 @@ function done() {
 
 const BUFFER_KEY = "viola-pending";
 
+/* Данные уходят обычным GET с параметром: POST на веб-приложение Apps Script
+   у анонимных запросов упирается в редирект и не доходит. Проверено. */
+function send_(payload) {
+  return fetch(CONFIG.sheetUrl + "?payload=" + encodeURIComponent(JSON.stringify(payload)));
+}
+
 /* Запись сначала кладём в буфер, потом отправляем. Не дошло — полежит
    и уйдёт при следующем открытии страницы. Иначе обрыв связи = потерянный лид. */
 function sendLead(r, name, contact) {
@@ -850,11 +856,7 @@ function flush() {
   if (!all.length) return;
   try { localStorage.removeItem(BUFFER_KEY); } catch (e) {}
   all.forEach(item => {
-    fetch(CONFIG.sheetUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(item)
-    })
+    send_(item)
       .then(res => res.text())
       .then(txt => {
         /* Приёмник отвечает {"ok":true}. Если вместо этого прилетела страница
@@ -890,14 +892,7 @@ function send(r) {
   };
   window.__result = payload;
 
-  if (CONFIG.sheetUrl) {
-    // text/plain — чтобы браузер не слал предварительный запрос, который Apps Script не примет
-    fetch(CONFIG.sheetUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    }).catch(() => {});
-  }
+  if (CONFIG.sheetUrl) send_(payload);
 
   if (tg) {
     try { tg.sendData(JSON.stringify({ rank: r.key, percent: r.pct })); } catch (e) {}

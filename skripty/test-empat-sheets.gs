@@ -38,7 +38,29 @@ var LEAD_HEADERS = [
 function doPost(e) {
   try {
     var d = JSON.parse(e.postData.contents);
+    return route_(d);
+  } catch (err) {
+    return json_({ ok: false, error: String(err) });
+  }
+}
 
+/**
+ * Страница присылает данные обычным GET с параметром payload.
+ * Так надёжнее: POST на веб-приложение Apps Script упирается в редирект,
+ * который у анонимных запросов отдаёт «Page Not Found».
+ */
+function doGet(e) {
+  try {
+    var raw = e && e.parameter && e.parameter.payload;
+    if (!raw) return json_({ ok: true, note: 'Приёмник теста эмпата жив' });
+    return route_(JSON.parse(raw));
+  } catch (err) {
+    return json_({ ok: false, error: String(err) });
+  }
+}
+
+function route_(d) {
+  try {
     if (d.type === 'lead') { return saveLead_(d); }
 
     var sheet = getSheet_();
@@ -61,10 +83,6 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, error: String(err) });
   }
-}
-
-function doGet() {
-  return json_({ ok: true, note: 'Приёмник теста эмпата жив' });
 }
 
 /** Запись в первый поток — отдельным листом, чтобы не мешать сырьё теста и контакты. */
