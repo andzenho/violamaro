@@ -245,6 +245,23 @@
   }
   .inside .format { color: var(--ink-mute); font-size: .88rem; }
 
+  .powers {
+    background: var(--surface-2);
+    border-radius: 3px;
+    padding: 1.05rem 1.1rem;
+    display: flex; flex-direction: column; gap: .65rem;
+  }
+  .powers-h {
+    font-size: .7rem; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .powers ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+  .powers li { position: relative; padding-left: 1.35rem; font-size: .96rem; line-height: 1.4; }
+  .powers li::before {
+    content: "✦"; position: absolute; left: 0; top: 0;
+    color: var(--accent); font-size: .85rem;
+  }
+
   .intro-voice p { font-size: 1.02rem; }
 
   .bridge .anchor {
@@ -469,6 +486,23 @@ const OFFER = {
   note: "Два поля: имя и телеграм. Двадцать секунд — остальное мы уже знаем из вашего теста."
 };
 
+/* ——— «ваши суперспособности»: выводим из ответов, а не раздаём всем одинаково.
+   Берём три самые сильные стороны — так это читается как вывод, а не как лесть. */
+function powers(sc, v) {
+  const list = [
+    { w: sc.A,        t: "Считываете состояние человека раньше, чем он открыл рот" },
+    { w: v[1] * 3,    t: "Слышите, когда слова говорят одно, а человек — другое" },
+    { w: v[2] * 3,    t: "Входите в комнату и уже знаете, что здесь только что было" },
+    { w: sc.C,        t: "Вам открываются те, кто с другими молчит" },
+    { w: sc.B,        t: "Тело срабатывает раньше головы — оно у вас как датчик" },
+    { w: sc.I,        t: "Прошли через растворение в другом человеке и собрались обратно" },
+    { w: 9 - sc.P,    t: "Держите дистанцию и при этом не остываете к людям" },
+    { w: (6 - sc.G) * 1.5, t: "Восстанавливаетесь заранее, а не когда уже накрыло" },
+    { w: sc.L * 1.5,  t: "Точно понимаете, от кого именно устали" }
+  ];
+  return list.sort((a, b) => b.w - a.w).slice(0, 3).map(x => x.t);
+}
+
 const ANCHOR = "Осенью Виола собирает под это программу — для эмпатов по всему миру. Про то, как использовать эмпатию как суперспособность.";
 
 const FON_NOTE = "Отдельно: часть того, что вас грузит, идёт не от людей, а от общего фона — шум, свет, слишком много всего. Это не про эмпатию, и в тесте оно не решается.";
@@ -624,6 +658,11 @@ function result(prev) {
         <h1>${t.name}</h1>
       </div>
       <div class="body-copy">${t.body.map(p => `<p>${p}</p>`).join("")}</div>
+      ${["donor","filter","sleeping","awake","reader"].includes(r.key) ? `
+        <div class="powers">
+          <div class="powers-h">Ваши суперспособности</div>
+          <ul>${powers(r.scales, answers).map(x => `<li>${x}</li>`).join("")}</ul>
+        </div>` : ""}
       ${t.voice ? `<p class="voice">${t.voice}</p>` : ""}
       ${r.fon ? `<p class="addendum">${FON_NOTE}</p>` : ""}
       ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}<span class="anchor">${ANCHOR}</span></p>` : ""}
