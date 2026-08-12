@@ -220,6 +220,14 @@
 <script>
 "use strict";
 
+/* ——— куда уходят результаты ———
+   sheetUrl — адрес приёмника из skripty/test-empat-sheets.gs.
+   Пусто — страница просто ничего никуда не шлёт, тест при этом работает. */
+const CONFIG = {
+  sheetUrl: "",
+  botLink: ""   // https://t.me/имя_бота — кнопка возврата в чат
+};
+
 /* ——— вопросы ———
    scale: шкала · inv: обратный вопрос · ctrl: контрольный, в баллы не идёт */
 const Q = [
@@ -391,10 +399,12 @@ function score() {
   if (K === 2) pct -= 10;
   pct = Math.max(20, Math.min(97, pct));
 
+  /* Порядок важен: «считывающий» проверяется последним из отказов — иначе он
+     забирает и тех, у кого просто тихий приёмник, и тех, кого грузит фон. */
   let key;
-  if (P <= 3 && I <= 4 && B <= 3) key = "reader";
-  else if (F >= 5 && L <= 1 && A <= 5) key = "other";
+  if (F >= 5 && L <= 1 && A <= 5) key = "other";
   else if (A <= 3 && C <= 4) key = "caring";
+  else if (A >= 6 && P <= 3 && I <= 4 && B <= 3) key = "reader";
   else if (I >= 6 && B / 9 < .5 && C / 12 < .5 && G <= 2 && K < 2) key = "awake";
   else {
     const b = B / 9, c = C / 12, g = G / 6;
@@ -506,12 +516,40 @@ function result() {
   });
   n.querySelector("#again").addEventListener("click", () => { answers.length = 0; intro(); });
 
-  // сюда же — отправка в бота: результат, шкалы и вилки
-  window.__result = { rank: r.key, percent: r.pct, scales: r.scales, forks: forks, answers: answers.slice() };
-  if (window.Telegram && window.Telegram.WebApp) {
-    try { window.Telegram.WebApp.sendData(JSON.stringify(window.__result)); } catch (e) {}
-  }
+  send(r);
   render(n);
+}
+
+/* ——— отправка результата ———
+   Два адресата, разные задачи:
+   таблица получает всё сырьё для калибровки, бот — ранг и процент для сегментов. */
+function send(r) {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const user = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+
+  const payload = {
+    rank: r.key,
+    percent: r.pct,
+    scales: r.scales,
+    forks: forks,
+    answers: answers.slice(),
+    userId: user.id || "",
+    userName: [user.first_name, user.last_name].filter(Boolean).join(" ")
+  };
+  window.__result = payload;
+
+  if (CONFIG.sheetUrl) {
+    // text/plain — чтобы браузер не слал предварительный запрос, который Apps Script не примет
+    fetch(CONFIG.sheetUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  }
+
+  if (tg) {
+    try { tg.sendData(JSON.stringify({ rank: r.key, percent: r.pct })); } catch (e) {}
+  }
 }
 
 if (window.Telegram && window.Telegram.WebApp) {
