@@ -178,6 +178,22 @@
   button.go.big:active { transform: translateY(0); }
   button.go.big span { margin-left: .2rem; }
 
+  .fields { display: flex; flex-direction: column; gap: .8rem; }
+  .fields label {
+    display: flex; flex-direction: column; gap: .35rem;
+    font-size: .74rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .fields input {
+    font: inherit; font-size: 1.02rem; color: var(--ink);
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    padding: .8rem .9rem;
+    text-transform: none; letter-spacing: normal;
+  }
+  .fields input:focus { border-color: var(--accent); outline: none; }
+
   .cta-note {
     font-size: .82rem; color: var(--ink-mute); text-align: center;
     margin-top: -.15rem;
@@ -462,6 +478,30 @@ const RESULTS = {
   }
 };
 
+const OFFER = {
+  title: "Любовь и деньги",
+  lead: "Так называется программа, которую Виола запускает осенью. Название про одно, не про два.",
+  body: [
+    "И любовь, и деньги — это про наполненность. Про то, когда внутри полно. Когда пусто, ни то ни другое не приходит, сколько ни старайся.",
+    "Изобилие — это не рог изобилия и не роскошь. Это свобода быть собой. Делать что хотите, когда хотите, с кем хотите."
+  ],
+  insideHead: "Что разбираем",
+  inside: [
+    "Куда именно утекают ваши силы. И как это перекрыть, не став при этом холодной или холодным.",
+    "Как отличать своё состояние от чужого. Этому учатся, это навык.",
+    "Почему за свою работу неловко просить денег. И что с этой неловкостью делать.",
+    "Чего хотите вы. Именно вы, а не дети, не муж, не начальник."
+  ],
+  format: "Практики, рабочая тетрадь, разборы и ответы Виолы. Лекций не будет.",
+  perks: [
+    { h: "Самая низкая цена", d: "Первый поток заходит по самой низкой цене. Назовём её в канале." },
+    { h: "Закрытый канал Виолы", d: "Материалы и подкасты, которых нет нигде больше. Доступ — сразу после записи." },
+    { h: "Право сказать, что включить", d: "В канале спросим, чего вам не хватает, и соберём из ваших ответов часть программы. Вы всю жизнь угадываете, что нужно другим. А тут спросят вас.", wide: true }
+  ],
+  cta: "Хочу в первый поток",
+  note: "Два поля: имя и телеграм. Двадцать секунд — остальное мы уже знаем из вашего теста."
+};
+
 /* ——— «ваши суперспособности»: выводим из ответов, а не раздаём всем одинаково.
    Берём три самые сильные стороны — так это читается как вывод, а не как лесть. */
 function powers(sc, v) {
@@ -707,9 +747,94 @@ function offer(r) {
         <button class="ghost" id="back-res">← Вернуться к результату</button>
       </div>
     </div>`);
-  n.querySelector("#form").addEventListener("click", () => open_(formLink(r)));
+  n.querySelector("#form").addEventListener("click", () => {
+    if (CONFIG.sheetUrl) lead(r);                 // пишем к себе в таблицу
+    else open_(formLink(r));                      // запасной путь, пока таблица не подключена
+  });
   n.querySelector("#back-res").addEventListener("click", () => result(r));
   render(n);
+}
+
+/* ——— запись в первый поток: имя и телеграм берём у Телеграма, если он их знает ——— */
+function lead(r) {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+  const known = [u.first_name, u.last_name].filter(Boolean).join(" ");
+  const tgName = u.username ? "@" + u.username : "";
+
+  const n = el(`
+    <div class="card">
+      <div class="step">Предзапись</div>
+      <h2>Записываю вас в первый поток</h2>
+      ${known && tgName ? `
+        <p class="lede">Записываю как <b>${known}</b>, ${tgName}. Если что-то не так — поправьте.</p>` : `
+        <p class="lede">Оставьте, как к вам обращаться и куда написать приглашение.</p>`}
+      <div class="fields">
+        <label>Как вас зовут
+          <input id="f-name" type="text" value="${known}" placeholder="Имя" autocomplete="name">
+        </label>
+        <label>Телеграм
+          <input id="f-tg" type="text" value="${tgName}" placeholder="@имя" autocomplete="off">
+        </label>
+      </div>
+      <div class="foot">
+        <button class="go big" id="send">Записаться <span aria-hidden="true">→</span></button>
+        <p class="cta-note" id="hint">Напишем, когда откроем набор. Раньше остальных.</p>
+        <button class="ghost" id="back-offer">← Назад</button>
+      </div>
+    </div>`);
+
+  const nameEl = n.querySelector("#f-name");
+  const tgEl = n.querySelector("#f-tg");
+  const btn = n.querySelector("#send");
+  const hint = n.querySelector("#hint");
+
+  btn.addEventListener("click", () => {
+    const name = (nameEl.value || "").trim();
+    const contact = (tgEl.value || "").trim();
+    if (!name || !contact) {
+      hint.textContent = "Заполните оба поля — иначе не сможем вас позвать.";
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = "Записываю…";
+    sendLead(r, name, contact);
+    done();
+  });
+  n.querySelector("#back-offer").addEventListener("click", () => offer(r));
+  render(n);
+}
+
+function done() {
+  const n = el(`
+    <div class="card">
+      <h2>Готово. Вы в списке первых.</h2>
+      <p class="lede">Когда откроем набор, напишем вам раньше остальных и по самой низкой цене.</p>
+      ${CONFIG.channelUrl ? `
+        <div class="foot">
+          <button class="go big" id="ch">Забрать доступ в канал Виолы <span aria-hidden="true">→</span></button>
+          <p class="cta-note">Материалы и подкасты. Там же спросим, что включить в программу.</p>
+        </div>` : ""}
+    </div>`);
+  const ch = n.querySelector("#ch");
+  if (ch) ch.addEventListener("click", () => open_(CONFIG.channelUrl));
+  render(n);
+}
+
+function sendLead(r, name, contact) {
+  if (!CONFIG.sheetUrl) return;
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+  fetch(CONFIG.sheetUrl, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({
+      type: "lead",
+      name: name, contact: contact,
+      rank: r.key, percent: r.pct,
+      userId: u.id || "", forks: forks
+    })
+  }).catch(() => {});
 }
 
 /* ——— отправка результата ———

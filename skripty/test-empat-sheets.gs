@@ -19,6 +19,7 @@
  */
 
 var SHEET_NAME = 'Тест эмпата';
+var LEAD_SHEET = 'Предзапись';
 
 var HEADERS = [
   'Дата', 'ID в Телеграме', 'Имя',
@@ -29,9 +30,17 @@ var HEADERS = [
   'Секунд', 'Быстро', 'Одна кнопка'
 ];
 
+var LEAD_HEADERS = [
+  'Дата', 'Имя', 'Телеграм', 'ID в Телеграме',
+  'Тип', 'Процент', 'Что менять первым', 'Где съедает'
+];
+
 function doPost(e) {
   try {
     var d = JSON.parse(e.postData.contents);
+
+    if (d.type === 'lead') { return saveLead_(d); }
+
     var sheet = getSheet_();
     var s = d.scales || {};
 
@@ -56,6 +65,32 @@ function doPost(e) {
 
 function doGet() {
   return json_({ ok: true, note: 'Приёмник теста эмпата жив' });
+}
+
+/** Запись в первый поток — отдельным листом, чтобы не мешать сырьё теста и контакты. */
+function saveLead_(d) {
+  var sheet = getSheet2_(LEAD_SHEET, LEAD_HEADERS);
+  sheet.appendRow([
+    new Date(),
+    d.name || '',
+    d.contact || '',
+    d.userId || '',
+    rankName_(d.rank),
+    d.percent || '',
+    pick_(d.forks, 'zapros'),
+    pick_(d.forks, 'bol')
+  ]);
+  return json_({ ok: true });
+}
+
+function getSheet2_(name, headers) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(name) || ss.insertSheet(name);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(headers);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
 }
 
 function getSheet_() {
