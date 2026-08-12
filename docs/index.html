@@ -346,8 +346,6 @@
    Пусто — страница просто ничего никуда не шлёт, тест при этом работает. */
 const CONFIG = {
   sheetUrl: "",     // приёмник из skripty/test-empat-sheets.gs
-  formUrl: "https://docs.google.com/forms/d/e/1FAIpQLSdI1u8kJvIUNBqaSlLUtyDAj67Ic8-ClzBmHiKzImNLPJ6j6g/viewform",
-  formCode: "entry.978626268",   // поле «Код теста» в форме предзаписи
   channelUrl: "https://t.me/+ot1pJz8KHlo2YTky",   // закрытый — для записавшихся
   publicChannel: "https://t.me/violamaro1",        // открытый — для тех, кто не эмпат
   botLink: ""       // https://t.me/имя_бота — возврат в чат
@@ -711,7 +709,8 @@ function result(prev) {
         () => { share.textContent = line; });
     } else { share.textContent = line; }
   });
-  n.querySelector("#again").addEventListener("click", () => { answers.length = 0; intro(); });
+  n.querySelector("#again").addEventListener("click", () => { answers.length = 0; flush();   // если в прошлый раз что-то не ушло
+intro(); });
 
   if (!prev) send(r);
   render(n);
@@ -722,14 +721,6 @@ function open_(url) {
   if (!url) return;
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg && tg.openLink) tg.openLink(url); else window.open(url, "_blank", "noopener");
-}
-
-function formLink(r) {
-  const tg = window.Telegram && window.Telegram.WebApp;
-  const user = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
-  const code = (user.id || "web") + "-" + r.key + "-" + r.pct;
-  if (!CONFIG.formCode) return CONFIG.formUrl;
-  return CONFIG.formUrl + "?usp=pp_url&" + CONFIG.formCode + "=" + encodeURIComponent(code);
 }
 
 function offer(r) {
@@ -802,16 +793,13 @@ function lead(r) {
     btn.disabled = true;
     btn.textContent = "Записываю…";
     sendLead(r, name, contact);
-    done(r, name, contact);
+    done();
   });
   n.querySelector("#back-offer").addEventListener("click", () => offer(r));
   render(n);
 }
 
-function done(r, name, contact) {
-  /* Пока таблица не подключена, страницу некуда сохранять — тогда просим
-     подтвердить запись в форме, чтобы контакт не потерялся. */
-  const needForm = !CONFIG.sheetUrl && CONFIG.formUrl;
+function done() {
   const n = el(`
     <div class="card">
       <h2>Готово. Вы в списке первых.</h2>
@@ -821,7 +809,6 @@ function done(r, name, contact) {
           <a class="go big" id="ch" href="${CONFIG.channelUrl}" target="_blank" rel="noopener">Забрать доступ в канал Виолы <span aria-hidden="true">→</span></a>
           <p class="cta-note">Материалы и подкасты. Там же спросим, что включить в программу.</p>
         </div>` : ""}
-      ${needForm ? `<p class="quiet">Подтвердите запись в короткой форме — <a href="${formLink(r)}" target="_blank" rel="noopener">открыть</a>.</p>` : ""}
     </div>`);
   const ch = n.querySelector("#ch");
   if (ch) ch.addEventListener("click", (e) => {
@@ -831,20 +818,44 @@ function done(r, name, contact) {
   render(n);
 }
 
+const BUFFER_KEY = "viola-pending";
+
+/* Запись сначала кладём в буфер, потом отправляем. Не дошло — полежит
+   и уйдёт при следующем открытии страницы. Иначе обрыв связи = потерянный лид. */
 function sendLead(r, name, contact) {
-  if (!CONFIG.sheetUrl) return;
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
-  fetch(CONFIG.sheetUrl, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({
-      type: "lead",
-      name: name, contact: contact,
-      rank: r.key, percent: r.pct,
-      userId: u.id || "", forks: forks
-    })
-  }).catch(() => {});
+  const lead = {
+    type: "lead",
+    name: name, contact: contact,
+    rank: r.key, percent: r.pct,
+    userId: u.id || "", forks: forks
+  };
+  buffer(lead);
+  flush();
+}
+
+function buffer(item) {
+  try {
+    const all = JSON.parse(localStorage.getItem(BUFFER_KEY) || "[]");
+    all.push(item);
+    localStorage.setItem(BUFFER_KEY, JSON.stringify(all));
+  } catch (e) {}
+}
+
+function flush() {
+  if (!CONFIG.sheetUrl) return;
+  let all = [];
+  try { all = JSON.parse(localStorage.getItem(BUFFER_KEY) || "[]"); } catch (e) { return; }
+  if (!all.length) return;
+  try { localStorage.removeItem(BUFFER_KEY); } catch (e) {}
+  all.forEach(item => {
+    fetch(CONFIG.sheetUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(item)
+    }).catch(() => buffer(item));   // не дошло — вернём в буфер до следующего раза
+  });
 }
 
 /* ——— отправка результата ———
