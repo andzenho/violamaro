@@ -197,6 +197,14 @@
   }
   .fields input:focus { border-color: var(--accent); outline: none; }
 
+  .promise {
+    background: var(--accent-soft);
+    border-radius: 3px;
+    padding: .9rem 1rem;
+    font-size: .95rem;
+    line-height: 1.45;
+  }
+
   .cta-note {
     font-size: .82rem; color: var(--ink-mute); text-align: center;
     margin-top: -.15rem;
@@ -771,6 +779,7 @@ function lead(r) {
           <input id="f-tg" type="text" value="${tgName}" placeholder="@имя" autocomplete="off">
         </label>
       </div>
+      <p class="promise">Сразу после записи откроем закрытый канал Виолы — с материалами и подкастами, которых нет нигде больше.</p>
       <div class="foot">
         <button class="go big" id="send">Записаться <span aria-hidden="true">→</span></button>
         <p class="cta-note" id="hint">Напишем, когда откроем набор. Раньше остальных.</p>
