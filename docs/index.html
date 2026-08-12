@@ -839,10 +839,22 @@ function lead(r) {
     btn.disabled = true;
     btn.textContent = "Записываю…";
     sendLead(r, name, contact, talk);
+    openChannel();   // обещали «сразу после записи» — открываем сами
     done();
   });
   n.querySelector("#back-offer").addEventListener("click", () => offer(r));
   render(n);
+}
+
+/* Внутри Телеграма уводим в канал сразу: это его собственный переход,
+   он открывается поверх и ничего не блокирует. В обычном браузере
+   не открываем ничего сами — там всплывающее окно просто съедят. */
+function openChannel() {
+  if (!CONFIG.channelUrl) return;
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (tg && tg.openTelegramLink) {
+    try { tg.openTelegramLink(CONFIG.channelUrl); } catch (e) {}
+  }
 }
 
 function done() {
