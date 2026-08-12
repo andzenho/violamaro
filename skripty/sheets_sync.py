@@ -190,14 +190,23 @@ def build_service():
             "Установи: python3 -m pip install -r skripty/requirements-sheets.txt"
         )
 
-    # Ключ можно передать двумя способами:
-    #  1) переменной окружения VIOLA_SHEETS_CREDS_JSON — сам JSON строкой
-    #     (удобно и безопасно: в репозиторий ничего не кладём);
-    #  2) файлом по пути CREDS_PATH (по умолчанию skripty/.google-creds.json).
+    # Ключ можно передать тремя способами (по приоритету):
+    #  1) VIOLA_SHEETS_CREDS_B64 — JSON, закодированный в base64. РЕКОМЕНДУЕТСЯ
+    #     для переменных окружения: только буквы/цифры, .env ничего не ломает;
+    #  2) VIOLA_SHEETS_CREDS_JSON — сам JSON строкой (может пострадать от
+    #     обработки спецсимволов в некоторых .env);
+    #  3) файл по пути CREDS_PATH (по умолчанию skripty/.google-creds.json).
+    import json
+    info = None
+    creds_b64 = os.environ.get("VIOLA_SHEETS_CREDS_B64")
     creds_json = os.environ.get("VIOLA_SHEETS_CREDS_JSON")
-    if creds_json:
-        import json
+    if creds_b64:
+        import base64
+        info = json.loads(base64.b64decode(creds_b64))
+    elif creds_json:
         info = json.loads(creds_json)
+
+    if info is not None:
         creds = service_account.Credentials.from_service_account_info(
             info, scopes=SCOPES
         )
@@ -208,8 +217,8 @@ def build_service():
     else:
         sys.exit(
             "Нет ключа сервис-аккаунта.\n"
-            "Задай переменную VIOLA_SHEETS_CREDS_JSON (содержимое JSON) "
-            "или положи файл: %s\n"
+            "Задай VIOLA_SHEETS_CREDS_B64 (JSON в base64) или "
+            "VIOLA_SHEETS_CREDS_JSON (сам JSON), либо положи файл: %s\n"
             "Инструкция — kontent/kp/README.md." % CREDS_PATH
         )
     return build("sheets", "v4", credentials=creds, cache_discovery=False)
