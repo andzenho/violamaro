@@ -15,7 +15,7 @@
 - Подробно: `produkt/voronka.md`, `produkt/transformatsii.md`.
 
 ## Аудитория
-- Сегменты С1–С5, каркас осведомлённости (Шварц) + Value Proposition — `analitika/ca-framework.md`.
+- Сегменты С1–С5, каркас осведомлённости (Шварц) + Value Proposition — `arhiv/vina-staryy-flagman/ca-framework.md`.
 - ~30% мужчин `[решено, Виола]` → формулировки он/она. Shorts — ~15 000 ежедневных зрителей, главный источник трафика и языка.
 - Язык аудитории — `analitika/ca-voc.md`, `kommentarii-razbor.md`, `tg-kommentarii-razbor.md`.
 
