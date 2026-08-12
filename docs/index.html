@@ -1,30 +1,4 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-function offer(r) {
-  const n = el(`
-    <div class="card">
-      <div class="step">Что дальше</div>
-      <h2>${OFFER.title}</h2>
-      <p class="lede">${OFFER.lead}</p>
-      <div class="body-copy">${OFFER.body.map(p => `<p>${p}</p>`).join("")}</div>
-      <div class="inside">
-        <div class="inside-h">${OFFER.insideHead}</div>
-        <ul>${OFFER.inside.map(i => `<li>${i}</li>`).join("")}</ul>
-        <p class="format">${OFFER.format}</p>
-      </div>
-      <div class="perks">
-        ${OFFER.perks.map(p => `<div class="perk${p.wide ? " wide" : ""}"><div class="perk-h">${p.h}</div><p>${p.d}</p></div>`).join("")}
-      </div>
-      <div class="foot">
-        <button class="go big" id="form">${OFFER.cta} <span aria-hidden="true">→</span></button>
-        <p class="cta-note">${OFFER.note}</p>
-        <button class="ghost" id="back-res">← Вернуться к результату</button>
-      </div>
-    </div>`);
-  n.querySelector("#form").addEventListener("click", () => open_(formLink(r)));
-  n.querySelector("#back-res").addEventListener("click", () => result(r));
-  render(n);
-}
-
 <title>Есть у вас способности эмпата?</title>
 <style>
   :root {
@@ -271,6 +245,12 @@ function offer(r) {
   }
   .inside .format { color: var(--ink-mute); font-size: .88rem; }
 
+  .bridge .anchor {
+    display: block; margin-top: .7rem;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: .95rem; font-weight: 600; color: var(--ink);
+  }
+
   .perks {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -398,7 +378,7 @@ const RESULTS = {
       "Дар работает. Просто не на вашу жизнь."
     ],
     voice: "Вы остаётесь таким же тёплым человеком, такой же тёплой. Меняется одно. Сколько сил уходит на всех и сколько остаётся вам.",
-    bridge: "Ваши радары настроены на всех, кроме вас. Их можно развернуть."
+    bridge: "Развернуть радары на себя — это не эгоизм и не переделка характера. Это настройка, и ей учатся."
   },
   filter: {
     name: "Эмпат без фильтра",
@@ -409,7 +389,7 @@ const RESULTS = {
       "Приёмник вам выдали. Выключатель — нет."
     ],
     voice: "Вы всё чувствуете правильно. Вопрос один: кто это выдержит без отдыха. Вот с этого и начинаем.",
-    bridge: "Вы устаёте не от дел, а от людей. Это лечится не отдыхом, а фильтром."
+    bridge: "Выключателя не выдали — но фильтр собирается руками. Это навык, а не характер."
   },
   sleeping: {
     name: "Спящий эмпат",
@@ -420,7 +400,7 @@ const RESULTS = {
       "Приёмник от этого не сломался. Он работает в фоне и забирает силы, а вы даже не слышите, на что."
     ],
     voice: "Розовые очки снимают не для того, чтобы стало холодно. А чтобы наконец видеть.",
-    bridge: "Приёмник можно не глушить. С ним можно жить включённым и не выгорать."
+    bridge: "Глушить — не единственный способ. Есть настройка, при которой приёмник включён и не выжигает."
   },
   awake: {
     name: "Проснувшийся эмпат",
@@ -431,7 +411,7 @@ const RESULTS = {
       "Это самая редкая настройка из всех. Она не даётся от рождения — до неё доходят.",
       "Ваш вопрос теперь другой. Куда девать эту силу. Дар есть, гигиена есть, а дело, отношения и деньги пока живут отдельно от него."
     ],
-    bridge: "Вы уже умеете не растворяться. Осталось направить."
+    bridge: "На вопрос «куда» есть ответ, и он практический — не про поиск себя ещё пять лет."
   },
   reader: {
     name: "Считывающий",
@@ -486,6 +466,8 @@ const OFFER = {
   cta: "Хочу в первый поток",
   note: "Два поля: имя и телеграм. Двадцать секунд — остальное мы уже знаем из вашего теста."
 };
+
+const ANCHOR = "Осенью Виола собирает под это программу.";
 
 const FON_NOTE = "Отдельно: часть того, что вас грузит, идёт не от людей, а от общего фона — шум, свет, слишком много всего. Это не про эмпатию, и в тесте оно не решается.";
 
@@ -637,7 +619,7 @@ function result(prev) {
       <div class="body-copy">${t.body.map(p => `<p>${p}</p>`).join("")}</div>
       ${t.voice ? `<p class="voice">${t.voice}</p>` : ""}
       ${r.fon ? `<p class="addendum">${FON_NOTE}</p>` : ""}
-      ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}</p>` : ""}
+      ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}<span class="anchor">${ANCHOR}</span></p>` : ""}
       <div class="foot">
         ${t.bridge && CONFIG.formUrl ? `<button class="go" id="offer">Что за программа?</button>` : ""}
         ${!t.bridge && CONFIG.channelUrl ? `<button class="go" id="channel">Забрать материалы Виолы</button>` : ""}
@@ -688,6 +670,11 @@ function offer(r) {
       <h2>${OFFER.title}</h2>
       <p class="lede">${OFFER.lead}</p>
       <div class="body-copy">${OFFER.body.map(p => `<p>${p}</p>`).join("")}</div>
+      <div class="inside">
+        <div class="inside-h">${OFFER.insideHead}</div>
+        <ul>${OFFER.inside.map(i => `<li>${i}</li>`).join("")}</ul>
+        <p class="format">${OFFER.format}</p>
+      </div>
       <div class="perks">
         ${OFFER.perks.map(p => `<div class="perk${p.wide ? " wide" : ""}"><div class="perk-h">${p.h}</div><p>${p.d}</p></div>`).join("")}
       </div>
