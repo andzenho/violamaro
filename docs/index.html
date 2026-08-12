@@ -345,7 +345,7 @@
    sheetUrl — адрес приёмника из skripty/test-empat-sheets.gs.
    Пусто — страница просто ничего никуда не шлёт, тест при этом работает. */
 const CONFIG = {
-  sheetUrl: "",     // приёмник из skripty/test-empat-sheets.gs
+  sheetUrl: "https://script.google.com/macros/s/AKfycbwS5LcpacjlIkaeb0sEDDklYano95FJZrrx47M4kcwzxsv20PHyIzSjPLya4Oza0K9Jzg/exec",
   channelUrl: "https://t.me/+ot1pJz8KHlo2YTky",   // закрытый — для записавшихся
   publicChannel: "https://t.me/violamaro1",        // открытый — для тех, кто не эмпат
   botLink: ""       // https://t.me/имя_бота — возврат в чат
@@ -854,7 +854,15 @@ function flush() {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(item)
-    }).catch(() => buffer(item));   // не дошло — вернём в буфер до следующего раза
+    })
+      .then(res => res.text())
+      .then(txt => {
+        /* Приёмник отвечает {"ok":true}. Если вместо этого прилетела страница
+           входа Google — значит развёртывание закрыто, и запись НЕ сохранилась.
+           Возвращаем её в буфер, иначе потеряем молча. */
+        if (txt.indexOf('"ok"') === -1) buffer(item);
+      })
+      .catch(() => buffer(item));
   });
 }
 
