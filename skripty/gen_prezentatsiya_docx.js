@@ -1,0 +1,352 @@
+const {
+  Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
+  Table, TableRow, TableCell, WidthType, ShadingType, BorderStyle,
+  LevelFormat, convertInchesToTwip
+} = require('docx');
+const fs = require('fs');
+
+const ACCENT = "8E3B62";      // приглушённый бордовый
+const GOLD   = "B08D57";
+const DARK   = "2B2440";
+const GREY   = "6B6478";
+const LIGHT  = "F4F1F7";
+
+const NONE = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+const noBorders = { top: NONE, bottom: NONE, left: NONE, right: NONE };
+
+// ---------- helpers ----------
+const P = (text, opts = {}) => new Paragraph({
+  spacing: { after: opts.after ?? 120, before: opts.before ?? 0, line: 276 },
+  alignment: opts.align,
+  indent: opts.indent,
+  border: opts.border,
+  shading: opts.shading,
+  children: [new TextRun({
+    text,
+    bold: opts.bold,
+    italics: opts.italics,
+    size: opts.size ?? 22,
+    color: opts.color ?? "1A1A1A",
+    font: "Georgia",
+    allCaps: opts.caps,
+  })],
+});
+
+const RUNS = (runs, opts = {}) => new Paragraph({
+  spacing: { after: opts.after ?? 120, before: opts.before ?? 0, line: 276 },
+  alignment: opts.align,
+  indent: opts.indent,
+  children: runs.map(r => new TextRun({
+    text: r.t, bold: r.b, italics: r.i, size: r.size ?? 22,
+    color: r.c ?? "1A1A1A", font: "Georgia",
+  })),
+});
+
+const H1 = (text) => new Paragraph({
+  heading: HeadingLevel.HEADING_1,
+  spacing: { before: 360, after: 160 },
+  children: [new TextRun({ text, bold: true, size: 34, color: DARK, font: "Georgia" })],
+});
+
+const H2 = (text) => new Paragraph({
+  heading: HeadingLevel.HEADING_2,
+  spacing: { before: 300, after: 140 },
+  children: [new TextRun({ text, bold: true, size: 26, color: ACCENT, font: "Georgia" })],
+});
+
+const H3 = (text) => new Paragraph({
+  heading: HeadingLevel.HEADING_3,
+  spacing: { before: 200, after: 80 },
+  children: [new TextRun({ text, bold: true, size: 23, color: DARK, font: "Georgia" })],
+});
+
+const BULLET = (text) => new Paragraph({
+  numbering: { reference: "dash-list", level: 0 },
+  spacing: { after: 90, line: 276 },
+  children: [new TextRun({ text, size: 22, color: "1A1A1A", font: "Georgia" })],
+});
+
+const RULE = () => new Paragraph({
+  spacing: { before: 200, after: 200 },
+  border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "D8D2E0" } },
+  children: [new TextRun({ text: "", size: 2 })],
+});
+
+// ---------- numbering ----------
+const numbering = {
+  config: [{
+    reference: "dash-list",
+    levels: [{
+      level: 0, format: LevelFormat.BULLET, text: "—", alignment: AlignmentType.LEFT,
+      style: { paragraph: { indent: { left: convertInchesToTwip(0.3), hanging: convertInchesToTwip(0.22) } },
+               run: { color: ACCENT } },
+    }],
+  }],
+};
+
+// ---------- таблица тарифов ----------
+const TW = 9360;               // ширина таблицы (DXA) для полей 1"
+const COLS = [3960, 1800, 1800, 1800];
+
+const cell = (children, opts = {}) => new TableCell({
+  width: { size: opts.w, type: WidthType.DXA },
+  shading: opts.fill ? { type: ShadingType.CLEAR, fill: opts.fill, color: "auto" } : undefined,
+  margins: { top: 100, bottom: 100, left: 120, right: 120 },
+  verticalAlign: opts.valign,
+  columnSpan: opts.span,
+  children,
+});
+
+const tHead = () => new TableRow({
+  tableHeader: true,
+  children: [
+    cell([P("", { size: 18 })], { w: COLS[0], fill: DARK }),
+    cell([
+      P("Базовый", { bold: true, size: 24, color: "FFFFFF", align: AlignmentType.CENTER, after: 20 }),
+      P("Метод и группа", { italics: true, size: 17, color: "CFC8DC", align: AlignmentType.CENTER, after: 60 }),
+      P("19 900 ₽", { bold: true, size: 26, color: "FFFFFF", align: AlignmentType.CENTER, after: 20 }),
+      P("6 недель", { size: 17, color: "CFC8DC", align: AlignmentType.CENTER, after: 0 }),
+    ], { w: COLS[1], fill: DARK }),
+    cell([
+      P("Полный", { bold: true, size: 24, color: "FFFFFF", align: AlignmentType.CENTER, after: 20 }),
+      P("Виола отвечает вам", { italics: true, size: 17, color: "CFC8DC", align: AlignmentType.CENTER, after: 60 }),
+      P("29 900 ₽", { bold: true, size: 26, color: "FFFFFF", align: AlignmentType.CENTER, after: 20 }),
+      P("7 недель", { size: 17, color: "CFC8DC", align: AlignmentType.CENTER, after: 0 }),
+    ], { w: COLS[2], fill: "3D3357" }),
+    cell([
+      P("Личный", { bold: true, size: 24, color: "FFFFFF", align: AlignmentType.CENTER, after: 20 }),
+      P("Виола с вашей историей", { italics: true, size: 17, color: "EFD9E4", align: AlignmentType.CENTER, after: 60 }),
+      P("49 900 ₽", { bold: true, size: 26, color: "FFFFFF", align: AlignmentType.CENTER, after: 20 }),
+      P("8 недель", { size: 17, color: "EFD9E4", align: AlignmentType.CENTER, after: 0 }),
+    ], { w: COLS[3], fill: ACCENT }),
+  ],
+});
+
+const groupRow = (label) => new TableRow({
+  children: [cell([P(label, { bold: true, size: 17, color: ACCENT, caps: true, after: 0 })],
+    { w: TW, fill: LIGHT, span: 4 })],
+});
+
+const featRow = (name, sub, marks) => new TableRow({
+  children: [
+    cell([
+      P(name, { bold: true, size: 21, after: sub ? 40 : 0 }),
+      ...(sub ? [P(sub, { size: 17, color: GREY, after: 0 })] : []),
+    ], { w: COLS[0] }),
+    ...marks.map((m, i) => cell(
+      [P(m ? "✓" : "—", {
+        align: AlignmentType.CENTER, bold: m, size: m ? 24 : 22,
+        color: m ? ACCENT : "B9B3C4", after: 0,
+      })],
+      { w: COLS[i + 1], valign: "center" }
+    )),
+  ],
+});
+
+const infoRow = (name, vals, strong) => new TableRow({
+  children: [
+    cell([P(name, { bold: true, size: 21, after: 0 })], { w: COLS[0] }),
+    ...vals.map((v, i) => cell(
+      [P(v, { align: AlignmentType.CENTER, size: 20, bold: strong, color: strong ? ACCENT : "1A1A1A", after: 0 })],
+      { w: COLS[i + 1], valign: "center" }
+    )),
+  ],
+});
+
+const tariffTable = new Table({
+  columnWidths: COLS,
+  width: { size: TW, type: WidthType.DXA },
+  borders: {
+    top:   { style: BorderStyle.SINGLE, size: 2, color: "D8D2E0" },
+    bottom:{ style: BorderStyle.SINGLE, size: 2, color: "D8D2E0" },
+    left:  { style: BorderStyle.SINGLE, size: 2, color: "D8D2E0" },
+    right: { style: BorderStyle.SINGLE, size: 2, color: "D8D2E0" },
+    insideHorizontal: { style: BorderStyle.SINGLE, size: 2, color: "E6E2EC" },
+    insideVertical:   { style: BorderStyle.SINGLE, size: 2, color: "E6E2EC" },
+  },
+  rows: [
+    tHead(),
+    groupRow("Есть везде — метод целиком, ничего не урезано"),
+    featRow("6 живых занятий с Виолой", "Одно в неделю: от «куда уходят ваши силы» до «деньги и своё дело»", [1,1,1]),
+    featRow("Подкасты к каждому шагу", "Слушать в дороге и на прогулке, возвращаться сколько нужно", [1,1,1]),
+    featRow("Рабочая тетрадь", "Задание после каждого занятия, практика на каждый день", [1,1,1]),
+    featRow("Доска желаний по состоянию души", "Авторская механика Виолы: вытащить то, чего вы хотите на самом деле", [1,1,1]),
+    featRow("Практики голосом Виолы", "Заземлиться, вернуть ресурс, услышать свою интуицию телом", [1,1,1]),
+    featRow("Готовые фразы", "Как сказать «нет» и как попросить за себя", [1,1,1]),
+    featRow("Записи и материалы, доступ навсегда", "Вернуться можно через год, когда снова накроет", [1,1,1]),
+    featRow("Сообщество эмпатов со всего мира", "Закрытый чат потока: Германия, Италия, США, Россия. Наконец свои люди", [1,1,1]),
+    groupRow("Со второго тарифа — Виола отвечает лично вам"),
+    featRow("Виола отвечает вам голосом", "Ваши вопросы в чате, весь поток", [0,1,1]),
+    featRow("Ваш вопрос на разборе потока", "Эфир вопросов с Виолой, 7-я неделя", [0,1,1]),
+    groupRow("Только в личном — работа один на один"),
+    featRow("Персональный аудио-разбор каждую неделю", "Виола разбирает голосом вашу ситуацию", [0,0,1]),
+    featRow("Круг", "Закрытая встреча малой группы, 8-я неделя. Каждый разбирается лично", [0,0,1]),
+    infoRow("Длительность потока", ["6 недель", "7 недель", "8 недель"], false),
+    infoRow("Мест в потоке", ["без ограничений", "[N]", "[N]"], true),
+  ],
+});
+
+// ---------- неделя программы ----------
+const week = (title, learn, gives) => [
+  H3(title),
+  RUNS([{ t: "Осваиваете: ", b: true, c: ACCENT }, { t: learn }], { after: 60 }),
+  RUNS([{ t: "Даёт: ", b: true, c: ACCENT }, { t: gives }], { after: 180 }),
+];
+
+// ---------- документ ----------
+const doc = new Document({
+  numbering,
+  styles: {
+    default: { document: { run: { font: "Georgia", size: 22 } } },
+  },
+  sections: [{
+    properties: {
+      page: {
+        size: { width: 11906, height: 16838 },            // A4
+        margin: { top: 1134, bottom: 1134, left: 1134, right: 1134 },
+      },
+    },
+    children: [
+      // ===== ТИТУЛ =====
+      P("ПРЕЗЕНТАЦИЯ ПРОДУКТА · ЧЕРНОВИК ПОД КАСТДЕВ · 12.08.2026",
+        { size: 17, color: GOLD, caps: true, after: 160 }),
+      new Paragraph({
+        spacing: { after: 80 },
+        children: [new TextRun({ text: "Любовь и деньги", bold: true, size: 56, color: DARK, font: "Georgia" })],
+      }),
+      P("практический курс для эмпатов", { italics: true, size: 24, color: GREY, after: 240 }),
+
+      P("Овладейте своей врождённой суперспособностью эмпата. И начните получать то, что годами отдавали другим.",
+        { bold: true, size: 26, color: DARK, after: 100 }),
+      P("Любимое дело и деньги. Отношения без потери себя. Жизнь для себя.",
+        { italics: true, size: 23, color: ACCENT, after: 200 }),
+      RULE(),
+
+      // ===== ЗЕРКАЛО =====
+      H2("Узнаёте себя?"),
+      BULLET("Вы заходите в комнату и сразу чувствуете энергетику и настроение каждого. Считываете людей раньше, чем они откроют рот."),
+      BULLET("Подруга звонит в слезах в полночь. Вы слушаете два часа, хотя валитесь с ног."),
+      BULLET("Всем нужна ваша энергия. А что нужно вам, не спрашивает никто."),
+      BULLET("Отдаёте, помогаете, спасаете. А сил, денег и здоровья всё меньше."),
+      BULLET("На работе всё трудное вешают на вас: вы же вывезете. А попросить за себя неудобно, и вы годами работаете за спасибо."),
+      BULLET("Сколько ни стараетесь, упираетесь в один и тот же потолок."),
+      BULLET("Иногда кажется, что вы с другой планеты. Слишком всё чувствуете."),
+
+      // ===== СИЛА =====
+      H2("Это не поломка. Это ваша суперспособность"),
+      P("Вы чувствуете сильнее других. Это не поломка и не слабость. Это ваша суперспособность, и она у вас уже есть. Вы видите людей насквозь, чувствуете правду и ложь, замечаете то, что другим недоступно. Годами вы копили эту чуткость и мудрость. Просто никто не научил вас ею пользоваться. Вот и уходит она на всех вокруг, обесточивает вас."),
+      P("Пора развернуть её на себя.", { bold: true, size: 25, color: ACCENT, after: 160 }),
+
+      // ===== ОКНО =====
+      H2("Представьте: та же сила, но теперь вы умеете ею управлять"),
+      P("Вот что меняется.", { after: 100 }),
+      BULLET("Выслушали человека и не развалились на весь день. Силы остались вам."),
+      BULLET("Говорите «нет» спокойно и уверенно. И потом себя не грызёте."),
+      BULLET("Ваш радар работает на вас: видите верный шаг, нужного человека, свою дверь."),
+      BULLET("Знаете себе цену и спокойно просите за себя. Занимаетесь тем, что по душе, и это приносит деньги."),
+      BULLET("Деньги больше не тревога. Меньше работаете и больше живёте."),
+      BULLET("Чувствуете свою силу и свою опору. «У меня есть Я»."),
+      BULLET("Живёте свою жизнь, никому ничего не доказываете. Тепла хватает и близким, и себе."),
+
+      P("Этот курс про то, как научиться пользоваться своей суперспособностью и направить её на себя. Чтобы она наконец работала на вас: на ваш покой, ваши отношения, ваше дело и ваши деньги.",
+        { before: 140, after: 120 }),
+      P("Что такое наполненность? Это когда сил хватает не только на других, но и на себя. Вы можете делать что хотите, когда хотите и с кем хотите. Вот с этого и начинаются и любовь, и деньги.",
+        { shading: { type: ShadingType.CLEAR, fill: LIGHT, color: "auto" }, after: 200, italics: true }),
+
+      // ===== ПРОГРАММА =====
+      H1("Программа: шесть недель, шаг за шагом"),
+      P("Это программа про практику и действия. Каждую неделю вы осваиваете свою врождённую суперспособность и сразу пробуете её в жизни. Никакой теории ради теории. Рабочие тетради и техники на каждый день, по чуть-чуть и в своём темпе.",
+        { after: 200 }),
+
+      ...week("Неделя 1. Куда уходят ваши силы",
+        "ловить момент, когда ваш радар включается на чужое. По телу, за секунду до того, как вас затянет.",
+        "вы отличаете своё от чужого. Больше не тащите на себе чужие настроения."),
+      ...week("Неделя 2. Вернуть себе энергию",
+        "считывать себя так же точно, как вы читаете других. И ставить границы, не выключая свою чувствительность.",
+        "силы возвращаются. Вы держите дистанцию с теми, кто вытягивает, и при этом не отдаляетесь от близких."),
+      ...week("Неделя 3. Разрешить себе получать",
+        "отвечать на то, что вы и так чувствуете. Вы всегда знали, когда вами пользуются. Теперь вы это называете и говорите «нет».",
+        "перестаёте работать за спасибо. Спокойно принимаете помощь, благодарность и деньги."),
+      ...week("Неделя 4. Услышать, чего вы хотите",
+        "разворачивать свой радар внутрь. Ваша интуиция годами работала на других, теперь она отвечает на ваши вопросы.",
+        "вы знаете, чего хотите, и говорите это ясно. Появляется свой план вместо чужих ожиданий."),
+      ...week("Неделя 5. Любовь без потери себя",
+        "быть рядом и не растворяться. Чувствовать человека, оставаясь в себе.",
+        "близость без выгорания. Рядом остаются свои люди."),
+      ...week("Неделя 6. Деньги: свобода и своё дело",
+        "спрашивать свой радар о работе и о деньгах. То самое чутьё, которым вы читаете людей, начинает подсказывать решения вам.",
+        "знаете себе цену и спокойно просите за себя. Занимаетесь тем, что по душе. Деньги перестают быть тревогой."),
+
+      // ===== ЧТО ПОЛУЧИТЕ =====
+      H2("Что вы получите"),
+      BULLET("Шесть живых занятий с Виолой, по одному в неделю."),
+      BULLET("Подкасты к каждому шагу: слушать в дороге и на прогулке."),
+      BULLET("Рабочую тетрадь и практику на каждый день."),
+      BULLET("Доску желаний по состоянию души: вытащить то, чего вы хотите на самом деле."),
+      BULLET("Практики голосом Виолы: заземлиться, вернуть ресурс, услышать свою интуицию телом."),
+      BULLET("Готовые фразы: как сказать «нет» и как попросить за себя."),
+      BULLET("Сообщество эмпатов со всего мира: Германия, Италия, США, Россия. Наконец свои люди."),
+      BULLET("Записи и материалы, доступ навсегда."),
+      BULLET("Техники, которые остаются с вами на всю жизнь."),
+      P("А главное, вы научитесь пользоваться своей суперспособностью: направлять её на себя, на свой покой, свои отношения, своё дело и свои деньги.",
+        { bold: true, before: 120, after: 200 }),
+
+      // ===== ТАРИФЫ =====
+      new Paragraph({ children: [new (require('docx').PageBreak)()] }),
+      H1("Тарифы"),
+      P("Первый поток · старт [дата]", { italics: true, color: GREY, after: 60 }),
+      P("6 живых занятий с Виолой · занятия раз в неделю · доступ к материалам навсегда",
+        { bold: true, size: 21, color: DARK, after: 200 }),
+      tariffTable,
+      P("Это цена первого потока. Дальше программа будет стоить дороже.",
+        { italics: true, color: GREY, before: 160, after: 100 }),
+      RUNS([{ t: "Оплата. ", b: true }, { t: "Рассрочка для РФ и СНГ, оплата из-за рубежа. Для тех, кому нужно, готовим сертификат и подтверждение оплаты." }],
+        { after: 100 }),
+      P("Программа не заменяет очную психотерапию.", { italics: true, size: 19, color: GREY, after: 200 }),
+
+      // ===== ДЛЯ КОГО =====
+      H2("Это для вас, если"),
+      P("вы эмпат: чувствуете людей глубже других и от этого устаёте; всю жизнь заботитесь о других, а до себя руки не доходят; хотите, чтобы чувствительность приносила радость.", { after: 100 }),
+      RUNS([{ t: "Это не для вас, если ", b: true }, { t: "ищете быструю схему заработка или как переделать другого человека. Здесь про вас." }], { after: 160 }),
+
+      H2("Кто ведёт"),
+      P("Виола Маро, психолог и эмпатолог, 25 лет практики. Живёт в Италии. Её курсы проходят по кругу и возвращаются, у выпускников три живых чата.", { after: 160 }),
+
+      H2("Как попасть"),
+      P("Первый поток стартует [дата]. Мест в группе немного.", { after: 60 }),
+      P("Хотите, забронирую вам место?", { bold: true, size: 24, color: ACCENT, after: 240 }),
+
+      // ===== СЛУЖЕБНОЕ =====
+      new Paragraph({ children: [new (require('docx').PageBreak)()] }),
+      H1("Для команды: что осталось закрыть"),
+      P("Этот раздел клиенту не показываем.", { italics: true, color: GREY, after: 160 }),
+
+      H3("Ждём от Виолы"),
+      BULLET("Числа мест в тарифах «Полный» и «Личный» — считаем от её реальной ёмкости: сколько персональных аудио-разборов и адресных ответов в неделю она вывозит. Придуманный лимит не публикуем."),
+      BULLET("Согласование цен 19 900 / 29 900 / 49 900 и самой трёхтарифной сетки."),
+      BULLET("Формат: 6 недель против её горизонта «90 дней» для глубокой перестройки."),
+      BULLET("Визирование строк её голоса, особенно денежных и заголовка (красная линия «без обещаний результата»)."),
+      BULLET("Точная формулировка регалий: «25 лет практики», «эмпатолог»."),
+      BULLET("Дата старта первого потока."),
+
+      H3("Что замеряем на кастдеве"),
+      BULLET("Какой тариф выбирают глазами и почему."),
+      BULLET("Цена: «легко / нормально / дорого» и где порог."),
+      BULLET("Что цепляет сильнее: спокойствие с деньгами или своё дело."),
+      BULLET("Какая неделя программы звучит нужнее всего."),
+
+      H3("Логика тарифной сетки"),
+      BULLET("Тарифы различаются только доступом к Виоле. Все материалы одинаковы везде: делить по объёму материалов значит выдать дешёвому тарифу урезанную версию."),
+      BULLET("В базовом тарифе метод целиком, результат достижим без доплат."),
+      BULLET("Шаг между тарифами меньше воспринимаемой прибавки: +10 000 против её консультации в 200 евро."),
+      BULLET("Средний тариф стоит ближе к нижнему, поэтому собирает основную массу."),
+      BULLET("Ограничение мест только там, где оно вытекает из физики её времени."),
+      BULLET("Старт заметно ниже потолка платёжеспособности: за «Практическую эмпатию» эта аудитория платила 600–1200 евро. Цена дальше только растёт."),
+    ],
+  }],
+});
+
+Packer.toBuffer(doc).then(buf => {
+  fs.writeFileSync(process.argv[2] || "out.docx", buf);
+  console.log("written");
+});
