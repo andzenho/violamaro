@@ -26,3 +26,12 @@ env/
 
 # Генерируемый файл для ручной вставки (Способ 1)
 kontent/kp/_dlya_vstavki.txt
+
+# Сырые дампы комментариев (регенерируются skripty/yt_comments.py, не коммитим)
+# в т.ч. в подпапках (vina/ и т.п.) — в репозитории держим только разбор
+analitika/kommentarii/*.jsonl
+analitika/kommentarii/*.txt
+analitika/kommentarii/**/*.jsonl
+analitika/kommentarii/**/*.txt
+analitika/kommentarii/*.json
+analitika/kommentarii/**/*.json
