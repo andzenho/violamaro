@@ -226,15 +226,13 @@ const doc = new Document({
     children: [
       // ===== ТИТУЛ =====
       P("ПРЕЗЕНТАЦИЯ ПРОДУКТА · ЧЕРНОВИК ПОД КАСТДЕВ · 12.08.2026",
-        { size: 17, color: GOLD, caps: true, after: 160 }),
+        { size: 17, color: GOLD, caps: true, after: 240 }),
+      P("ПЕРВЫЙ ПОТОК · 4-НЕДЕЛЬНЫЙ АВТОРСКИЙ ОНЛАЙН-ИНТЕНСИВ ВИОЛЫ МАРО ДЛЯ ЭМПАТОВ",
+        { bold: true, size: 19, color: ACCENT, caps: true, after: 100 }),
       new Paragraph({
-        spacing: { after: 80 },
+        spacing: { after: 200 },
         children: [new TextRun({ text: "Любовь и деньги", bold: true, size: 56, color: DARK, font: "Georgia" })],
       }),
-      P("спец поток", { bold: true, size: 24, color: ACCENT, caps: true, after: 160 }),
-
-      P("Первая программа для эмпатов о том, как направить свою чувствительность на себя. Чтобы её хватало и на отношения, и на своё дело, и на деньги.",
-        { size: 24, color: GREY, italics: true, after: 200 }),
 
       P("Овладейте своей врождённой суперспособностью эмпата. И начните получать то, что годами отдавали другим.",
         { bold: true, size: 26, color: DARK, after: 100 }),
