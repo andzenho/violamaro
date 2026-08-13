@@ -200,4 +200,4 @@
 
 ---
 
-*Основания: `analitika/ca-chaty-empatia.md` §1,3,7,9,11,12 · `analitika/ca-master.md` §2,3,4,6 · `analitika/kastdev-sozvony.md` §1,2 · `produkt/prezentatsiya-lyubov-i-dengi.md` (тарифы, сверка с её курсами) · `produkt/sozvon-viola-11.08-itogi.md`.*
+*Основания: `analitika/ca-chaty-empatia.md` §1,3,7,9,11,12 · `analitika/ca-master.md` §2,3,4,6 · `analitika/kastdev-sozvony.md` §1,2 · `produkt/praktikum-dlya-empatov.md` (тарифы, сверка с её курсами) · `produkt/sozvon-viola-11.08-itogi.md`.*

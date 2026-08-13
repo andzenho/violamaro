@@ -1,7 +1,7 @@
 # «Любовь и деньги» v2 — простая конструкция
 
 13.08.2026 · **Что это:** продукт после решений 13.08, в упрощённой сборке продюсера.
-**Статус:** предложение. Источник правды по офферу и тарифам до отдельного решения — `prezentatsiya-lyubov-i-dengi.md`.
+**Статус:** предложение. Источник правды по офферу и тарифам до отдельного решения — `praktikum-dlya-empatov.md`.
 
 ---
 
@@ -206,4 +206,4 @@
 
 ---
 
-*Основания: `gipoteza-produkt-vokrug-lichnosti.md` · `analitika/ca-master.md` §2,4,5,6 · `analitika/ca-chaty-empatia.md` §1,2,3,7 · `analitika/kastdev-sozvony.md` · `prezentatsiya-lyubov-i-dengi.md` (канон тарифов).*
+*Основания: `gipoteza-produkt-vokrug-lichnosti.md` · `analitika/ca-master.md` §2,4,5,6 · `analitika/ca-chaty-empatia.md` §1,2,3,7 · `analitika/kastdev-sozvony.md` · `praktikum-dlya-empatov.md` (канон тарифов).*
