@@ -35,3 +35,7 @@ analitika/kommentarii/**/*.jsonl
 analitika/kommentarii/**/*.txt
 analitika/kommentarii/*.json
 analitika/kommentarii/**/*.json
+
+# npm (docx-генератор ставится локально)
+node_modules/
+package-lock.json
