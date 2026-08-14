@@ -321,6 +321,23 @@
 
   .med { color: var(--ink-mute); font-size: .82rem; line-height: 1.45; }
 
+  /* Рамка экрана: человек должен сразу понять, что продажи ещё не идут,
+     иначе страница читается как обычный лендинг и кнопка пугает оплатой. */
+  .status {
+    background: var(--accent-soft);
+    border-radius: 3px;
+    padding: .75rem .9rem;
+    color: var(--ink);
+    font-size: .93rem; line-height: 1.5;
+  }
+  .status b { font-weight: 600; }
+
+  .perks-wrap { display: flex; flex-direction: column; gap: .7rem; }
+  .perks-h {
+    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
   .powers {
     background: var(--surface-2);
     border-radius: 3px;
@@ -540,9 +557,10 @@ const RESULTS = {
    Формулировки взяты из программы; они же дословно звучат в комментариях канала,
    поэтому работают на узнавание сильнее, чем описание содержания. */
 const OFFER = {
-  eyebrow: "6-недельный практикум Виолы Маро",
+  eyebrow: "Предзапись · 6-недельный практикум Виолы Маро",
   title: "Практическая эмпатия 4.0",
   lead: "Полностью обновлённая программа — с упором на практику и на реальные жизненные ситуации. Старт в конце сентября.",
+  status: "<b>Продажи ещё не открыты.</b> Сейчас идёт запись в список первых: кого позовут раньше остальных и по самой низкой цене.",
   body: [
     "Эмпатия — это способность. У вас она есть. Пользоваться ей вас никто не учил.",
     "Здесь вы научитесь пользоваться своей эмпатией во всех сферах жизни."
@@ -567,12 +585,14 @@ const OFFER = {
   med: "Практикум не заменяет обследование и лечение у врача.",
   /* Отличие от бесплатного контента ставим после программы: сначала человек видит, что внутри, и уже потом — почему этого нет в роликах. */
   afterInside: "Ролики в YouTube и в соцсетях Виола делает для широкой аудитории, там про людей вообще. Здесь всё собрано только под эмпатов.",
+  perksHead: "Что даёт запись в список",
   perks: [
-    { h: "Самая низкая цена", d: "Тем, кто в списке предзаписи, практикум открывается по самой низкой цене." },
+    { h: "Самая низкая цена", d: "Тем, кто в списке, практикум открывается по самой низкой цене." },
     { h: "Закрытый канал Виолы", d: "Материалы и подкасты, которых нет нигде больше. Доступ — сразу после записи." },
     { h: "Право сказать, что включить", d: "В канале спросим, чего вам не хватает, и соберём из ваших ответов часть программы. Вы всю жизнь угадываете, что нужно другим. А тут спросят вас.", wide: true }
   ],
-  cta: "Хочу в первый поток"
+  cta: "Хочу в первый поток",
+  ctaNote: "Платить сейчас ничего не нужно. Мы просто вносим вас в список."
 };
 
 /* ——— «ваши суперспособности»: выводим из ответов, а не раздаём всем одинаково.
@@ -805,6 +825,7 @@ function offer(r) {
         <h2 class="offer-title">${OFFER.title}</h2>
       </div>
       <p class="lede">${OFFER.lead}</p>
+      <p class="status">${OFFER.status}</p>
       <div class="body-copy">${OFFER.body.map(p => `<p>${p}</p>`).join("")}</div>
       <div class="inside">
         <div class="inside-h">${OFFER.insideHead}</div>
@@ -817,11 +838,15 @@ function offer(r) {
       </div>
       <div class="body-copy"><p>${OFFER.afterInside}</p></div>
       <p class="med">${OFFER.med}</p>
-      <div class="perks">
-        ${OFFER.perks.map(p => `<div class="perk${p.wide ? " wide" : ""}"><div class="perk-h">${p.h}</div><p>${p.d}</p></div>`).join("")}
+      <div class="perks-wrap">
+        <div class="perks-h">${OFFER.perksHead}</div>
+        <div class="perks">
+          ${OFFER.perks.map(p => `<div class="perk${p.wide ? " wide" : ""}"><div class="perk-h">${p.h}</div><p>${p.d}</p></div>`).join("")}
+        </div>
       </div>
       <div class="foot">
         <button class="go big" id="form">${OFFER.cta} <span aria-hidden="true">→</span></button>
+        <p class="cta-note">${OFFER.ctaNote}</p>
         <button class="ghost" id="back-res">← Вернуться к результату</button>
       </div>
     </div>`);
