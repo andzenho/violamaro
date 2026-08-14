@@ -2,7 +2,7 @@
 
 13.08.2026 · Сырьё — `kastdev/03-transkript-empat-3potok.txt`. Метка источника **[КД3]**. Обезличено.
 
-⚠️ **При слиянии веток влить как «Созвон №3» в `analitika/kastdev-sozvony.md`** (файл живёт в ветке `claude/product-target-audience-tinczi`).
+**Место в нумерации кастдевов:** созвоны №1, №2 и №4 лежат в `analitika/kastdev-sozvony.md`, этот — отдельным файлом из-за объёма.
 
 **Кто:** женщина, фрилансер с непостоянным доходом, педагогическое образование, сама вела тренинговые программы. **Первый платный обучающий продукт в её жизни — любой, не только психологический.** Шла к покупке **год с лишним**, пропустила первый и второй потоки, купила третий.
 
@@ -264,4 +264,4 @@
 
 ---
 
-*Метка источника **[КД3]**. Сырьё — `kastdev/03-transkript-empat-3potok.txt`. Связанные: `ca-master.md` · `ca-chaty-empatia.md` · `kastdev-sozvony.md` (ветка `claude/product-target-audience-tinczi`) · `produkt/praktikum-dlya-empatov.md` · `produkt/marafon-po-sferam.md`.*
+*Метка источника **[КД3]**. Сырьё — `kastdev/03-transkript-empat-3potok.txt`. Связанные: `ca-master.md` · `ca-chaty-empatia.md` · `kastdev-sozvony.md` (созвоны №1, №2, №4) · `produkt/praktikum-dlya-empatov.md` · `produkt/marafon-po-sferam.md`.*
