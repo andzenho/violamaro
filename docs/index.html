@@ -373,6 +373,12 @@
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-size: .95rem; font-weight: 600; color: var(--ink);
   }
+  /* Вторая строка якоря — про предзапись. Легче по весу, чтобы не спорить с первой. */
+  .bridge .anchor-2 {
+    display: block; margin-top: .35rem;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: .93rem; font-weight: 400; color: var(--ink-soft);
+  }
 
   .perks {
     display: grid;
@@ -624,6 +630,7 @@ function powers(sc, v) {
 }
 
 const ANCHOR = "Осенью у Виолы стартует практикум «Практическая эмпатия 4.0» — про то, как пользоваться своей эмпатией во всех сферах жизни.";
+const ANCHOR_2 = "И сейчас открыта предзапись на него, чтобы получать актуальную информацию про программу.";
 
 const FON_NOTE = "Отдельно: часть того, что вас грузит, идёт не от людей, а от общего фона — шум, свет, слишком много всего. Это не про эмпатию, и в тесте оно не решается.";
 
@@ -796,7 +803,7 @@ function result(prev) {
           <ul>${powers(r.scales, answers).map(x => `<li>${x}</li>`).join("")}</ul>
         </div>` : ""}
       ${r.fon ? `<p class="addendum">${FON_NOTE}</p>` : ""}
-      ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}<span class="anchor">${ANCHOR}</span></p>` : ""}
+      ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}<span class="anchor">${ANCHOR}</span><span class="anchor-2">${ANCHOR_2}</span></p>` : ""}
       <div class="foot">
         ${t.bridge ? `<button class="go big" id="offer">Что за программа? <span aria-hidden="true">→</span></button>` : ""}
         ${!t.bridge && CONFIG.publicChannel ? `<a class="go big" id="channel" href="${CONFIG.publicChannel}" target="_blank" rel="noopener">Читать Виолу в Телеграме <span aria-hidden="true">→</span></a>
