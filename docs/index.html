@@ -781,7 +781,7 @@ function intro() {
       <p class="quiet">Это не диагностика и не диагноз. Это способ посмотреть на себя со стороны.</p>
       <button class="go" id="start">Начать</button>
     </div>`);
-  n.querySelector("#start").addEventListener("click", () => { idx = 0; startedAt = Date.now(); question(); });
+  n.querySelector("#start").addEventListener("click", () => { idx = 0; startedAt = Date.now(); stage = "q"; saveState(); question(); });
   render(n);
 }
 
@@ -802,10 +802,10 @@ function question() {
   n.querySelectorAll(".ans").forEach(b => b.addEventListener("click", () => {
     answers[idx] = Number(b.dataset.v);
     idx++;
-    if (idx < Q.length) question(); else { idx = 0; fork(); }
+    if (idx < Q.length) { saveState(); question(); } else { idx = 0; saveState(); fork(); }
   }));
   const back = n.querySelector("#back");
-  if (back) back.addEventListener("click", () => { idx--; answers.length = idx; question(); });
+  if (back) back.addEventListener("click", () => { idx--; answers.length = idx; saveState(); question(); });
   render(n);
 }
 
@@ -823,6 +823,7 @@ function fork() {
   n.querySelectorAll(".ans").forEach(b => b.addEventListener("click", () => {
     const pick = f.a[Number(b.dataset.i)]; forks[f.k] = pick[1]; forks[f.k + "_text"] = pick[0];
     idx++;
+    saveState();
     if (idx < FORKS.length) fork(); else result();
   }));
   render(n);
@@ -864,10 +865,11 @@ function result(prev) {
     if (tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink(CONFIG.publicChannel); }
   });
 
-  n.querySelector("#again").addEventListener("click", () => { answers.length = 0; flush();   // если в прошлый раз что-то не ушло
+  n.querySelector("#again").addEventListener("click", () => { answers.length = 0; clearState(); flush();   // если в прошлый раз что-то не ушло
 intro(); });
 
   if (!prev) send(r);
+  saveState();          // чтобы перезагрузка вернула человека на результат, а не в начало
   render(n);
 }
 
@@ -1166,9 +1168,68 @@ function send(r) {
   if (CONFIG.sheetUrl) queue(payload);
 }
 
-if (window.Telegram && window.Telegram.WebApp) {
-  window.Telegram.WebApp.ready();
-  window.Telegram.WebApp.expand();
+/* ——— сохранение прогресса ———
+   Мини-апп внутри Телеграма может перезагрузиться сам: свернули и вернулись,
+   система выгрузила вкладку из памяти, сработал жест закрытия. Страница при этом
+   стартует заново, и без сохранения человек оказывается в начале теста.
+   Держим ответы в памяти браузера и возвращаем его на то же место. */
+const STATE_KEY = "viola-state";
+const TTL_MID = 3 * 3600e3;    // недопройденный тест живёт три часа
+const TTL_DONE = 24 * 3600e3;  // готовый результат — сутки
+
+function saveState() {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify({
+      t: Date.now(), stage: stage, idx: idx,
+      answers: answers.slice(), forks: forks, startedAt: startedAt
+    }));
+  } catch (e) {}
 }
-intro();
+
+function clearState() {
+  try { localStorage.removeItem(STATE_KEY); } catch (e) {}
+}
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
+    if (!s || !s.t) return null;
+    const done = (s.answers || []).length === Q.length;
+    if (Date.now() - s.t > (done ? TTL_DONE : TTL_MID)) { clearState(); return null; }
+    return s;
+  } catch (e) { return null; }
+}
+
+function boot() {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    /* Экран результата длинный. Пока листаешь его вниз, Телеграм может принять
+       прокрутку за жест «свернуть» и утащить приложение. Bot API 7.7+ */
+    if (tg.disableVerticalSwipes) { try { tg.disableVerticalSwipes(); } catch (e) {} }
+  }
+
+  flush();   // всё, что не ушло в прошлый раз, отправляем при каждом открытии
+
+  const s = loadState();
+  if (!s) { intro(); return; }
+
+  (s.answers || []).forEach(v => answers.push(v));
+  Object.keys(s.forks || {}).forEach(k => { forks[k] = s.forks[k]; });
+  startedAt = s.startedAt || 0;
+
+  if (answers.length === Q.length) {
+    if (s.stage === "fork" && (s.idx || 0) < FORKS.length) { idx = s.idx || 0; fork(); return; }
+    /* Аргумент обязателен: без него result() отправит прохождение в таблицу второй раз. */
+    result(score());
+    return;
+  }
+  if (s.stage === "q" && answers.length) { idx = Math.min(s.idx || 0, Q.length - 1); question(); return; }
+
+  answers.length = 0;
+  intro();
+}
+
+boot();
 </script>
