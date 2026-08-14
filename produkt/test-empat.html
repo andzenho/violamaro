@@ -744,6 +744,13 @@ function el(html) {
   return d;
 }
 
+/* Имя из Телеграма подставляется в разметку. Кавычка в имени рвала атрибут
+   value и оставляла поле пустым — а такие имена в Телеграме встречаются. */
+const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ESC[c]);
+}
+
 function render(node) {
   screen.replaceChildren(node);
   paintDial();
@@ -915,8 +922,8 @@ function offer(r) {
 function lead(r) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
-  const known = [u.first_name, u.last_name].filter(Boolean).join(" ");
-  const tgName = u.username ? "@" + u.username : "";
+  const known = esc([u.first_name, u.last_name].filter(Boolean).join(" "));
+  const tgName = esc(u.username ? "@" + u.username : "");
 
   const n = el(`
     <div class="card">
@@ -1011,8 +1018,11 @@ function lead(r) {
     btn.disabled = true;
     btn.textContent = "Записываю…";
     sendLead(r, name, contact, talk);
-    openChannel();   // обещали «сразу после записи» — открываем сами
+    /* Сначала рисуем «Готово», потом уводим в канал: на клиентах Телеграма
+       старше Bot API 7.0 openTelegramLink закрывает мини-апп, и экран
+       подтверждения человек бы не увидел вовсе. */
     done();
+    openChannel();   // обещали «сразу после записи» — открываем сами
   });
   n.querySelector("#back-offer").addEventListener("click", () => offer(r));
   render(n);
@@ -1056,8 +1066,13 @@ function send_(payload) {
   return fetch(CONFIG.sheetUrl + "?payload=" + encodeURIComponent(JSON.stringify(payload)));
 }
 
-/* Запись сначала кладём в буфер, потом отправляем. Не дошло — полежит
-   и уйдёт при следующем открытии страницы. Иначе обрыв связи = потерянный лид. */
+/* Кладём в буфер и пробуем отправить. Не дошло — полежит и уйдёт
+   при следующем открытии страницы. Иначе обрыв связи = потерянный лид. */
+function queue(item) {
+  buffer(item);
+  flush();
+}
+
 function sendLead(r, name, contact, talk) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
@@ -1067,8 +1082,7 @@ function sendLead(r, name, contact, talk) {
     rank: r.key, percent: r.pct,
     userId: u.id || "", forks: forks
   };
-  buffer(lead);
-  flush();
+  queue(lead);
 }
 
 function buffer(item) {
@@ -1079,22 +1093,44 @@ function buffer(item) {
   } catch (e) {}
 }
 
+/* Вынимаем из буфера ровно одну запись — ту, что подтвердил приёмник. */
+function unbuffer(item) {
+  try {
+    const s = JSON.stringify(item);
+    const all = JSON.parse(localStorage.getItem(BUFFER_KEY) || "[]");
+    const i = all.findIndex(x => JSON.stringify(x) === s);
+    if (i !== -1) {
+      all.splice(i, 1);
+      localStorage.setItem(BUFFER_KEY, JSON.stringify(all));
+    }
+  } catch (e) {}
+}
+
+const inFlight = new Set();
+
+/* Буфер чистим ТОЛЬКО после подтверждения от приёмника.
+   Раньше буфер очищался до отправки — и если Телеграм выгружал вкладку,
+   пока запрос в пути (а он уходит ровно тогда, когда человека уводит в канал),
+   лид пропадал молча. Дубль в таблице пережить можно, потерю контакта — нет. */
 function flush() {
   if (!CONFIG.sheetUrl) return;
   let all = [];
   try { all = JSON.parse(localStorage.getItem(BUFFER_KEY) || "[]"); } catch (e) { return; }
   if (!all.length) return;
-  try { localStorage.removeItem(BUFFER_KEY); } catch (e) {}
   all.forEach(item => {
+    const key = JSON.stringify(item);
+    if (inFlight.has(key)) return;     // тот же элемент уже летит — второй раз не шлём
+    inFlight.add(key);
     send_(item)
       .then(res => res.text())
       .then(txt => {
         /* Приёмник отвечает {"ok":true}. Если вместо этого прилетела страница
            входа Google — значит развёртывание закрыто, и запись НЕ сохранилась.
-           Возвращаем её в буфер, иначе потеряем молча. */
-        if (txt.indexOf('"ok"') === -1) buffer(item);
+           Оставляем её в буфере до следующего раза. */
+        if (txt.indexOf('"ok"') !== -1) unbuffer(item);
       })
-      .catch(() => buffer(item));
+      .catch(() => {})
+      .then(() => { inFlight.delete(key); });
   });
 }
 
@@ -1126,7 +1162,8 @@ function send(r) {
   };
   window.__result = payload;
 
-  if (CONFIG.sheetUrl) send_(payload);
+  /* Через буфер, как и лид: обрыв связи на этом шаге раньше терял прохождение молча. */
+  if (CONFIG.sheetUrl) queue(payload);
 }
 
 if (window.Telegram && window.Telegram.WebApp) {
