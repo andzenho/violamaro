@@ -15,6 +15,7 @@
     --line-strong: #C9BBC6;
     --accent: #A2703C;
     --accent-soft: #E8D9C6;
+    --warn: #B03A26;
     --deep: #4B3556;
     --shadow: 0 1px 2px rgba(36, 29, 40, .06), 0 8px 24px -12px rgba(36, 29, 40, .18);
   }
@@ -31,6 +32,7 @@
       --line-strong: #473C50;
       --accent: #D9A163;
       --accent-soft: #3A2C22;
+      --warn: #F08A72;
       --deep: #C4A5D6;
       --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
     }
@@ -47,6 +49,7 @@
     --line-strong: #473C50;
     --accent: #D9A163;
     --accent-soft: #3A2C22;
+    --warn: #F08A72;
     --deep: #C4A5D6;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
   }
@@ -222,7 +225,19 @@
   }
   .fields input:focus { border-color: var(--accent); outline: none; }
 
-  .ask { display: flex; flex-direction: column; gap: .5rem; }
+  .ask {
+    display: flex; flex-direction: column; gap: .5rem;
+    border: 1px solid transparent; border-radius: 3px;
+    margin: 0 -.7rem; padding: .7rem;
+    transition: border-color .2s ease, background-color .2s ease;
+  }
+  /* Пока на вопрос не ответили, а записаться уже нажали — обводим сам вопрос.
+     Подсказки под кнопкой человек не видит: она ниже сгиба и набрана мелким. */
+  .ask.need {
+    border-color: var(--warn);
+    background: color-mix(in srgb, var(--warn) 7%, transparent);
+  }
+  .ask-need-note { color: var(--warn); font-size: .88rem; font-weight: 600; line-height: 1.4; }
   .ask-q { font-size: 1rem; line-height: 1.4; }
   .ask-note { font-size: .86rem; color: var(--ink-mute); line-height: 1.45; }
   .chips { display: flex; gap: .5rem; margin-top: .2rem; }
@@ -331,6 +346,8 @@
   .gets .format { color: var(--ink); font-size: .95rem; }
 
   .med { color: var(--ink-mute); font-size: .82rem; line-height: 1.45; }
+  .cta-note.err { color: var(--warn); font-weight: 600; }
+  .fields input.err { border-color: var(--warn); }
 
   /* Подсветка решающих мест. Одно средство на весь экран и не больше одного
      выделения на абзац — иначе подсветка перестаёт что-либо выделять.
@@ -901,13 +918,14 @@ function lead(r) {
           <input id="f-tg" type="text" value="${tgName}" placeholder="@имя" autocomplete="off">
         </label>
       </div>
-      <div class="ask">
+      <div class="ask" id="ask">
         <div class="ask-q">Готовы двадцать минут поговорить с командой о программе?</div>
         <p class="ask-note">Спросим, чего вам не хватает и что важно включить в программу. Спишемся или созвонимся, когда вам удобно.</p>
         <div class="chips">
           <button class="chip" data-v="да">Да, поговорю</button>
           <button class="chip" data-v="нет">Пока нет</button>
         </div>
+        <p class="ask-need-note" id="ask-need" hidden>Выберите один из двух ответов — и нажмите «Записаться».</p>
       </div>
       <p class="promise">Сразу после записи откроем закрытый канал Виолы — с материалами и подкастами, которых нет нигде больше.</p>
       <div class="foot">
@@ -923,25 +941,58 @@ function lead(r) {
   const tgEl = n.querySelector("#f-tg");
   const btn = n.querySelector("#send");
   const hint = n.querySelector("#hint");
+  const ask = n.querySelector("#ask");
+  const askNote = n.querySelector("#ask-need");
+  const hintText = hint ? hint.textContent : "";
   let talk = "";
+
+  /* Снимаем предупреждение молча, как только человек исправил. */
+  function clearWarn() {
+    if (ask) ask.classList.remove("need");
+    if (askNote) askNote.hidden = true;
+    if (hint) { hint.classList.remove("err"); hint.textContent = hintText; }
+    nameEl.classList.remove("err");
+    tgEl.classList.remove("err");
+  }
+
+  function warn(msg) {
+    if (!hint) return;
+    hint.textContent = msg;
+    hint.classList.add("err");
+  }
 
   n.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
     talk = c.dataset.v;
     n.querySelectorAll(".chip").forEach(x => x.className = "chip");
     c.className = "chip on";
+    clearWarn();
+  }));
+  [nameEl, tgEl].forEach(f => f.addEventListener("input", () => {
+    if (f.value.trim()) f.classList.remove("err");
   }));
 
   btn.addEventListener("click", () => {
     const name = (nameEl.value || "").trim();
     const contact = (tgEl.value || "").trim();
     if (!name || !contact) {
-      hint.textContent = "Заполните оба поля — иначе не сможем вас позвать.";
+      if (!name) nameEl.classList.add("err");
+      if (!contact) tgEl.classList.add("err");
+      warn("Заполните оба поля — иначе не сможем вас позвать.");
+      (name ? tgEl : nameEl).focus();
       return;
     }
     if (!talk) {
-      hint.textContent = "Ответьте про разговор — одним касанием.";
+      /* Главная причина «нажал, и ничего не происходит»: вопрос выше кнопки,
+         человек его пролистал. Поэтому подсвечиваем сам вопрос и подводим к нему экран. */
+      if (ask) {
+        ask.classList.add("need");
+        if (askNote) askNote.hidden = false;
+        if (ask.scrollIntoView) ask.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      warn("Сначала ответьте на вопрос выше.");
       return;
     }
+    clearWarn();
     btn.disabled = true;
     btn.textContent = "Записываю…";
     sendLead(r, name, contact, talk);
