@@ -119,6 +119,15 @@
   h1 { font-size: 1.9rem; line-height: 1.25; }
   h2 { font-size: 1.4rem; line-height: 1.35; }
 
+  /* Название программы на экране предзаписи — главный акцент страницы */
+  .offer-head { display: flex; flex-direction: column; gap: .5rem; }
+  .offer-head .step { color: var(--ink-soft); }
+  h2.offer-title {
+    font-size: 2.3rem; line-height: 1.1;
+    letter-spacing: .02em;
+    color: var(--accent);
+  }
+
   p { margin: 0; }
   .lede { color: var(--ink-soft); }
   .quiet { color: var(--ink-mute); font-size: .88rem; line-height: 1.5; }
@@ -506,8 +515,9 @@ const RESULTS = {
 };
 
 const OFFER = {
+  eyebrow: "Полностью новая программа Виолы Маро",
   title: "Я ЭМПАТ",
-  lead: "Шестинедельный практикум Виолы. Старт в конце сентября.",
+  lead: "Шестинедельный практикум. Старт в конце сентября.",
   body: [
     "Эмпатия — это способность. У вас она есть. Пользоваться ей вас никто не учил.",
     "Ролики в YouTube и в соцсетях Виола делает для широкой аудитории, там про людей вообще. Здесь всё собрано только под эмпатов."
@@ -756,8 +766,10 @@ function open_(url) {
 function offer(r) {
   const n = el(`
     <div class="card">
-      <div class="step">Что дальше</div>
-      <h2>${OFFER.title}</h2>
+      <div class="offer-head">
+        <div class="step">${OFFER.eyebrow}</div>
+        <h2 class="offer-title">${OFFER.title}</h2>
+      </div>
       <p class="lede">${OFFER.lead}</p>
       <div class="body-copy">${OFFER.body.map(p => `<p>${p}</p>`).join("")}</div>
       <div class="inside">
