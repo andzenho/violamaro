@@ -353,7 +353,6 @@
   }
 
   .med { color: var(--ink-mute); font-size: .82rem; line-height: 1.45; }
-  .gets .tariff-note { color: var(--ink-mute); font-size: .82rem; line-height: 1.45; }
   .cta-note.err { color: var(--warn); font-weight: 600; }
   .fields input.err { border-color: var(--warn); }
 
@@ -635,8 +634,6 @@ const OFFER = {
   ],
   /* Мастер-класс — не еженедельное, а финал программы, поэтому вынесен из списка. */
   finale: "И в конце программы — <span class=\"hl\">мастер-класс в прямом эфире</span>: Виола отвечает на ваши вопросы.",
-  /* Чат и личные ответы в «Базовом» вычеркнуты — обещать их всем нельзя. */
-  tariffNote: "Чат потока и личные ответы Виолы открываются с тарифа «Полный».",
   format: "Доступ ко всему <span class=\"hl\">остаётся навсегда</span>.",
   med: "Практикум не заменяет обследование и лечение у врача.",
   /* Отличие от бесплатного контента ставим после программы: сначала человек видит, что внутри, и уже потом — почему этого нет в роликах. */
@@ -894,7 +891,6 @@ function offer(r) {
         <ul>${OFFER.gets.map(i => `<li>${i}</li>`).join("")}</ul>
         <p class="finale">${OFFER.finale}</p>
         <p class="format">${OFFER.format}</p>
-        <p class="tariff-note">${OFFER.tariffNote}</p>
       </div>
       <div class="body-copy"><p>${OFFER.afterInside}</p></div>
       <p class="med">${OFFER.med}</p>
