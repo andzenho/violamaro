@@ -1099,8 +1099,12 @@ function flush() {
 }
 
 /* ——— отправка результата ———
-   Два адресата, разные задачи:
-   таблица получает всё сырьё для калибровки, бот — ранг и процент для сегментов. */
+   Адресат один: таблица. Она получает всё сырьё для калибровки.
+
+   Бота отсюда НЕ трогаем. Telegram.WebApp.sendData по документации
+   «отправляет служебное сообщение боту, и мини-апп закрывается» — то есть
+   человек, открывший тест кнопкой клавиатуры, вылетал в чат ровно на переходе
+   к результату и своего типа не видел. Ранг и процент берём из таблицы. */
 function send(r) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const user = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
@@ -1123,10 +1127,6 @@ function send(r) {
   window.__result = payload;
 
   if (CONFIG.sheetUrl) send_(payload);
-
-  if (tg) {
-    try { tg.sendData(JSON.stringify({ rank: r.key, percent: r.pct })); } catch (e) {}
-  }
 }
 
 if (window.Telegram && window.Telegram.WebApp) {
