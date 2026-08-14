@@ -59,6 +59,7 @@ KP_DIR = os.path.join(KOREN, "kontent", "kp")
 COL_DATE = "дата"
 COL_THEME = "тема / идея"
 COL_TEXT_VARIANTS = ("текст поста", "суть")  # у разных вкладок по-разному
+COL_FORMAT = "формат"  # необязательная колонка; пишем, только если есть в шапке
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
@@ -122,6 +123,7 @@ def parse_post_file(path):
         head, body = raw, ""
 
     tema = ""
+    fmt = ""
     for line in head.splitlines():
         m = re.match(r"^([A-Za-zА-Яа-яЁё ]+?)\s*:\s*(.*)$", line)
         if not m:
@@ -129,9 +131,11 @@ def parse_post_file(path):
         key = norm(m.group(1))
         if key == "тема":
             tema = m.group(2).strip()
-        # 'статус' и прочее читаем, но в таблицу не пишем (только D и E).
+        elif key == "формат":
+            fmt = m.group(2).strip()
+        # 'статус' и прочее читаем, но в таблицу не пишем.
 
-    return {"тема": tema, "текст": body.strip("\n")}
+    return {"тема": tema, "формат": fmt, "текст": body.strip("\n")}
 
 
 def load_tab_source(folder):
@@ -262,6 +266,7 @@ def analyze_kp(rows):
             break
     if col_text is None:
         return None
+    col_format = header.index(COL_FORMAT) if COL_FORMAT in header else None
 
     dates = {}
     for r in range(header_idx + 1, len(rows)):
@@ -276,6 +281,7 @@ def analyze_kp(rows):
         "col_date": col_date,
         "col_theme": col_theme,
         "col_text": col_text,
+        "col_format": col_format,
         "dates": dates,
         "rows": rows,
     }
@@ -317,10 +323,14 @@ def plan_updates(title, kp, posts_by_date):
             )
 
         for post, row_num in zip(posts, row_nums):
-            for col_idx, value in (
-                (kp["col_theme"], post["тема"]),
-                (kp["col_text"], post["текст"]),
-            ):
+            cols = [
+                (kp["col_theme"], post.get("тема", "")),
+                (kp["col_text"], post.get("текст", "")),
+            ]
+            # 'Формат' — только если колонка есть в шапке и поле задано в файле
+            if kp.get("col_format") is not None and post.get("формат"):
+                cols.append((kp["col_format"], post["формат"]))
+            for col_idx, value in cols:
                 old = cell_current(rows, row_num, col_idx)
                 if (old or "") == (value or ""):
                     continue
