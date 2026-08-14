@@ -119,9 +119,11 @@
   h1 { font-size: 1.9rem; line-height: 1.25; }
   h2 { font-size: 1.4rem; line-height: 1.35; }
 
+  /* Надзаголовок и заголовок держим одним блоком, чтобы между ними не влезал общий отступ карточки */
+  .title-block { display: flex; flex-direction: column; gap: .5rem; }
+  .title-block .step { color: var(--ink-soft); }
+
   /* Название программы на экране предзаписи — главный акцент страницы */
-  .offer-head { display: flex; flex-direction: column; gap: .5rem; }
-  .offer-head .step { color: var(--ink-soft); }
   h2.offer-title {
     font-size: 2.3rem; line-height: 1.1;
     letter-spacing: .02em;
@@ -656,7 +658,10 @@ function intro() {
   stage = "intro";
   const n = el(`
     <div class="card">
-      <h1>Есть у вас способности эмпата?</h1>
+      <div class="title-block">
+        <div class="step">Диагностический тест</div>
+        <h1>Есть у вас способности эмпата?</h1>
+      </div>
       <div class="body-copy intro-voice">
         <p>Тут двадцать четыре утверждения. Про то, как вы чувствуете других людей и что с вами при этом происходит.</p>
         <p>Отвечайте сразу, первым, что придёт в голову. Начнёте примерять каждое слово — получится про кого-то другого.</p>
@@ -766,7 +771,7 @@ function open_(url) {
 function offer(r) {
   const n = el(`
     <div class="card">
-      <div class="offer-head">
+      <div class="title-block">
         <div class="step">${OFFER.eyebrow}</div>
         <h2 class="offer-title">${OFFER.title}</h2>
       </div>
