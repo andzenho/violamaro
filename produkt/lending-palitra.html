@@ -124,6 +124,15 @@
     overflow: hidden;
   }
 
+  .hero.light { background: #F6F2F4; color: #241D28; }
+  .hero.light .hero-inset { border-color: rgba(162, 112, 60, .45); }
+  .hero.light .hero-eyebrow { color: #5C5162; }
+  .hero.light .hero-name { color: #241D28; }
+  .hero.light .hero-name .ver { color: #7A4E22; }
+  .hero.light .hero-credo { color: #241D28; opacity: 1; }
+  .hero.light .hero-btn { background: #43203A; border-color: #43203A; color: #F4ECEF; }
+  .hero.light .hero-slot { color: #8B7F92; }
+
   .hero-inset {
     border: 1px solid rgba(201, 143, 79, .35);
     border-radius: 3px;
@@ -348,28 +357,51 @@
   <header class="head">
     <p class="eyebrow">Практическая эмпатия 4.0 · решение по цвету</p>
     <h1>Палитра практикума</h1>
-    <p class="lede">Светлая страница с одним тёмным экраном сверху. Один акцент, всё остальное — нейтрали. Контрасты посчитаны, не подобраны на глаз: порог 7:1 для основного текста, 4.5:1 для всего прочего.</p>
+    <p class="lede">Светлая страница без тёмных секций. Один акцент, всё остальное — нейтрали. Контрасты посчитаны, не подобраны на глаз: порог 7:1 для основного текста, 4.5:1 для всего прочего.</p>
   </header>
 
   <hr class="rule">
 
   <section>
     <div class="head">
-      <p class="eyebrow">Рекомендация</p>
-      <h2>Первый экран: глубокий сливово-винный</h2>
-      <p class="note">Портрет ляжет справа, поле слева оставлено под имя и кредо. Кнопка контуром, как в референсе — на тёмном она даёт 12:1 и не требует заливки.</p>
+      <p class="eyebrow">Решено 15.08</p>
+      <h2>Первый экран: принят светлый</h2>
+      <p class="note">Страница светлая насквозь, тёмных секций нет. Слева — принятый вариант, справа — снятый, оставлен для истории решения. Портрет ляжет справа в экране, поле слева оставлено под имя и кредо.</p>
     </div>
 
-    <div class="hero">
-      <div class="hero-inset">
-        <div class="hero-eyebrow">
-          <span>6-недельный практикум Виолы Маро</span>
-          <span>старт 1 октября</span>
+    <div class="grid-2">
+      <div class="card" style="padding:0; border:0; background:transparent; gap:12px;">
+        <div class="hero light">
+          <div class="hero-inset">
+            <div class="hero-eyebrow">
+              <span>6-недельный практикум</span>
+              <span>старт 1 октября</span>
+            </div>
+            <p class="hero-name">Практическая<br>эмпатия <span class="ver">4.0</span></p>
+            <p class="hero-credo">Эмпатия — это способность. У вас она есть. Пользоваться ей вас никто не учил.</p>
+            <span class="hero-btn">Оставить заявку</span>
+            <p class="hero-slot">Слот под портрет</p>
+          </div>
         </div>
-        <p class="hero-name">Практическая<br>эмпатия <span class="ver">4.0</span></p>
-        <p class="hero-credo">Эмпатия — это способность. У вас она есть. Пользоваться ей вас никто не учил.</p>
-        <span class="hero-btn">Оставить заявку</span>
-        <p class="hero-slot">Слот под портрет</p>
+        <h3>✅ Принято: светлая шапка</h3>
+        <p class="note">Цвет держится только на кнопке и волосяных линиях. ⚠️ Следствие для съёмки: портрет нужен на светлом фоне со средой, иначе повиснет вырезкой. И иерархию теперь целиком несёт набор — плашкой ошибку не прикрыть.</p>
+      </div>
+
+      <div class="card" style="padding:0; border:0; background:transparent; gap:12px;">
+        <div class="hero">
+          <div class="hero-inset">
+            <div class="hero-eyebrow">
+              <span>6-недельный практикум</span>
+              <span>старт 1 октября</span>
+            </div>
+            <p class="hero-name">Практическая<br>эмпатия <span class="ver">4.0</span></p>
+            <p class="hero-credo">Эмпатия — это способность. У вас она есть. Пользоваться ей вас никто не учил.</p>
+            <span class="hero-btn">Оставить заявку</span>
+            <p class="hero-slot">Слот под портрет</p>
+          </div>
+        </div>
+        <h3>⛔ Снято: тёмная шапка</h3>
+        <p class="note">Архитектура референса. Отдали вместе с ней удар первого экрана: портрет на плотном фоне сам останавливает взгляд. Оставлено в файле, чтобы решение можно было пересмотреть с открытыми глазами.</p>
       </div>
     </div>
   </section>
@@ -512,7 +544,7 @@
     <div class="head">
       <p class="eyebrow">Итог</p>
       <h2>Набор токенов</h2>
-      <p class="note">Страница светлая. Тёмный план выходит ровно один раз — первый экран; дальше цвет несут только кнопки, залитые тем же винным. Это и есть её образ «зажечь свет во всех своих комнатах»: страница выходит из плотного в светлое и в нём остаётся.</p>
+      <p class="note">Страница светлая насквозь, тёмных секций нет. Весь цвет держат кнопки и волосяные линии. ⚠️ Значит иерархию несёт типографика, а не смена планов, и порог качества набора поднимается.</p>
     </div>
 
     <div class="table-scroll">
@@ -566,7 +598,7 @@
             <td><span class="dot" style="background:#43203A;"></span>deep</td>
             <td class="hex">#43203A</td>
             <td class="hex">#3A1B2B</td>
-            <td>первый экран и заливка кнопок — больше нигде</td>
+            <td>только заливка кнопок — фоном нигде</td>
             <td class="n">12.01 · 13.19</td>
           </tr>
           <tr>
