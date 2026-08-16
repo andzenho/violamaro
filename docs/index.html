@@ -2,6 +2,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#16121A">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+/* Страховка. Если основной скрипт не разберётся или упадёт на старом браузере,
+   человек увидит текст и объяснение, а не белый экран — и мы узнаем об этом.
+   Здесь намеренно только ES5: этот блок обязан работать даже там, где не работает остальное. */
+(function () {
+  var shown = false;
+  function fallback(msg) {
+    if (shown) return;
+    shown = true;
+    var box = document.getElementById("screen") || document.body;
+    if (!box) return;
+    box.innerHTML =
+      '<div style="max-width:32rem;margin:1.5rem auto;padding:1.4rem;font:16px/1.55 system-ui,-apple-system,sans-serif;' +
+      'color:#241D28;background:#fff;border:1px solid #E0D6DD;border-radius:4px">' +
+      '<p style="margin:0 0 .9rem;font-size:1.2rem">Тест не открылся на этом устройстве</p>' +
+      '<p style="margin:0 0 .9rem;color:#5C5162">Дело не в вас. Браузер внутри Телеграма на этом телефоне слишком старый. ' +
+      'Откройте ту же ссылку в обычном браузере — там всё работает.</p>' +
+      '<p style="margin:0 0 .9rem"><a href="https://andzenho.github.io/violamaro/" style="color:#A2703C">andzenho.github.io/violamaro</a></p>' +
+      '<p style="margin:0;font-size:.8rem;color:#8B7F92">Если не поможет, пришлите нам эту строку: ' +
+      String(msg).replace(/</g, "&lt;").slice(0, 200) + '</p></div>';
+  }
+  window.__fallback = fallback;
+  window.addEventListener("error", function (e) {
+    fallback(e && e.message ? e.message : "неизвестная ошибка");
+  });
+  /* Скрипт у нас встроенный, ему нечего ждать. Пусто через семь секунд — значит не доехал. */
+  setTimeout(function () {
+    var s = document.getElementById("screen");
+    if (s && !s.firstChild) fallback("пустой экран");
+  }, 7000);
+})();
+</script>
 <title>Есть у вас способности эмпата?</title>
 <style>
   :root {
@@ -236,7 +268,7 @@
      Подсказки под кнопкой человек не видит: она ниже сгиба и набрана мелким. */
   .ask.need {
     border-color: var(--warn);
-    background: color-mix(in srgb, var(--warn) 7%, transparent);
+    background: rgba(176, 58, 38, .07);   /* без color-mix: его нет на старых Android */
   }
   .ask-need-note { color: var(--warn); font-size: .88rem; font-weight: 600; line-height: 1.4; }
   .ask-q { font-size: 1rem; line-height: 1.4; }
@@ -751,8 +783,11 @@ function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, c => ESC[c]);
 }
 
+/* Без replaceChildren: он появился только в Chrome 86 (конец 2020),
+   а на неподновлённых Android его нет — и падал весь скрипт, экран оставался белым. */
 function render(node) {
-  screen.replaceChildren(node);
+  while (screen.firstChild) screen.removeChild(screen.firstChild);
+  screen.appendChild(node);
   paintDial();
   toTop();
 }
@@ -1231,5 +1266,9 @@ function boot() {
   intro();
 }
 
-boot();
+try {
+  boot();
+} catch (e) {
+  if (window.__fallback) window.__fallback(e && e.message ? e.message : e);
+}
 </script>
