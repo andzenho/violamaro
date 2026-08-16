@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" 2>/dev/null; git rev-parse --is-inside-work-tree >/dev/null 2>&1 && GIT_TERMINAL_PROMPT=0 git pull --ff-only 2>&1 || echo '[git] авто-pull не прошёл: расхождение веток или нет доступа. Сделай git pull вручную, конфликт не разрешаю сам.'"
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" 2>/dev/null; git rev-parse --is-inside-work-tree >/dev/null 2>&1 && GIT_TERMINAL_PROMPT=0 git fetch origin main 2>&1 && git log --oneline HEAD..origin/main 2>/dev/null | sed 's/^/[main новое] /' || echo '[git] авто-fetch main не прошёл: нет доступа к origin. Сделай git fetch вручную.'"
           }
         ]
       }
