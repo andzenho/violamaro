@@ -274,6 +274,9 @@
   .ask-q { font-size: 1rem; line-height: 1.4; }
   .ask-note { font-size: .86rem; color: var(--ink-mute); line-height: 1.45; }
   .chips { display: flex; gap: .5rem; margin-top: .2rem; }
+  /* Три варианта по-русски в строку не помещаются — столбиком и по левому краю. */
+  .chips-col { flex-direction: column; }
+  .chips-col .chip { text-align: left; }
   .chip {
     flex: 1; appearance: none; font: inherit; font-size: .95rem;
     color: var(--ink); background: var(--surface);
@@ -1004,18 +1007,19 @@ function lead(r) {
         </label>
       </div>
       <div class="ask" id="ask">
-        <div class="ask-q">Готовы двадцать минут поговорить с командой о программе?</div>
-        <p class="ask-note">Спросим, чего вам не хватает и что важно включить в программу. Спишемся или созвонимся, когда вам удобно.</p>
-        <div class="chips">
-          <button class="chip" data-v="да">Да, поговорю</button>
-          <button class="chip" data-v="нет">Пока нет</button>
+        <div class="ask-q">Насколько вы готовы занять место в первом потоке?</div>
+        <p class="ask-note">Ответ ни к чему не обязывает. Он нужен, чтобы мы понимали, с чего начать разговор.</p>
+        <div class="chips chips-col">
+          <button class="chip" data-v="готов сейчас">Готов занять сейчас</button>
+          <button class="chip" data-v="остались вопросы">Почти решаю, остались вопросы</button>
+          <button class="chip" data-v="присматриваюсь">Пока присматриваюсь</button>
         </div>
-        <p class="ask-need-note" id="ask-need" hidden>Выберите один из двух ответов — и нажмите «Записаться».</p>
+        <p class="ask-need-note" id="ask-need" hidden>Выберите один из вариантов — и нажмите кнопку ниже.</p>
       </div>
       <p class="promise">Сразу после записи откроем закрытый канал Виолы. Новое вы увидите там первыми, там же лучшие условия, подкасты и материалы, которых нет в открытом доступе.</p>
       <div class="foot">
-        <button class="go big" id="send">Записаться <span aria-hidden="true">→</span></button>
-        <p class="cta-note" id="hint">Напишем, когда откроем набор. Раньше остальных.</p>
+        <button class="go big" id="send">Отправить заявку <span aria-hidden="true">→</span></button>
+        <p class="cta-note" id="hint">Команда Виолы напишет вам в Телеграм.</p>
         <!-- Отдельным абзацем: подсказки валидации перетирают #hint, а это обещание должно оставаться на экране. -->
         <p class="cta-note">После записи вас перекинет в обещанный Телеграм-канал.</p>
         <button class="ghost" id="back-offer">← Назад</button>
@@ -1079,7 +1083,7 @@ function lead(r) {
     }
     clearWarn();
     btn.disabled = true;
-    btn.textContent = "Записываю…";
+    btn.textContent = "Отправляю…";
     sendLead(r, name, contact, talk);
     /* Сначала рисуем «Готово», потом уводим в канал: на клиентах Телеграма
        старше Bot API 7.0 openTelegramLink закрывает мини-апп, и экран
@@ -1141,7 +1145,7 @@ function sendLead(r, name, contact, talk) {
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
   const lead = {
     type: "lead",
-    name: name, contact: contact, talk: talk || "",
+    name: name, contact: contact, ready: talk || "",
     rank: r.key, percent: r.pct,
     userId: u.id || "", forks: forks
   };
