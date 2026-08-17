@@ -120,19 +120,23 @@ function getSheet2_(name, headers) {
     return sheet;
   }
 
-  /* Лист уже с данными, а состав колонок поменялся — переписываем шапку.
-     Без этого новые поля легли бы в столбцы без названий, а старые остались
-     бы подписаны по-прежнему. Строки с данными не трогаем. */
+  /* Лист уже с данными, а колонок стало больше — подписываем только пустые
+     ячейки шапки. Названия, поставленные руками, не трогаем: если колонку
+     переименовали в таблице, это решение человека, а не сбой.
+     Строки с данными не трогаем никогда. */
   if (sheet.getMaxColumns() < headers.length) {
     sheet.insertColumnsAfter(sheet.getMaxColumns(), headers.length - sheet.getMaxColumns());
   }
   var have = sheet.getRange(1, 1, 1, headers.length).getValues()[0];
-  var same = true;
+  var fixed = [];
+  var need = false;
   for (var i = 0; i < headers.length; i++) {
-    if (String(have[i]) !== headers[i]) { same = false; break; }
+    var cur = String(have[i] == null ? '' : have[i]).trim();
+    fixed.push(cur ? have[i] : headers[i]);
+    if (!cur) need = true;
   }
-  if (!same) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  if (need) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([fixed]);
     sheet.setFrozenRows(1);
   }
   return sheet;
