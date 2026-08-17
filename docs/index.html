@@ -398,7 +398,12 @@
   }
 
   .med { color: var(--ink-mute); font-size: .82rem; line-height: 1.45; }
-  .before-cta { color: var(--ink); font-size: .97rem; line-height: 1.5; }
+  .before-cta { display: flex; flex-direction: column; gap: .6rem; color: var(--ink); font-size: .97rem; line-height: 1.5; }
+  .gets.bonus .bonus-note {
+    margin-top: .3rem; padding-top: .7rem;
+    border-top: 1px solid var(--line);
+    color: var(--ink); font-size: .92rem; line-height: 1.45;
+  }
   .cta-note.err { color: var(--warn); font-weight: 600; }
   .fields input.err { border-color: var(--warn); }
 
@@ -654,7 +659,7 @@ const OFFER = {
   eyebrow: "6-недельный практикум Виолы Маро для эмпатов",
   title: "Прикладная эмпатия",
   lead: "Полностью обновлённая программа — с упором на практику и на реальные жизненные ситуации. <span class=\"hl\">Старт 1 октября.</span>",
-  status: "<b>Набор в первый поток уже открыт.</b> Место можно занять сейчас, до старта 1 октября.",
+  status: "<b>Набор в первый поток уже открыт.</b> Место можно занять сейчас.",
   body: [
     "Эмпатия — это способность. <span class=\"hl\">У вас она есть.</span> Пользоваться ей вас никто не учил.",
     "Здесь вы научитесь пользоваться своей эмпатией во всех сферах жизни."
@@ -693,13 +698,17 @@ const OFFER = {
   /* Бонусы за раннюю покупку — отдельно от того, что даёт сама запись в список.
      Смешивать нельзя: одно получают за контакт, другое за вход в поток. */
   bonusHead: "И три записи в подарок тем, кто зайдёт первыми",
+  bonusNote: "Подарки действуют <span class=\"hl\">до 4 сентября</span>. С 5 сентября они сгорают, а цена практикума становится выше.",
   bonus: [
     "<b>«Любовь и деньги».</b> Лекция Виолы о том, почему и любовь, и деньги — про одно и то же состояние наполненности.",
     "<b>Разбор фильма «Догвиль».</b> Как эмпат оказывается в позиции жертвы, как устроена эмоциональная зависимость и как из неё выходят.",
     "<b>Большой мастер-класс на узнавание себя.</b> Там подробно разобрано то, что тест показал вам коротко."
   ],
   /* Главное возражение перед кнопкой — «а что дальше?». Отвечаем до нажатия, а не после. */
-  beforeCta: "Оставьте заявку — с вами свяжется команда Виолы Маро. Расскажут про программу подробно, закрепят за вами <b>вход по самой низкой цене</b> и подарки за ранний вход.",
+  beforeCta: [
+    "После заявки с вами свяжется команда Виолы Маро. Расскажут, как устроен практикум и какой тариф под вашу задачу, ответят на вопросы и помогут с оплатой — в том числе в рассрочку.",
+    "И закрепят за вами <b>вход по самой низкой цене</b> и <b>все три подарка</b> — до 4 сентября."
+  ],
   cta: "Оставить заявку",
   ctaNote: "<span class=\"hl\">Платить сейчас ничего не нужно.</span> Два поля — имя и телеграм."
 };
@@ -971,9 +980,10 @@ function offer(r) {
       <div class="gets bonus">
         <div class="gets-h">${OFFER.bonusHead}</div>
         <ul>${OFFER.bonus.map(i => `<li>${i}</li>`).join("")}</ul>
+        <p class="bonus-note">${OFFER.bonusNote}</p>
       </div>
       <div class="foot">
-        <p class="before-cta">${OFFER.beforeCta}</p>
+        <div class="before-cta">${OFFER.beforeCta.map(t => `<p>${t}</p>`).join("")}</div>
         <button class="go big" id="form">${OFFER.cta} <span aria-hidden="true">→</span></button>
         <p class="cta-note">${OFFER.ctaNote}</p>
         <button class="ghost" id="back-res">← Вернуться к результату</button>
@@ -1010,7 +1020,7 @@ function lead(r) {
         <div class="ask-q">Насколько вы готовы занять место на «Прикладной эмпатии»?</div>
         <p class="ask-note">Ответ ни к чему не обязывает. Он нужен, чтобы мы понимали, с чего начать разговор.</p>
         <div class="chips chips-col">
-          <button class="chip" data-v="готов сейчас">Готов занять сейчас</button>
+          <button class="chip" data-v="готов сейчас">Готов(-а) занять сейчас</button>
           <button class="chip" data-v="остались вопросы">Почти решаю, остались вопросы</button>
           <button class="chip" data-v="присматриваюсь">Пока присматриваюсь</button>
         </div>
