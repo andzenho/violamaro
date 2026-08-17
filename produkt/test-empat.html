@@ -744,6 +744,9 @@ let idx = 0;
 const answers = [];        // баллы 3..0 по каждому вопросу
 const forks = {};
 let startedAt = 0;   // засекаем на первом вопросе — чтобы отличить честное прохождение от прокликанного
+/* Посчитанный результат храним отдельно: если пороги когда-нибудь поменяются,
+   человек при возврате должен увидеть тот же тип, что и в первый раз. */
+let lastResult = null;
 
 const screen = document.getElementById("screen");
 const dial = document.getElementById("dial");
@@ -794,7 +797,11 @@ function score() {
   if (F >= 5 && L <= 1 && A <= 5) key = "other";
   else if (A <= 3 && C <= 4) key = "caring";
   else if (A >= 6 && P <= 3 && I <= 4 && B <= 3) key = "reader";
-  else if (I >= 6 && B / 9 < .5 && C / 12 < .5 && G <= 2 && K < 2) key = "awake";
+  /* Проснулся — это разрыв между историей и тем, на кого развёрнуты радары сейчас.
+     Шкала «тело» из условия убрана намеренно: дар остаётся, меняется адресат,
+     и телесный отклик у проснувшегося никуда не девается. Прежнее условие требовало
+     почти нулевого тела и идеальной гигиены — за 53 прохождения не сработало ни разу. */
+  else if (I >= 6 && (I - C) >= 1 && G <= 4 && K < 2) key = "awake";
   else {
     const b = B / 9, c = C / 12, g = G / 6;
     key = (c >= b && c >= g) ? "donor" : (b >= g ? "filter" : "sleeping");
@@ -903,6 +910,7 @@ function fork() {
 function result(prev) {
   stage = "result";
   const r = prev || score();
+  lastResult = r;
   const t = RESULTS[r.key];
 
   const n = el(`
@@ -1261,7 +1269,8 @@ function saveState() {
   try {
     localStorage.setItem(STATE_KEY, JSON.stringify({
       t: Date.now(), stage: stage, idx: idx,
-      answers: answers.slice(), forks: forks, startedAt: startedAt
+      answers: answers.slice(), forks: forks, startedAt: startedAt,
+      res: lastResult
     }));
   } catch (e) {}
 }
@@ -1301,8 +1310,9 @@ function boot() {
 
   if (answers.length === Q.length) {
     if (s.stage === "fork" && (s.idx || 0) < FORKS.length) { idx = s.idx || 0; fork(); return; }
-    /* Аргумент обязателен: без него result() отправит прохождение в таблицу второй раз. */
-    result(score());
+    /* Аргумент обязателен: без него result() отправит прохождение в таблицу второй раз.
+       Берём сохранённый вердикт, если он есть, — тогда тип не переиграется. */
+    result(s.res || score());
     return;
   }
   if (s.stage === "q" && answers.length) { idx = Math.min(s.idx || 0, Q.length - 1); question(); return; }
