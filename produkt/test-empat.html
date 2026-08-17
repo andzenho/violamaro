@@ -386,8 +386,9 @@
     padding: 1.05rem 1.1rem;
   }
   .gets.bonus .gets-h { color: var(--accent); }
-  .gets.bonus li { color: var(--ink); padding-left: 1.35rem; }
-  .gets.bonus li::before { content: "✦"; color: var(--accent); font-size: .85rem; }
+  /* Подарки метим эмодзи: на длинном экране взгляд цепляется за него раньше, чем за текст. */
+  .gets.bonus li { color: var(--ink); padding-left: 1.75rem; }
+  .gets.bonus li::before { content: "🎁"; font-size: 1rem; top: .05em; }
   .gets.bonus li b { font-weight: 600; }
   .gets .format { color: var(--ink); font-size: .95rem; }
   /* Финал программы — отдельно от еженедельного списка, отбит линией сверху. */
