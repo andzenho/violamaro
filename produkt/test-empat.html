@@ -392,6 +392,16 @@
   .gets.bonus li b { font-weight: 600; }
 
   .med { color: var(--ink-mute); font-size: .82rem; line-height: 1.45; }
+  .consents { display: flex; flex-direction: column; gap: .65rem; }
+  .cb {
+    display: grid; grid-template-columns: 20px 1fr; gap: .55rem; align-items: start;
+    font-size: .88rem; line-height: 1.45; color: var(--ink-soft); cursor: pointer;
+  }
+  .cb input { width: 18px; height: 18px; margin: .1rem 0 0; accent-color: var(--accent); }
+  .cb a { color: var(--accent); }
+  .cb.err span { color: var(--warn); }
+  .cb.err input { outline: 2px solid var(--warn); outline-offset: 2px; }
+
   .before-cta { display: flex; flex-direction: column; gap: .6rem; color: var(--ink); font-size: .97rem; line-height: 1.5; }
   .gets.bonus .bonus-note {
     margin-top: .3rem; padding-top: .7rem;
@@ -514,7 +524,15 @@ const CONFIG = {
   sheetUrl: "https://script.google.com/macros/s/AKfycbx-HmkA7u4MHNOe-rRMMyrU7s6-Hgo12WIAE83BeqkQROn4KIK05gvyG2c0UCzH3O7Bkw/exec",
   channelUrl: "https://t.me/+ot1pJz8KHlo2YTky",   // закрытый — для записавшихся
   publicChannel: "https://t.me/violamaro1",        // открытый — для тех, кто не эмпат
-  botLink: ""       // https://t.me/имя_бота — возврат в чат
+  botLink: "",      // https://t.me/имя_бота — возврат в чат
+  /* Правовые страницы живут на сайте оплаты — тексты и редакции там одни на всё. */
+  docs: {
+    consent: "https://andzenho.github.io/Viola-Maro/consent",
+    privacy: "https://andzenho.github.io/Viola-Maro/privacy",
+    ads:     "https://andzenho.github.io/Viola-Maro/consent-ads"
+  },
+  /* Редакция согласия на момент акцепта — та же, что на сайте. Меняется вместе с текстом. */
+  docVersionConsent: "2026-08-10"
 };
 
 /* ——— вопросы ———
@@ -858,6 +876,7 @@ function intro() {
       </div>
       <p class="quiet">Это не диагностика и не диагноз. Это способ посмотреть на себя со стороны.</p>
       <button class="go" id="start">Начать</button>
+      <p class="quiet">Нажимая «Начать», вы соглашаетесь с <a href="${CONFIG.docs.privacy}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>.</p>
     </div>`);
   n.querySelector("#start").addEventListener("click", () => { idx = 0; startedAt = Date.now(); stage = "q"; saveState(); question(); });
   render(n);
@@ -1039,6 +1058,16 @@ function lead(r) {
         </div>
         <p class="ask-need-note" id="ask-need" hidden>Выберите один из вариантов — и нажмите кнопку ниже.</p>
       </div>
+      <div class="consents">
+        <label class="cb" id="cb-pd-l">
+          <input type="checkbox" id="cb-pd">
+          <span>Я даю <a href="${CONFIG.docs.consent}" target="_blank" rel="noopener">согласие</a> на обработку моих персональных данных и ознакомлен(а) с <a href="${CONFIG.docs.privacy}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>.</span>
+        </label>
+        <label class="cb">
+          <input type="checkbox" id="cb-ads">
+          <span>Я хочу получать письма и сообщения о программах и эфирах. Отписаться можно в один клик. <a href="${CONFIG.docs.ads}" target="_blank" rel="noopener">Условия рассылки</a></span>
+        </label>
+      </div>
       <p class="promise">Сразу после записи откроем закрытый канал Виолы. Новое вы увидите там первыми, там же лучшие условия, подкасты и материалы, которых нет в открытом доступе.</p>
       <div class="foot">
         <button class="go big" id="send">Отправить заявку <span aria-hidden="true">→</span></button>
@@ -1054,6 +1083,9 @@ function lead(r) {
   const btn = n.querySelector("#send");
   const hint = n.querySelector("#hint");
   const ask = n.querySelector("#ask");
+  const pd = n.querySelector("#cb-pd");
+  const pdLabel = n.querySelector("#cb-pd-l");
+  const ads = n.querySelector("#cb-ads");
   const askNote = n.querySelector("#ask-need");
   const hintText = hint ? hint.textContent : "";
   let talk = "";
@@ -1065,6 +1097,7 @@ function lead(r) {
     if (hint) { hint.classList.remove("err"); hint.textContent = hintText; }
     nameEl.classList.remove("err");
     tgEl.classList.remove("err");
+    if (pdLabel) pdLabel.classList.remove("err");
   }
 
   function warn(msg) {
@@ -1078,6 +1111,15 @@ function lead(r) {
     n.querySelectorAll(".chip").forEach(x => x.className = "chip");
     c.className = "chip on";
     clearWarn();
+  }));
+  if (pd) pd.addEventListener("change", () => { if (pd.checked) clearWarn(); });
+  /* Правовые страницы открываем средствами Телеграма: обычный target=_blank
+     внутри мини-аппа на части клиентов просто не срабатывает. */
+  n.querySelectorAll("a").forEach(a => a.addEventListener("click", (e) => {
+    const href = a.getAttribute("href");
+    if (!href || href.indexOf("http") !== 0) return;
+    const tgApp = window.Telegram && window.Telegram.WebApp;
+    if (tgApp && tgApp.openLink) { e.preventDefault(); tgApp.openLink(href); }
   }));
   [nameEl, tgEl].forEach(f => f.addEventListener("input", () => {
     if (f.value.trim()) f.classList.remove("err");
@@ -1104,10 +1146,17 @@ function lead(r) {
       warn("Сначала ответьте на вопрос выше.");
       return;
     }
+    if (pd && !pd.checked) {
+      /* Без согласия на обработку данных заявку принимать нельзя. */
+      pdLabel.classList.add("err");
+      if (pdLabel.scrollIntoView) pdLabel.scrollIntoView({ behavior: "smooth", block: "center" });
+      warn("Отметьте согласие на обработку персональных данных.");
+      return;
+    }
     clearWarn();
     btn.disabled = true;
     btn.textContent = "Отправляю…";
-    sendLead(r, name, contact, talk);
+    sendLead(r, name, contact, talk, { pd: !!(pd && pd.checked), ads: !!(ads && ads.checked) });
     /* Сначала рисуем «Готово», потом уводим в канал: на клиентах Телеграма
        старше Bot API 7.0 openTelegramLink закрывает мини-апп, и экран
        подтверждения человек бы не увидел вовсе. */
@@ -1163,14 +1212,19 @@ function queue(item) {
   flush();
 }
 
-function sendLead(r, name, contact, talk) {
+function sendLead(r, name, contact, talk, consent) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
   const lead = {
     type: "lead",
     name: name, contact: contact, ready: talk || "",
     rank: r.key, percent: r.pct,
-    userId: u.id || "", forks: forks
+    userId: u.id || "", forks: forks,
+    /* Акцепт фиксируем так же, как на сайте: сами галочки, время и редакция документа. */
+    accept_pd: consent && consent.pd ? "да" : "",
+    accept_ads: consent && consent.ads ? "да" : "",
+    consent_ts: new Date().toISOString(),
+    doc_version_consent: CONFIG.docVersionConsent || ""
   };
   queue(lead);
 }
