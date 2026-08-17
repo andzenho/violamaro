@@ -113,8 +113,26 @@ function saveLead_(d) {
 function getSheet2_(name, headers) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(name) || ss.insertSheet(name);
+
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(headers);
+    sheet.setFrozenRows(1);
+    return sheet;
+  }
+
+  /* Лист уже с данными, а состав колонок поменялся — переписываем шапку.
+     Без этого новые поля легли бы в столбцы без названий, а старые остались
+     бы подписаны по-прежнему. Строки с данными не трогаем. */
+  if (sheet.getMaxColumns() < headers.length) {
+    sheet.insertColumnsAfter(sheet.getMaxColumns(), headers.length - sheet.getMaxColumns());
+  }
+  var have = sheet.getRange(1, 1, 1, headers.length).getValues()[0];
+  var same = true;
+  for (var i = 0; i < headers.length; i++) {
+    if (String(have[i]) !== headers[i]) { same = false; break; }
+  }
+  if (!same) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.setFrozenRows(1);
   }
   return sheet;
