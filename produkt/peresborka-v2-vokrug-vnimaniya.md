@@ -206,4 +206,4 @@
 
 ---
 
-*Основания: `gipoteza-produkt-vokrug-lichnosti.md` · `analitika/ca-master.md` §2,4,5,6 · `analitika/ca-chaty-empatia.md` §1,2,3,7 · `analitika/kastdev-sozvony.md` · `praktikum-dlya-empatov.md` (канон тарифов).*
+*Основания: `gipoteza-produkt-vokrug-lichnosti.md` · `analitika/ca-master.md` §2,4,5,6 · `analitika/ca-chaty-empatia.md` §1,2,3,7 · `analitika/kastdev-sozvony.md` · `praktikum-zametki.md` (канон тарифов, §14).*
