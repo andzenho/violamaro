@@ -2,7 +2,7 @@
 
 12.08.2026 · Рабочий инструмент для созвонов и лендинга. На каждый смысл платящей аудитории — аргумент, который ведёт к покупке «Прикладной эмпатии», и то, **чем именно в продукте** это закрыто.
 
-**Источники:** `analitika/ca-master.md` (сводка платящих), `ca-empatia.md`, `ca-klyuchi.md`, `ca-voc.md` раздел А, `kommentarii-razbor.md` партии 4–7, `anketa-pervye-dannye.md`. Продукт — `praktikum-dlya-empatov.md`.
+**Источники:** `analitika/ca-master.md` (сводка платящих), `ca-empatia.md`, `ca-klyuchi.md`, `ca-voc.md` раздел А, `kommentarii-razbor.md` партии 4–7, `arhiv/vina-staryy-flagman/anketa-pervye-dannye.md`. Продукт — `praktikum-dlya-empatov.md`.
 
 ## Два правила пользования
 

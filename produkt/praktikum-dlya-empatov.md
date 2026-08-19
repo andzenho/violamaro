@@ -375,7 +375,7 @@ https://docs.google.com/document/d/1pbdca-brUxxZ57VOm3y5LX4lQxqaMWxl5Q1-1y717e8/
 
 ## 11. Главное решение: товар — её внимание, лекции — каркас
 
-Основание — `gipoteza-produkt-vokrug-lichnosti.md`. Коротко: в чатах прошлых потоков из 346 сообщений участников почти всё — вопросы Виоле. Люди потребляют не программу, а поток «вопрос — ответ». Отсюда вся конструкция:
+Основание — `arhiv/lyubov-i-dengi/gipoteza-produkt-vokrug-lichnosti.md`. Коротко: в чатах прошлых потоков из 346 сообщений участников почти всё — вопросы Виоле. Люди потребляют не программу, а поток «вопрос — ответ». Отсюда вся конструкция:
 
 - сердцевина продукта — **её ответы**: живой эфир с разбором ситуаций раз в неделю плюс ответы голосом в чате (уточнено 13.08 по кастдеву №2 — живое ценится выше асинхронного);
 - лестница тарифов строится **только на её внимании**, материалы везде одинаковы;
@@ -618,7 +618,7 @@ https://docs.google.com/document/d/1pbdca-brUxxZ57VOm3y5LX4lQxqaMWxl5Q1-1y717e8/
 
 ---
 
-*Связанные файлы: `gipoteza-produkt-vokrug-lichnosti.md` (обоснование конструкции) · `peresborka-v2-vokrug-vnimaniya.md` (промежуточная сборка и разбор рисков) · `analitika/ca-master.md` (ЦА) · `analitika/kastdev-sozvony.md` (созвоны с покупателями) · `arhiv/lyubov-i-dengi/` (прежний флагман).*
+*Связанные файлы: `arhiv/lyubov-i-dengi/gipoteza-produkt-vokrug-lichnosti.md` (обоснование конструкции) · `arhiv/lyubov-i-dengi/peresborka-v2-vokrug-vnimaniya.md` (промежуточная сборка и разбор рисков) · `analitika/ca-master.md` (ЦА) · `analitika/kastdev-sozvony.md` (созвоны с покупателями) · `arhiv/lyubov-i-dengi/` (прежний флагман).*
 
 ## 21. Сигналы кастдева №2 (13.08) — что менять в этой сборке
 

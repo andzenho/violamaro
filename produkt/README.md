@@ -14,8 +14,8 @@
 *Прежний флагман «Любовь и деньги» (презентация, одностраничник, программа v1, docx) — в `arhiv/lyubov-i-dengi/`. Название снято 13.08, конструкция пересобрана вокруг её внимания.*
 
 **Рабочие разборы к текущей сборке**
-- `gipoteza-produkt-vokrug-lichnosti.md` — разбор гипотезы «покупают Виолу, а не программу» и механика «индивидуальность на массу».
-- `peresborka-v2-vokrug-vnimaniya.md` — промежуточная сборка 13.08: ритм недели, нагрузка в числах, дырки от отказа от куратора, риски.
+- `arhiv/lyubov-i-dengi/gipoteza-produkt-vokrug-lichnosti.md` — разбор гипотезы «покупают Виолу, а не программу» и механика «индивидуальность на массу».
+- `arhiv/lyubov-i-dengi/peresborka-v2-vokrug-vnimaniya.md` — промежуточная сборка 13.08: ритм недели, нагрузка в числах, дырки от отказа от куратора, риски.
 
 **Запуск флагмана**
 - `marafon-po-sferam.md` — **календарь запуска и пять эфиров.** Даты по таблице запуска (пересборка партнёра 13.08), две разные работы эфиров (до события — анкета, после — продажа), темы и раскладка, структура эфира, правило «один приём из недели», вопросы из комментариев, техконтур, что нужно к 15.08. Плюс ценовая лестница по четырём окнам продаж и четыре замечания к ней (разрывы без цены, защита «Личного», нижний тариф без карты приёмов).
@@ -27,9 +27,9 @@
 `strategiya.md` — стратегия запуска · `voronka.md` — канон воронки · `transformatsii.md` — канон трансформаций · `transformatsiya-za-dengi.md` — какую метаморфозу продавать.
 
 **Материал от Виолы и по Виоле**
-`sozvon-viola-11.08-itogi.md` — решения с созвона (разворот на эмпатов) · `sozvon-11.08-razbor-dlya-komandy.md` — тот же созвон, развёрнуто для команды · `fakty-viola.md` — цифры и решения · `produkty-viola-staryye.md` — её старые лендинги: цены, тарифы, образы.
+`arhiv/lyubov-i-dengi/sozvon-viola-11.08-itogi.md` — решения с созвона (разворот на эмпатов) · `arhiv/lyubov-i-dengi/sozvon-11.08-razbor-dlya-komandy.md` — тот же созвон, развёрнуто для команды · `fakty-viola.md` — цифры и решения · `produkty-viola-staryye.md` — её старые лендинги: цены, тарифы, образы.
 
 **Рабочие разборы** (сырьё решений, при спорах поднимать их)
-`efir-lyubov-i-dengi-razbor.md` · `vebinar-empaty-dengi-razbor.md` · `dengi-dlya-empata-razbor.md` · `flagman-sborka-jtbd.md` · `blok-do-posle-prorabotka.md`.
+`efir-lyubov-i-dengi-razbor.md` · `vebinar-empaty-dengi-razbor.md` · `dengi-dlya-empata-razbor.md` · `arhiv/lyubov-i-dengi/flagman-sborka-jtbd.md` · `blok-do-posle-prorabotka.md`.
 
 Устаревшие офферы — в `arhiv/ofery-promezhutochnye/`, при обычной работе не читать.
