@@ -1,26 +1,40 @@
+<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#16121A">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 /* Страховка. Если основной скрипт не разберётся или упадёт на старом браузере,
    человек увидит текст и объяснение, а не белый экран — и мы узнаем об этом.
-   Здесь намеренно только ES5: этот блок обязан работать даже там, где не работает остальное. */
+   Здесь намеренно только ES5: этот блок обязан работать даже там, где не работает остальное.
+
+   Стоит ВЫШЕ подключения Телеграма, и это важно. Пока тег telegram-web-app.js
+   был первым и обычным, он держал разбор страницы: провайдер, который на запрос
+   не отвечает отказом, а молчит, оставлял человека перед белым экраном сколько
+   угодно долго — эта страховка до себя не доходила, и таймер ниже не запускался. */
 (function () {
   var shown = false;
   function fallback(msg) {
     if (shown) return;
     shown = true;
+    /* Причиной падения могло быть само сохранённое прохождение: формат менялся,
+       а запись живёт в памяти браузера до суток. Пока её не убирали, человек
+       получал этот экран при каждом открытии — сутки подряд, и «открыть заново»
+       ему не помогало. Убираем сразу: перезагрузка после этого лечит. */
+    try { localStorage.removeItem("viola-state"); } catch (e) {}
     var box = document.getElementById("screen") || document.body;
     if (!box) return;
     box.innerHTML =
       '<div style="max-width:32rem;margin:1.5rem auto;padding:1.4rem;font:16px/1.55 system-ui,-apple-system,sans-serif;' +
       'color:#241D28;background:#fff;border:1px solid #E0D6DD;border-radius:4px">' +
-      '<p style="margin:0 0 .9rem;font-size:1.2rem">Тест не открылся на этом устройстве</p>' +
-      '<p style="margin:0 0 .9rem;color:#5C5162">Дело не в вас. Браузер внутри Телеграма на этом телефоне слишком старый. ' +
-      'Откройте ту же ссылку в обычном браузере — там всё работает.</p>' +
-      '<p style="margin:0 0 .9rem"><a href="https://andzenho.github.io/violamaro/" style="color:#A2703C">andzenho.github.io/violamaro</a></p>' +
-      '<p style="margin:0;font-size:.8rem;color:#8B7F92">Если не поможет, пришлите нам эту строку: ' +
+      '<p style="margin:0 0 .9rem;font-size:1.2rem">Тест не открылся с первого раза</p>' +
+      '<p style="margin:0 0 .9rem;color:#5C5162">Так бывает: оборвалась связь или страница не догрузилась. ' +
+      'Нажмите «Открыть заново» — обычно этого хватает.</p>' +
+      '<p style="margin:0 0 .9rem"><button onclick="location.reload()" ' +
+      'style="font:inherit;padding:.7rem 1.1rem;color:#fff;background:#A2703C;border:0;border-radius:4px">' +
+      'Открыть заново</button></p>' +
+      '<p style="margin:0 0 .9rem;color:#5C5162">Не помогло — откройте ту же ссылку в обычном браузере: ' +
+      '<a href="https://andzenho.github.io/violamaro/" style="color:#A2703C">andzenho.github.io/violamaro</a></p>' +
+      '<p style="margin:0;font-size:.8rem;color:#8B7F92">Если и там не открылось, пришлите нам эту строку: ' +
       String(msg).replace(/</g, "&lt;").slice(0, 200) + '</p></div>';
   }
   window.__fallback = fallback;
@@ -32,8 +46,47 @@
     var s = document.getElementById("screen");
     if (s && !s.firstChild) fallback("пустой экран");
   }, 7000);
+
+  /* ——— когда стартовать ———
+     Телеграм грузится фоном и держать страницу больше не может. Тест ждёт его
+     не дольше TG_WAIT: доехал раньше — стартуем сразу, не доехал — стартуем без
+     него. Обращения к Телеграму в основном скрипте и так идут через
+     window.Telegram && window.Telegram.WebApp, поэтому без SDK тест просто
+     работает как в обычном браузере: не будет разворота во весь экран
+     и телеграм-id в таблице. Это несравнимо лучше белого экрана. */
+  var TG_WAIT = 3000;
+  var tgSettled = false, appStart = null, launched = false;
+
+  function launch() {
+    if (launched || !tgSettled || !appStart) return;
+    launched = true;
+    appStart();
+  }
+
+  /* Телеграм опоздал к запуску — подхватываем его на ходу: развернуть окно
+     и выключить свайпы можно и после того, как человек увидел первый экран. */
+  function lateInit() {
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (!tg) return;
+    try {
+      tg.ready();
+      tg.expand();
+      if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+    } catch (e) {}
+  }
+
+  window.__tgSettled = function () {
+    if (tgSettled) return;
+    tgSettled = true;
+    if (launched) lateInit(); else launch();
+  };
+  window.__appStart = function (fn) { appStart = fn; launch(); };
+  setTimeout(window.__tgSettled, TG_WAIT);
 })();
 </script>
+<script async src="https://telegram.org/js/telegram-web-app.js"
+        onload="window.__tgSettled && window.__tgSettled()"
+        onerror="window.__tgSettled && window.__tgSettled()"></script>
 <title>Есть у вас способности эмпата?</title>
 <style>
   :root {
@@ -848,9 +901,26 @@ function esc(s) {
    а на неподновлённых Android его нет — и падал весь скрипт, экран оставался белым. */
 function render(node) {
   while (screen.firstChild) screen.removeChild(screen.firstChild);
+  linksThroughTelegram_(node);
   screen.appendChild(node);
   paintDial();
   toTop();
+}
+
+/* Правовые страницы открываем средствами Телеграма: обычный target=_blank
+   внутри мини-аппа на части клиентов просто не срабатывает. Раньше это стояло
+   только на экране анкеты — а первая такая ссылка попадается человеку раньше,
+   на первом экране, под кнопкой «Начать».
+   Ссылки на t.me не трогаем: их уводит openTelegramLink, и у них свои
+   обработчики — перехватить здесь значило бы открыть канал дважды. */
+function linksThroughTelegram_(node) {
+  node.querySelectorAll("a").forEach(a => a.addEventListener("click", (e) => {
+    const href = a.getAttribute("href");
+    if (!href || href.indexOf("http") !== 0) return;
+    if (href.indexOf("https://t.me/") === 0) return;
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.openLink) { e.preventDefault(); tg.openLink(href); }
+  }));
 }
 
 /* Каждый новый экран показываем с начала — иначе человек попадает
@@ -1113,14 +1183,6 @@ function lead(r) {
     clearWarn();
   }));
   if (pd) pd.addEventListener("change", () => { if (pd.checked) clearWarn(); });
-  /* Правовые страницы открываем средствами Телеграма: обычный target=_blank
-     внутри мини-аппа на части клиентов просто не срабатывает. */
-  n.querySelectorAll("a").forEach(a => a.addEventListener("click", (e) => {
-    const href = a.getAttribute("href");
-    if (!href || href.indexOf("http") !== 0) return;
-    const tgApp = window.Telegram && window.Telegram.WebApp;
-    if (tgApp && tgApp.openLink) { e.preventDefault(); tgApp.openLink(href); }
-  }));
   [nameEl, tgEl].forEach(f => f.addEventListener("input", () => {
     if (f.value.trim()) f.classList.remove("err");
   }));
@@ -1261,21 +1323,26 @@ function flush() {
   let all = [];
   try { all = JSON.parse(localStorage.getItem(BUFFER_KEY) || "[]"); } catch (e) { return; }
   if (!all.length) return;
-  all.forEach(item => {
-    const key = JSON.stringify(item);
-    if (inFlight.has(key)) return;     // тот же элемент уже летит — второй раз не шлём
-    inFlight.add(key);
-    send_(item)
-      .then(res => res.text())
-      .then(txt => {
-        /* Приёмник отвечает {"ok":true}. Если вместо этого прилетела страница
-           входа Google — значит развёртывание закрыто, и запись НЕ сохранилась.
-           Оставляем её в буфере до следующего раза. */
-        if (txt.indexOf('"ok"') !== -1) unbuffer(item);
-      })
-      .catch(() => {})
-      .then(() => { inFlight.delete(key); });
-  });
+  /* Обёртка не про сеть, а про сам вызов: fetch есть не в каждом вебвью,
+     и на телефоне без него исключение уходило вверх — в boot(). Человек
+     вместо теста получал экран отказа из-за одной недоставленной заявки. */
+  try {
+    all.forEach(item => {
+      const key = JSON.stringify(item);
+      if (inFlight.has(key)) return;     // тот же элемент уже летит — второй раз не шлём
+      inFlight.add(key);
+      send_(item)
+        .then(res => res.text())
+        .then(txt => {
+          /* Приёмник отвечает {"ok":true}. Если вместо этого прилетела страница
+             входа Google — значит развёртывание закрыто, и запись НЕ сохранилась.
+             Оставляем её в буфере до следующего раза. */
+          if (txt.indexOf('"ok"') !== -1) unbuffer(item);
+        })
+        .catch(() => {})
+        .then(() => { inFlight.delete(key); });
+    });
+  } catch (e) {}
 }
 
 /* ——— отправка результата ———
@@ -1333,12 +1400,36 @@ function clearState() {
   try { localStorage.removeItem(STATE_KEY); } catch (e) {}
 }
 
+/* Шкалы, без которых экран результата не построить: powers() читает их
+   напрямую. Раньше запись без них роняла запуск. */
+const SCALES_NEEDED = ["A", "P", "I", "B", "C", "G", "L"];
+
+/* Сохранённое прохождение могло остаться от прежней версии теста: вопросы
+   и способ хранения результата менялись, а запись живёт до суток. Такое
+   состояние роняло boot(), и человек при каждом открытии видел экран
+   «тест не открылся» — весь срок хранения. Не сошлось — молча начинаем
+   заново: потерять полтора экрана ответов не так дорого, как сутки не мочь
+   войти. Проходящему сейчас это ничем не грозит — его запись форме отвечает. */
+function stateOk_(s) {
+  const a = s.answers;
+  if (!Array.isArray(a) || a.length > Q.length) return false;
+  if (!a.every(v => typeof v === "number" && v >= 0 && v <= 3)) return false;
+  if (s.res) {
+    if (!RESULTS[s.res.key]) return false;
+    const sc = s.res.scales;
+    if (!sc || typeof sc !== "object") return false;
+    if (!SCALES_NEEDED.every(k => typeof sc[k] === "number")) return false;
+  }
+  return true;
+}
+
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
     if (!s || !s.t) return null;
     const done = (s.answers || []).length === Q.length;
     if (Date.now() - s.t > (done ? TTL_DONE : TTL_MID)) { clearState(); return null; }
+    if (!stateOk_(s)) { clearState(); return null; }
     return s;
   } catch (e) { return null; }
 }
@@ -1375,9 +1466,16 @@ function boot() {
   intro();
 }
 
-try {
-  boot();
-} catch (e) {
-  if (window.__fallback) window.__fallback(e && e.message ? e.message : e);
+/* Стартуем не сразу: страховка наверху дождётся Телеграма — или того, что его
+   не будет, — и позовёт сама. Прямой вызов оставлен на случай, если верхний
+   блок почему-то не отработал: без запуска тест не оставляем ни при каких условиях. */
+function run() {
+  try {
+    boot();
+  } catch (e) {
+    if (window.__fallback) window.__fallback(e && e.message ? e.message : e);
+  }
 }
+
+if (window.__appStart) window.__appStart(run); else run();
 </script>
