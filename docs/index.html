@@ -1,40 +1,26 @@
-<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#16121A">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 /* Страховка. Если основной скрипт не разберётся или упадёт на старом браузере,
    человек увидит текст и объяснение, а не белый экран — и мы узнаем об этом.
-   Здесь намеренно только ES5: этот блок обязан работать даже там, где не работает остальное.
-
-   Стоит ВЫШЕ подключения Телеграма, и это важно. Пока тег telegram-web-app.js
-   был первым и обычным, он держал разбор страницы: провайдер, который на запрос
-   не отвечает отказом, а молчит, оставлял человека перед белым экраном сколько
-   угодно долго — эта страховка до себя не доходила, и таймер ниже не запускался. */
+   Здесь намеренно только ES5: этот блок обязан работать даже там, где не работает остальное. */
 (function () {
   var shown = false;
   function fallback(msg) {
     if (shown) return;
     shown = true;
-    /* Причиной падения могло быть само сохранённое прохождение: формат менялся,
-       а запись живёт в памяти браузера до суток. Пока её не убирали, человек
-       получал этот экран при каждом открытии — сутки подряд, и «открыть заново»
-       ему не помогало. Убираем сразу: перезагрузка после этого лечит. */
-    try { localStorage.removeItem("viola-state"); } catch (e) {}
     var box = document.getElementById("screen") || document.body;
     if (!box) return;
     box.innerHTML =
       '<div style="max-width:32rem;margin:1.5rem auto;padding:1.4rem;font:16px/1.55 system-ui,-apple-system,sans-serif;' +
       'color:#241D28;background:#fff;border:1px solid #E0D6DD;border-radius:4px">' +
-      '<p style="margin:0 0 .9rem;font-size:1.2rem">Тест не открылся с первого раза</p>' +
-      '<p style="margin:0 0 .9rem;color:#5C5162">Так бывает: оборвалась связь или страница не догрузилась. ' +
-      'Нажмите «Открыть заново» — обычно этого хватает.</p>' +
-      '<p style="margin:0 0 .9rem"><button onclick="location.reload()" ' +
-      'style="font:inherit;padding:.7rem 1.1rem;color:#fff;background:#A2703C;border:0;border-radius:4px">' +
-      'Открыть заново</button></p>' +
-      '<p style="margin:0 0 .9rem;color:#5C5162">Не помогло — откройте ту же ссылку в обычном браузере: ' +
-      '<a href="https://andzenho.github.io/violamaro/" style="color:#A2703C">andzenho.github.io/violamaro</a></p>' +
-      '<p style="margin:0;font-size:.8rem;color:#8B7F92">Если и там не открылось, пришлите нам эту строку: ' +
+      '<p style="margin:0 0 .9rem;font-size:1.2rem">Тест не открылся на этом устройстве</p>' +
+      '<p style="margin:0 0 .9rem;color:#5C5162">Дело не в вас. Браузер внутри Телеграма на этом телефоне слишком старый. ' +
+      'Откройте ту же ссылку в обычном браузере — там всё работает.</p>' +
+      '<p style="margin:0 0 .9rem"><a href="https://andzenho.github.io/violamaro/" style="color:#A2703C">andzenho.github.io/violamaro</a></p>' +
+      '<p style="margin:0;font-size:.8rem;color:#8B7F92">Если не поможет, пришлите нам эту строку: ' +
       String(msg).replace(/</g, "&lt;").slice(0, 200) + '</p></div>';
   }
   window.__fallback = fallback;
@@ -46,47 +32,8 @@
     var s = document.getElementById("screen");
     if (s && !s.firstChild) fallback("пустой экран");
   }, 7000);
-
-  /* ——— когда стартовать ———
-     Телеграм грузится фоном и держать страницу больше не может. Тест ждёт его
-     не дольше TG_WAIT: доехал раньше — стартуем сразу, не доехал — стартуем без
-     него. Обращения к Телеграму в основном скрипте и так идут через
-     window.Telegram && window.Telegram.WebApp, поэтому без SDK тест просто
-     работает как в обычном браузере: не будет разворота во весь экран
-     и телеграм-id в таблице. Это несравнимо лучше белого экрана. */
-  var TG_WAIT = 3000;
-  var tgSettled = false, appStart = null, launched = false;
-
-  function launch() {
-    if (launched || !tgSettled || !appStart) return;
-    launched = true;
-    appStart();
-  }
-
-  /* Телеграм опоздал к запуску — подхватываем его на ходу: развернуть окно
-     и выключить свайпы можно и после того, как человек увидел первый экран. */
-  function lateInit() {
-    var tg = window.Telegram && window.Telegram.WebApp;
-    if (!tg) return;
-    try {
-      tg.ready();
-      tg.expand();
-      if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
-    } catch (e) {}
-  }
-
-  window.__tgSettled = function () {
-    if (tgSettled) return;
-    tgSettled = true;
-    if (launched) lateInit(); else launch();
-  };
-  window.__appStart = function (fn) { appStart = fn; launch(); };
-  setTimeout(window.__tgSettled, TG_WAIT);
 })();
 </script>
-<script async src="https://telegram.org/js/telegram-web-app.js"
-        onload="window.__tgSettled && window.__tgSettled()"
-        onerror="window.__tgSettled && window.__tgSettled()"></script>
 <title>Есть у вас способности эмпата?</title>
 <style>
   :root {
@@ -295,63 +242,18 @@
   a.go { display: block; text-align: center; text-decoration: none; }
   a.go.big { color: #FFF; }
 
-  .fields { display: flex; flex-direction: column; gap: .8rem; }
-  .fields label {
-    display: flex; flex-direction: column; gap: .35rem;
-    font-size: .74rem; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--ink-mute);
-  }
-  .fields input {
-    font: inherit; font-size: 1.02rem; color: var(--ink);
-    background: var(--surface-2);
-    border: 1px solid var(--line-strong);
-    border-radius: 3px;
-    padding: .8rem .9rem;
-    text-transform: none; letter-spacing: normal;
-  }
-  .fields input:focus { border-color: var(--accent); outline: none; }
-
-  .ask {
-    display: flex; flex-direction: column; gap: .5rem;
-    border: 1px solid transparent; border-radius: 3px;
-    margin: 0 -.7rem; padding: .7rem;
-    transition: border-color .2s ease, background-color .2s ease;
-  }
-  /* Пока на вопрос не ответили, а записаться уже нажали — обводим сам вопрос.
-     Подсказки под кнопкой человек не видит: она ниже сгиба и набрана мелким. */
-  .ask.need {
-    border-color: var(--warn);
-    background: rgba(176, 58, 38, .07);   /* без color-mix: его нет на старых Android */
-  }
-  .ask-need-note { color: var(--warn); font-size: .88rem; font-weight: 600; line-height: 1.4; }
-  .ask-q { font-size: 1rem; line-height: 1.4; }
-  .ask-note { font-size: .86rem; color: var(--ink-mute); line-height: 1.45; }
-  .chips { display: flex; gap: .5rem; margin-top: .2rem; }
-  /* Три варианта по-русски в строку не помещаются — столбиком и по левому краю. */
-  .chips-col { flex-direction: column; }
-  .chips-col .chip { text-align: left; }
-  .chip {
-    flex: 1; appearance: none; font: inherit; font-size: .95rem;
-    color: var(--ink); background: var(--surface);
-    border: 1px solid var(--line-strong); border-radius: 3px;
-    padding: .7rem .6rem; cursor: pointer;
-    transition: background-color .15s ease, border-color .15s ease;
-  }
-  .chip:hover { border-color: var(--accent); }
-  .chip.on { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
-
-  .promise {
-    background: var(--accent-soft);
-    border-radius: 3px;
-    padding: .9rem 1rem;
-    font-size: .95rem;
-    line-height: 1.45;
-  }
 
   .cta-note {
     font-size: .82rem; color: var(--ink-mute); text-align: center;
     margin-top: -.15rem;
   }
+
+  /* Акцепт под кнопкой. Мельче подписи: это правовая сноска, а не аргумент. */
+  .cta-legal {
+    font-size: .74rem; line-height: 1.45; color: var(--ink-mute); text-align: center;
+    margin-top: -.5rem;
+  }
+  .cta-legal a { color: var(--ink-mute); }
 
   @media (prefers-reduced-motion: reduce) {
     button.go.big { transition: none; }
@@ -445,15 +347,6 @@
   .gets.bonus li b { font-weight: 600; }
 
   .med { color: var(--ink-mute); font-size: .82rem; line-height: 1.45; }
-  .consents { display: flex; flex-direction: column; gap: .65rem; }
-  .cb {
-    display: grid; grid-template-columns: 20px 1fr; gap: .55rem; align-items: start;
-    font-size: .88rem; line-height: 1.45; color: var(--ink-soft); cursor: pointer;
-  }
-  .cb input { width: 18px; height: 18px; margin: .1rem 0 0; accent-color: var(--accent); }
-  .cb a { color: var(--accent); }
-  .cb.err span { color: var(--warn); }
-  .cb.err input { outline: 2px solid var(--warn); outline-offset: 2px; }
 
   .before-cta { display: flex; flex-direction: column; gap: .6rem; color: var(--ink); font-size: .97rem; line-height: 1.5; }
   .gets.bonus .bonus-note {
@@ -461,8 +354,6 @@
     border-top: 1px solid var(--line);
     color: var(--ink); font-size: .92rem; line-height: 1.45;
   }
-  .cta-note.err { color: var(--warn); font-weight: 600; }
-  .fields input.err { border-color: var(--warn); }
 
   /* Подсветка решающих мест. Одно средство на весь экран и не больше одного
      выделения на абзац — иначе подсветка перестаёт что-либо выделять.
@@ -575,7 +466,10 @@
    Пусто — страница просто ничего никуда не шлёт, тест при этом работает. */
 const CONFIG = {
   sheetUrl: "https://script.google.com/macros/s/AKfycbzgho8KRyxxAoVrV2lkpS-2aCS4VjEbvzew1kaRjOQnx_X9qxtADNRQaNWQK-7GROkuUw/exec",
-  channelUrl: "https://t.me/+ot1pJz8KHlo2YTky",   // закрытый — для записавшихся
+  /* Кнопка предзаписи ведёт прямо в чат с командой. Формы нет: контакт
+     человек оставляет самим фактом того, что написал. Доступ в закрытый
+     канал выдаёт команда там же — приложение его больше не открывает. */
+  teamChat: "https://t.me/m/LEHK_cjeNGU1",
   publicChannel: "https://t.me/violamaro1",        // открытый — для тех, кто не эмпат
   botLink: "",      // https://t.me/имя_бота — возврат в чат
   /* Правовые страницы живут на сайте оплаты — тексты и редакции там одни на всё. */
@@ -583,9 +477,7 @@ const CONFIG = {
     consent: "https://andzenho.github.io/Viola-Maro/consent",
     privacy: "https://andzenho.github.io/Viola-Maro/privacy",
     ads:     "https://andzenho.github.io/Viola-Maro/consent-ads"
-  },
-  /* Редакция согласия на момент акцепта — та же, что на сайте. Меняется вместе с текстом. */
-  docVersionConsent: "2026-08-10"
+  }
 };
 
 /* ——— вопросы ———
@@ -780,11 +672,12 @@ const OFFER = {
   ],
   /* Главное возражение перед кнопкой — «а что дальше?». Отвечаем до нажатия, а не после. */
   beforeCta: [
-    "После заявки с вами свяжется команда Виолы Маро. Расскажут, как устроен практикум и какой тариф под вашу задачу, ответят на вопросы и помогут с оплатой — в том числе в рассрочку.",
+    "Жмите на кнопку — и вы попадаете в чат с командой Виолы.",
+    "Там выдадут доступ к закрытому каналу, расскажут, как устроен практикум и какой тариф под вашу задачу, ответят на вопросы и помогут с оплатой — в том числе в рассрочку.",
     "И закрепят за вами <b>вход по самой низкой цене</b> — она держится до 4 сентября."
   ],
-  cta: "Оставить заявку",
-  ctaNote: "<span class=\"hl\">Платить сейчас ничего не нужно.</span> Два поля — имя и телеграм."
+  cta: "Написать команде Виолы",
+  ctaNote: "<span class=\"hl\">Платить сейчас ничего не нужно.</span> Заполнять анкету — тоже."
 };
 
 /* ——— «ваши суперспособности»: выводим из ответов, а не раздаём всем одинаково.
@@ -890,37 +783,13 @@ function el(html) {
   return d;
 }
 
-/* Имя из Телеграма подставляется в разметку. Кавычка в имени рвала атрибут
-   value и оставляла поле пустым — а такие имена в Телеграме встречаются. */
-const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
-function esc(s) {
-  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ESC[c]);
-}
-
 /* Без replaceChildren: он появился только в Chrome 86 (конец 2020),
    а на неподновлённых Android его нет — и падал весь скрипт, экран оставался белым. */
 function render(node) {
   while (screen.firstChild) screen.removeChild(screen.firstChild);
-  linksThroughTelegram_(node);
   screen.appendChild(node);
   paintDial();
   toTop();
-}
-
-/* Правовые страницы открываем средствами Телеграма: обычный target=_blank
-   внутри мини-аппа на части клиентов просто не срабатывает. Раньше это стояло
-   только на экране анкеты — а первая такая ссылка попадается человеку раньше,
-   на первом экране, под кнопкой «Начать».
-   Ссылки на t.me не трогаем: их уводит openTelegramLink, и у них свои
-   обработчики — перехватить здесь значило бы открыть канал дважды. */
-function linksThroughTelegram_(node) {
-  node.querySelectorAll("a").forEach(a => a.addEventListener("click", (e) => {
-    const href = a.getAttribute("href");
-    if (!href || href.indexOf("http") !== 0) return;
-    if (href.indexOf("https://t.me/") === 0) return;
-    const tg = window.Telegram && window.Telegram.WebApp;
-    if (tg && tg.openLink) { e.preventDefault(); tg.openLink(href); }
-  }));
 }
 
 /* Каждый новый экран показываем с начала — иначе человек попадает
@@ -1086,177 +955,38 @@ function offer(r) {
       </div>
       <div class="foot">
         <div class="before-cta">${OFFER.beforeCta.map(t => `<p>${t}</p>`).join("")}</div>
-        <button class="go big" id="form">${OFFER.cta} <span aria-hidden="true">→</span></button>
+        <!-- Стрелка привязана к последнему слову неразрывным пробелом: иначе на узком
+             экране надпись переносится, и стрелка остаётся одна на второй строке. -->
+        <button class="go big" id="form">${OFFER.cta}&nbsp;<span aria-hidden="true">→</span></button>
         <p class="cta-note">${OFFER.ctaNote}</p>
+        <p class="cta-legal">Нажимая кнопку, вы соглашаетесь с <a href="${CONFIG.docs.privacy}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>.</p>
         <button class="ghost" id="back-res">← Вернуться к результату</button>
       </div>
     </div>`);
-  n.querySelector("#form").addEventListener("click", () => lead(r));
+  n.querySelector("#form").addEventListener("click", () => openChat());
   n.querySelector("#back-res").addEventListener("click", () => result(r));
+  /* Правовые страницы открываем средствами Телеграма: обычный target=_blank
+     внутри мини-аппа на части клиентов просто не срабатывает. */
+  n.querySelectorAll("a").forEach(a => a.addEventListener("click", (e) => {
+    const href = a.getAttribute("href");
+    if (!href || href.indexOf("http") !== 0) return;
+    const tgApp = window.Telegram && window.Telegram.WebApp;
+    if (tgApp && tgApp.openLink) { e.preventDefault(); tgApp.openLink(href); }
+  }));
   render(n);
 }
 
-/* ——— запись в первый поток: имя и телеграм берём у Телеграма, если он их знает ——— */
-function lead(r) {
-  const tg = window.Telegram && window.Telegram.WebApp;
-  const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
-  const known = esc([u.first_name, u.last_name].filter(Boolean).join(" "));
-  const tgName = esc(u.username ? "@" + u.username : "");
-
-  const n = el(`
-    <div class="card">
-      <div class="step">Предзапись</div>
-      <h2>Записываю вас в предзапись</h2>
-      ${known && tgName ? `
-        <p class="lede">Записываю как <b>${known}</b>, ${tgName}. Если что-то не так — поправьте.</p>` : `
-        <p class="lede">Оставьте, как к вам обращаться и куда написать приглашение.</p>`}
-      <div class="fields">
-        <label>Как вас зовут
-          <input id="f-name" type="text" value="${known}" placeholder="Имя" autocomplete="name">
-        </label>
-        <label>Телеграм
-          <input id="f-tg" type="text" value="${tgName}" placeholder="@имя" autocomplete="off">
-        </label>
-      </div>
-      <div class="ask" id="ask">
-        <div class="ask-q">Насколько вы готовы занять место на «Прикладной эмпатии»?</div>
-        <p class="ask-note">Ответ ни к чему не обязывает. Он нужен, чтобы мы понимали, с чего начать разговор.</p>
-        <div class="chips chips-col">
-          <button class="chip" data-v="готов сейчас">Готов(-а) занять сейчас</button>
-          <button class="chip" data-v="остались вопросы">Почти решаю, остались вопросы</button>
-          <button class="chip" data-v="присматриваюсь">Пока присматриваюсь</button>
-        </div>
-        <p class="ask-need-note" id="ask-need" hidden>Выберите один из вариантов — и нажмите кнопку ниже.</p>
-      </div>
-      <div class="consents">
-        <label class="cb" id="cb-pd-l">
-          <input type="checkbox" id="cb-pd">
-          <span>Я даю <a href="${CONFIG.docs.consent}" target="_blank" rel="noopener">согласие</a> на обработку моих персональных данных и ознакомлен(а) с <a href="${CONFIG.docs.privacy}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>.</span>
-        </label>
-        <label class="cb">
-          <input type="checkbox" id="cb-ads">
-          <span>Я хочу получать письма и сообщения о программах и эфирах. Отписаться можно в один клик. <a href="${CONFIG.docs.ads}" target="_blank" rel="noopener">Условия рассылки</a></span>
-        </label>
-      </div>
-      <p class="promise">Сразу после записи откроем закрытый канал Виолы. Новое вы увидите там первыми, там же лучшие условия, подкасты и материалы, которых нет в открытом доступе.</p>
-      <div class="foot">
-        <button class="go big" id="send">Отправить заявку <span aria-hidden="true">→</span></button>
-        <p class="cta-note" id="hint">Команда Виолы напишет вам в Телеграм.</p>
-        <!-- Отдельным абзацем: подсказки валидации перетирают #hint, а это обещание должно оставаться на экране. -->
-        <p class="cta-note">После записи вас перекинет в обещанный Телеграм-канал.</p>
-        <button class="ghost" id="back-offer">← Назад</button>
-      </div>
-    </div>`);
-
-  const nameEl = n.querySelector("#f-name");
-  const tgEl = n.querySelector("#f-tg");
-  const btn = n.querySelector("#send");
-  const hint = n.querySelector("#hint");
-  const ask = n.querySelector("#ask");
-  const pd = n.querySelector("#cb-pd");
-  const pdLabel = n.querySelector("#cb-pd-l");
-  const ads = n.querySelector("#cb-ads");
-  const askNote = n.querySelector("#ask-need");
-  const hintText = hint ? hint.textContent : "";
-  let talk = "";
-
-  /* Снимаем предупреждение молча, как только человек исправил. */
-  function clearWarn() {
-    if (ask) ask.classList.remove("need");
-    if (askNote) askNote.hidden = true;
-    if (hint) { hint.classList.remove("err"); hint.textContent = hintText; }
-    nameEl.classList.remove("err");
-    tgEl.classList.remove("err");
-    if (pdLabel) pdLabel.classList.remove("err");
-  }
-
-  function warn(msg) {
-    if (!hint) return;
-    hint.textContent = msg;
-    hint.classList.add("err");
-  }
-
-  n.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
-    talk = c.dataset.v;
-    n.querySelectorAll(".chip").forEach(x => x.className = "chip");
-    c.className = "chip on";
-    clearWarn();
-  }));
-  if (pd) pd.addEventListener("change", () => { if (pd.checked) clearWarn(); });
-  [nameEl, tgEl].forEach(f => f.addEventListener("input", () => {
-    if (f.value.trim()) f.classList.remove("err");
-  }));
-
-  btn.addEventListener("click", () => {
-    const name = (nameEl.value || "").trim();
-    const contact = (tgEl.value || "").trim();
-    if (!name || !contact) {
-      if (!name) nameEl.classList.add("err");
-      if (!contact) tgEl.classList.add("err");
-      warn("Заполните оба поля — иначе не сможем вас позвать.");
-      (name ? tgEl : nameEl).focus();
-      return;
-    }
-    if (!talk) {
-      /* Главная причина «нажал, и ничего не происходит»: вопрос выше кнопки,
-         человек его пролистал. Поэтому подсвечиваем сам вопрос и подводим к нему экран. */
-      if (ask) {
-        ask.classList.add("need");
-        if (askNote) askNote.hidden = false;
-        if (ask.scrollIntoView) ask.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-      warn("Сначала ответьте на вопрос выше.");
-      return;
-    }
-    if (pd && !pd.checked) {
-      /* Без согласия на обработку данных заявку принимать нельзя. */
-      pdLabel.classList.add("err");
-      if (pdLabel.scrollIntoView) pdLabel.scrollIntoView({ behavior: "smooth", block: "center" });
-      warn("Отметьте согласие на обработку персональных данных.");
-      return;
-    }
-    clearWarn();
-    btn.disabled = true;
-    btn.textContent = "Отправляю…";
-    sendLead(r, name, contact, talk, { pd: !!(pd && pd.checked), ads: !!(ads && ads.checked) });
-    /* Сначала рисуем «Готово», потом уводим в канал: на клиентах Телеграма
-       старше Bot API 7.0 openTelegramLink закрывает мини-апп, и экран
-       подтверждения человек бы не увидел вовсе. */
-    done();
-    openChannel();   // обещали «сразу после записи» — открываем сами
-  });
-  n.querySelector("#back-offer").addEventListener("click", () => offer(r));
-  render(n);
-}
-
-/* Внутри Телеграма уводим в канал сразу: это его собственный переход,
-   он открывается поверх и ничего не блокирует. В обычном браузере
-   не открываем ничего сами — там всплывающее окно просто съедят. */
-function openChannel() {
-  if (!CONFIG.channelUrl) return;
+/* Уводим в чат с командой. Внутри Телеграма это его собственный переход:
+   на клиентах старше Bot API 7.0 он закрывает мини-апп — здесь это и нужно,
+   человек уходит писать. В обычном браузере открываем новой вкладкой. */
+function openChat() {
+  const url = CONFIG.teamChat;
+  if (!url) return;
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg && tg.openTelegramLink) {
-    try { tg.openTelegramLink(CONFIG.channelUrl); } catch (e) {}
+    try { tg.openTelegramLink(url); return; } catch (e) {}
   }
-}
-
-function done() {
-  const n = el(`
-    <div class="card">
-      <h2>Готово. Вы в списке первых.</h2>
-      <p class="lede">Когда откроем набор, напишем вам раньше остальных и по самой низкой цене.</p>
-      ${CONFIG.channelUrl ? `
-        <div class="foot">
-          <a class="go big" id="ch" href="${CONFIG.channelUrl}" target="_blank" rel="noopener">Забрать доступ в канал Виолы <span aria-hidden="true">→</span></a>
-          <p class="cta-note">Новое видите первыми, лучшие условия, подкасты и материалы, которых нет в открытом доступе.</p>
-        </div>` : ""}
-    </div>`);
-  const ch = n.querySelector("#ch");
-  if (ch) ch.addEventListener("click", (e) => {
-    const tg = window.Telegram && window.Telegram.WebApp;
-    if (tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink(CONFIG.channelUrl); }
-  });
-  render(n);
+  window.open(url, "_blank", "noopener");
 }
 
 const BUFFER_KEY = "viola-pending";
@@ -1272,23 +1002,6 @@ function send_(payload) {
 function queue(item) {
   buffer(item);
   flush();
-}
-
-function sendLead(r, name, contact, talk, consent) {
-  const tg = window.Telegram && window.Telegram.WebApp;
-  const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
-  const lead = {
-    type: "lead",
-    name: name, contact: contact, ready: talk || "",
-    rank: r.key, percent: r.pct,
-    userId: u.id || "", forks: forks,
-    /* Акцепт фиксируем так же, как на сайте: сами галочки, время и редакция документа. */
-    accept_pd: consent && consent.pd ? "да" : "",
-    accept_ads: consent && consent.ads ? "да" : "",
-    consent_ts: new Date().toISOString(),
-    doc_version_consent: CONFIG.docVersionConsent || ""
-  };
-  queue(lead);
 }
 
 function buffer(item) {
@@ -1323,26 +1036,21 @@ function flush() {
   let all = [];
   try { all = JSON.parse(localStorage.getItem(BUFFER_KEY) || "[]"); } catch (e) { return; }
   if (!all.length) return;
-  /* Обёртка не про сеть, а про сам вызов: fetch есть не в каждом вебвью,
-     и на телефоне без него исключение уходило вверх — в boot(). Человек
-     вместо теста получал экран отказа из-за одной недоставленной заявки. */
-  try {
-    all.forEach(item => {
-      const key = JSON.stringify(item);
-      if (inFlight.has(key)) return;     // тот же элемент уже летит — второй раз не шлём
-      inFlight.add(key);
-      send_(item)
-        .then(res => res.text())
-        .then(txt => {
-          /* Приёмник отвечает {"ok":true}. Если вместо этого прилетела страница
-             входа Google — значит развёртывание закрыто, и запись НЕ сохранилась.
-             Оставляем её в буфере до следующего раза. */
-          if (txt.indexOf('"ok"') !== -1) unbuffer(item);
-        })
-        .catch(() => {})
-        .then(() => { inFlight.delete(key); });
-    });
-  } catch (e) {}
+  all.forEach(item => {
+    const key = JSON.stringify(item);
+    if (inFlight.has(key)) return;     // тот же элемент уже летит — второй раз не шлём
+    inFlight.add(key);
+    send_(item)
+      .then(res => res.text())
+      .then(txt => {
+        /* Приёмник отвечает {"ok":true}. Если вместо этого прилетела страница
+           входа Google — значит развёртывание закрыто, и запись НЕ сохранилась.
+           Оставляем её в буфере до следующего раза. */
+        if (txt.indexOf('"ok"') !== -1) unbuffer(item);
+      })
+      .catch(() => {})
+      .then(() => { inFlight.delete(key); });
+  });
 }
 
 /* ——— отправка результата ———
@@ -1400,36 +1108,12 @@ function clearState() {
   try { localStorage.removeItem(STATE_KEY); } catch (e) {}
 }
 
-/* Шкалы, без которых экран результата не построить: powers() читает их
-   напрямую. Раньше запись без них роняла запуск. */
-const SCALES_NEEDED = ["A", "P", "I", "B", "C", "G", "L"];
-
-/* Сохранённое прохождение могло остаться от прежней версии теста: вопросы
-   и способ хранения результата менялись, а запись живёт до суток. Такое
-   состояние роняло boot(), и человек при каждом открытии видел экран
-   «тест не открылся» — весь срок хранения. Не сошлось — молча начинаем
-   заново: потерять полтора экрана ответов не так дорого, как сутки не мочь
-   войти. Проходящему сейчас это ничем не грозит — его запись форме отвечает. */
-function stateOk_(s) {
-  const a = s.answers;
-  if (!Array.isArray(a) || a.length > Q.length) return false;
-  if (!a.every(v => typeof v === "number" && v >= 0 && v <= 3)) return false;
-  if (s.res) {
-    if (!RESULTS[s.res.key]) return false;
-    const sc = s.res.scales;
-    if (!sc || typeof sc !== "object") return false;
-    if (!SCALES_NEEDED.every(k => typeof sc[k] === "number")) return false;
-  }
-  return true;
-}
-
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
     if (!s || !s.t) return null;
     const done = (s.answers || []).length === Q.length;
     if (Date.now() - s.t > (done ? TTL_DONE : TTL_MID)) { clearState(); return null; }
-    if (!stateOk_(s)) { clearState(); return null; }
     return s;
   } catch (e) { return null; }
 }
@@ -1466,16 +1150,9 @@ function boot() {
   intro();
 }
 
-/* Стартуем не сразу: страховка наверху дождётся Телеграма — или того, что его
-   не будет, — и позовёт сама. Прямой вызов оставлен на случай, если верхний
-   блок почему-то не отработал: без запуска тест не оставляем ни при каких условиях. */
-function run() {
-  try {
-    boot();
-  } catch (e) {
-    if (window.__fallback) window.__fallback(e && e.message ? e.message : e);
-  }
+try {
+  boot();
+} catch (e) {
+  if (window.__fallback) window.__fallback(e && e.message ? e.message : e);
 }
-
-if (window.__appStart) window.__appStart(run); else run();
 </script>
