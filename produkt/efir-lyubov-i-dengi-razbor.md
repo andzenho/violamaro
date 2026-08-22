@@ -75,4 +75,4 @@
 
 ---
 
-**Связки:** ЦА и платёжеспособность — `../analitika/ca-master.md`, `ca-empatia.md`; методички курса — `../korpus/05–07`; комментарии (деньги/желания) — `../analitika/kommentarii-razbor.md` (партии 5–7); слова Виолы о развороте — `sozvon-viola-11.08-itogi.md`.
+**Связки:** ЦА и платёжеспособность — `../analitika/ca-master.md`, `ca-empatia.md`; методички курса — `../korpus/05–07`; комментарии (деньги/желания) — `../analitika/kommentarii-razbor.md` (партии 5–7); слова Виолы о развороте — `arhiv/lyubov-i-dengi/sozvon-viola-11.08-itogi.md`.
