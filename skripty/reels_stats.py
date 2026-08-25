@@ -23,6 +23,12 @@ DATA = 'analitika/reels-data.csv'
 WINDOW_DAYS = 30
 MIN_WINDOW_N = 5   # меньше -- окно ненадёжно, берём глобальную медиану года
 
+# Рилс набирает просмотры примерно две недели: медиана сырых просмотров по возрасту
+# на момент выгрузки -- 0-3 дня 7 224, 4-7 дней 9 175, 8-14 дней 13 787, 15-30 дней 27 104.
+# Всё, что моложе MATURE_DAYS, из сводных расчётов исключается: K у таких рилсов занижен
+# не потому, что они плохие, а потому, что они ещё не досчитались.
+MATURE_DAYS = 15
+
 # Бакеты длительности подобраны под фактическое распределение (медиана 114 сек),
 # а не под "типовой рилс до 60 сек": у Виолы формат длинный.
 BUCKETS = [(0, 45), (45, 75), (75, 120), (120, 180), (180, 10**6)]
@@ -63,6 +69,10 @@ def add_norm(recs):
         r['CR'] = 1000 * r['comments'] / r['views']  # комментарии на 1000 просмотров
         r['bucket'] = next('%d-%d' % (a, b) if b < 10**6 else '%d+' % a
                            for a, b in BUCKETS if a <= r['dur'] < b)
+    cutoff = max(r['date'] for r in recs)
+    for r in recs:
+        r['age'] = (cutoff - r['date']).days
+        r['mature'] = r['age'] >= MATURE_DAYS
     return recs
 
 
@@ -102,12 +112,26 @@ def fmt(r):
                text_of(r)[:110].replace('\n', ' ')))
 
 
-def report(recs, top_n=15):
-    print('РИЛСЫ @viola.maro.psy — %d шт, %s … %s' % (len(recs), recs[0]['date'], recs[-1]['date']))
+def report(all_recs, top_n=15):
+    recs = [r for r in all_recs if r['mature']]
+    young = [r for r in all_recs if not r['mature']]
+    print('РИЛСЫ @viola.maro.psy — %d шт, %s … %s' % (len(all_recs), all_recs[0]['date'], all_recs[-1]['date']))
+    if young:
+        print('Исключено как недозревшие (моложе %d дней): %d — %s'
+              % (MATURE_DAYS, len(young), ', '.join(str(r['date']) for r in young)))
     print('Суммарно просмотров: %s | медиана: %s | транскриптов: %d'
           % (f"{sum(r['views'] for r in recs):,}".replace(',', ' '),
              f"{int(statistics.median(r['views'] for r in recs)):,}".replace(',', ' '),
              sum(1 for r in recs if r['tr'])))
+
+    print('\n— ДОЗРЕВАНИЕ: сырые просмотры по возрасту на момент выгрузки —')
+    print('возраст        n   медиана просмотров')
+    for lo, hi, lbl in [(0, 3, '0-3 дня'), (4, 7, '4-7 дней'), (8, 14, '8-14 дней'),
+                        (15, 30, '15-30 дней'), (31, 60, '31-60 дней'), (61, 120, '61-120 дней')]:
+        g = [r for r in all_recs if lo <= r['age'] <= hi]
+        if g:
+            print('%-13s %3d %18s' % (lbl, len(g),
+                  f"{int(statistics.median(x['views'] for x in g)):,}".replace(',', ' ')))
 
     print('\n— ДРЕЙФ ОХВАТА ПО ПОЛУГОДИЯМ (почему нужна нормировка) —')
     half = collections.defaultdict(list)
