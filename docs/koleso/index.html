@@ -340,6 +340,21 @@
   a.go { display: block; text-align: center; text-decoration: none; }
   a.go.big { color: #FFF; }
 
+  /* Вторая кнопка оплаты. Обводкой, а не заливкой: способов два, но
+     основной один, и две одинаково громкие кнопки заставляли бы человека
+     выбирать там, где выбор у большинства очевиден. */
+  button.go.alt {
+    color: var(--ink);
+    background: none;
+    border: 1px solid var(--line-strong);
+    box-shadow: none;
+    font-weight: 500;
+    font-size: .98rem;
+    padding: .85rem 1.4rem;
+  }
+  button.go.alt:hover { opacity: 1; background: var(--surface-2); }
+  button.go.alt:disabled, button.go.big:disabled { opacity: .55; cursor: default; }
+
   .fields { display: flex; flex-direction: column; gap: .8rem; }
   .fields label {
     display: flex; flex-direction: column; gap: .35rem;
@@ -449,6 +464,10 @@
     font-size: .74rem; line-height: 1.45; color: var(--ink-mute); text-align: center;
     margin-top: -.5rem;
   }
+  /* Общее правило для ссылок. Без него всё, что не попало в .cb и
+     .cta-legal (политика на первом экране, отдел заботы в лид-форме),
+     красилось браузерным синим и в тёмной теме почти не читалось. */
+  a { color: var(--accent); }
   .cta-legal a { color: var(--ink-mute); }
 
   /* ——— колесо ——— */
@@ -714,12 +733,16 @@
 /* ——— куда уходит прохождение ———
    sheetUrl — адрес приёмника из skripty/test-empat-sheets.gs, тот же, что у теста
    на эмпатию: приёмник один, листы в таблице разные.
-   payUrl — куда ведёт кнопка в конце. Страница оплаты на GetCourse: там же
-   принимается оферта и там же деньги, поэтому в лид-форме оферту не просим.
-   Пусто — уводим в чат с командой, чтобы кнопка не вела в никуда. */
+   payUrl — оплата рублями, страница GetCourse: там же принимается оферта
+   и там же деньги, поэтому в лид-форме оферту не просим.
+   payUrlIntl — оплата зарубежной картой. Пока пусто, кнопка уводит в отдел
+   заботы, и под кнопками об этом сказано прямо: обещать автоматическую
+   оплату, которой нет, значит терять человека уже после того, как он решил
+   заплатить. */
 const CONFIG = {
   sheetUrl: "https://script.google.com/macros/s/AKfycbzgho8KRyxxAoVrV2lkpS-2aCS4VjEbvzew1kaRjOQnx_X9qxtADNRQaNWQK-7GROkuUw/exec",
   payUrl: "https://anny-nizh.getplatinum.ru/payment/VyfTEMo",
+  payUrlIntl: "",
   teamChat: "https://t.me/m/LEHK_cjeNGU1",
   publicChannel: "https://t.me/violamaro1",
   testUrl: "https://andzenho.github.io/violamaro/koleso/",   // им же делятся
@@ -1370,8 +1393,9 @@ function lead(r) {
         </label>
       </div>
       <div class="foot">
-        <button class="go big" id="send">Перейти к оплате, ${CONFIG.price}&nbsp;<span aria-hidden="true">→</span></button>
-        <p class="cta-note" id="hint">Оплата откроется в отдельном окне, там же условия участия.</p>
+        <button class="go big" id="send">Оплатить рублями, ${CONFIG.price}&nbsp;<span aria-hidden="true">→</span></button>
+        <button class="go alt" id="send-intl">Оплатить зарубежной картой&nbsp;<span aria-hidden="true">→</span></button>
+        <p class="cta-note" id="hint">Оплата откроется в отдельном окне, там же условия участия.${CONFIG.payUrlIntl ? "" : " Зарубежной картой оплату оформляет отдел заботы: напишет и пришлёт ссылку."}</p>
         <button class="ghost" id="back-offer">← Назад</button>
       </div>
     </div>`);
@@ -1396,7 +1420,12 @@ function lead(r) {
   [nameEl, tgEl].forEach(f => f.addEventListener("input", () => { if (f.value.trim()) f.classList.remove("err"); }));
   if (pd) pd.addEventListener("change", () => { if (pd.checked) clearWarn(); });
 
-  btn.addEventListener("click", () => {
+  const btnIntl = n.querySelector("#send-intl");
+
+  /* Обе кнопки проходят одну проверку и один и тот же порядок: сначала
+     заявка в таблицу, потом оплата. Человек, закрывший оплату, всё равно
+     остаётся у нас контактом, и заботе есть кому написать. */
+  function goPay(way, pressed) {
     const name = (nameEl.value || "").trim();
     const contact = (tgEl.value || "").trim();
     if (!name || !contact) {
@@ -1414,19 +1443,25 @@ function lead(r) {
     }
     clearWarn();
     btn.disabled = true;
-    btn.textContent = "Открываю оплату…";
-    sendGo(r, name, contact, { pd: !!(pd && pd.checked), ads: !!(ads && ads.checked) });
-    openPay();
-  });
+    if (btnIntl) btnIntl.disabled = true;
+    pressed.textContent = way === "intl" && !CONFIG.payUrlIntl ? "Открываю чат…" : "Открываю оплату…";
+    sendGo(r, name, contact, { pd: !!(pd && pd.checked), ads: !!(ads && ads.checked) }, way);
+    openPay(way);
+  }
+
+  btn.addEventListener("click", () => goPay("rub", btn));
+  if (btnIntl) btnIntl.addEventListener("click", () => goPay("intl", btnIntl));
   n.querySelector("#back-offer").addEventListener("click", () => offer(r));
   linksThroughTelegram_(n);
   render(n);
 }
 
-/* Уводим на оплату. Пока страницы оплаты нет — в чат с командой, чтобы кнопка
-   не вела в никуда. Обе ссылки телеграмовские или обычные, различаем по адресу. */
-function openPay() {
-  const url = CONFIG.payUrl || CONFIG.teamChat;
+/* Уводим на оплату. Способов два: рублями и зарубежной картой. Если адреса
+   под способ нет — в чат с командой, чтобы кнопка не вела в никуда.
+   Ссылки телеграмовские или обычные, различаем по адресу. */
+function openPay(way) {
+  const url = (way === "intl" ? CONFIG.payUrlIntl : CONFIG.payUrl)
+    || CONFIG.careChat || CONFIG.teamChat;
   if (!url) return;
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg) {
@@ -1440,7 +1475,7 @@ function openPay() {
 
 /* Отметка «пошёл платить». Формы здесь нет, контакт оставляет сама оплата, —
    но без этой записи мы не знаем, кто дошёл до кнопки и не дошёл до оплаты. */
-function sendGo(r, name, contact, consent) {
+function sendGo(r, name, contact, consent, way) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
   queue({
@@ -1455,6 +1490,9 @@ function sendGo(r, name, contact, consent) {
     userName: [u.first_name, u.last_name].filter(Boolean).join(" "),
     name: name || "",
     contact: contact || "",
+    /* Каким способом человек пошёл платить. Заботе это нужно сразу:
+       зарубежную карту она ведёт руками, рублёвую нет. */
+    pay: way === "intl" ? "зарубежная карта" : "рубли",
     /* Акцепт оферты собирает страница оплаты на GetCourse: там же деньги,
        там же и договор. Дважды за минуту принимать один документ незачем. */
     accept_pd: consent && consent.pd ? "да" : "",
