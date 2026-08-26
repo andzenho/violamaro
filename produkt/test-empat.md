@@ -2,7 +2,7 @@
 
 12.08.2026 · v4 (эго-механика, блок «эмпатия или СДВГ», реальный отсев, блок «История»).
 Готовый текст теста под сборку — `produkt/test-empat-chistovik.md`. Здесь — обоснование конструкции.
-Собран из присланного текста «Портрет эмпата. 30 маркеров» (авторство уточняется), сверен с `produkt/sozvon-viola-11.08-itogi.md`, `analitika/ca-empatia.md`, `analitika/ca-voc.md`, `baza/kanon-empat.md`, `baza/golos-viola.md`.
+Собран из присланного текста «Портрет эмпата. 30 маркеров» (авторство уточняется), сверен с `arhiv/lyubov-i-dengi/sozvon-viola-11.08-itogi.md`, `analitika/ca-empatia.md`, `analitika/ca-voc.md`, `baza/kanon-empat.md`, `baza/golos-viola.md`.
 
 Статус: **черновик под сборку в боте**. Строки голосом Виолы — на её визирование.
 
