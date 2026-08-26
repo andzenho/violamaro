@@ -714,12 +714,12 @@
 /* ——— куда уходит прохождение ———
    sheetUrl — адрес приёмника из skripty/test-empat-sheets.gs, тот же, что у теста
    на эмпатию: приёмник один, листы в таблице разные.
-   payUrl — куда ведёт кнопка в конце. Способ оплаты (страница автоплатежа или
-   команда в переписке) решает продюсер; в коде это одна строка. Пусто — уводим
-   в чат с командой, чтобы кнопка не вела в никуда. */
+   payUrl — куда ведёт кнопка в конце. Страница оплаты на GetCourse: там же
+   принимается оферта и там же деньги, поэтому в лид-форме оферту не просим.
+   Пусто — уводим в чат с командой, чтобы кнопка не вела в никуда. */
 const CONFIG = {
   sheetUrl: "https://script.google.com/macros/s/AKfycbzgho8KRyxxAoVrV2lkpS-2aCS4VjEbvzew1kaRjOQnx_X9qxtADNRQaNWQK-7GROkuUw/exec",
-  payUrl: "",
+  payUrl: "https://anny-nizh.getplatinum.ru/payment/VyfTEMo",
   teamChat: "https://t.me/m/LEHK_cjeNGU1",
   publicChannel: "https://t.me/violamaro1",
   testUrl: "https://andzenho.github.io/violamaro/koleso/",   // им же делятся
