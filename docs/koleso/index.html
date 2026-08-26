@@ -340,20 +340,37 @@
   a.go { display: block; text-align: center; text-decoration: none; }
   a.go.big { color: #FFF; }
 
-  /* Вторая кнопка оплаты. Обводкой, а не заливкой: способов два, но
-     основной один, и две одинаково громкие кнопки заставляли бы человека
-     выбирать там, где выбор у большинства очевиден. */
-  button.go.alt {
-    color: var(--ink);
-    background: none;
+  button.go:disabled, button.go.big:disabled { opacity: .55; cursor: default; }
+
+  /* Два способа оплаты. Карточки намеренно одинаковые до пикселя: рамка,
+     фон, размер суммы, кнопка. Аудитория делится примерно пополам, и любой
+     намёк «этот способ основной» половине людей сообщает, что они здесь
+     второй сорт. */
+  .ways { display: flex; flex-direction: column; gap: .8rem; margin: .2rem 0 .4rem; }
+  .way {
+    display: flex; flex-direction: column; gap: .35rem;
+    padding: 1.1rem 1.1rem 1.2rem;
     border: 1px solid var(--line-strong);
-    box-shadow: none;
-    font-weight: 500;
-    font-size: .98rem;
-    padding: .85rem 1.4rem;
+    border-radius: 18px;
+    background: var(--surface-2);
   }
-  button.go.alt:hover { opacity: 1; background: var(--surface-2); }
-  button.go.alt:disabled, button.go.big:disabled { opacity: .55; cursor: default; }
+  .way-sum {
+    font-family: 'Prata', Georgia, serif; font-size: 1.75rem; line-height: 1.1;
+    color: var(--accent);
+  }
+  .way-what { font-weight: 600; }
+  .way-note { margin: 0 0 .35rem; font-size: .92rem; color: var(--ink-soft); line-height: 1.45; }
+  /* margin-top: auto прижимает кнопки к низу карточки. Пояснения разной
+     длины, и без этого кнопки вставали на разной высоте — глаз читает это
+     как «одна главнее». */
+  .way button.go.big { width: 100%; font-size: 1rem; padding: .95rem 1.2rem; margin-top: auto; }
+
+  /* На широком экране способы встают рядом: так равенство читается сразу,
+     без прокрутки от одного к другому. */
+  @media (min-width: 560px) {
+    .ways { flex-direction: row; }
+    .way { flex: 1 1 0; }
+  }
 
   .fields { display: flex; flex-direction: column; gap: .8rem; }
   .fields label {
@@ -733,16 +750,19 @@
 /* ——— куда уходит прохождение ———
    sheetUrl — адрес приёмника из skripty/test-empat-sheets.gs, тот же, что у теста
    на эмпатию: приёмник один, листы в таблице разные.
-   payUrl — оплата рублями, страница GetCourse: там же принимается оферта
-   и там же деньги, поэтому в лид-форме оферту не просим.
-   payUrlIntl — оплата зарубежной картой. Пока пусто, кнопка уводит в отдел
-   заботы, и под кнопками об этом сказано прямо: обещать автоматическую
-   оплату, которой нет, значит терять человека уже после того, как он решил
-   заплатить. */
+   payUrl — рублями, страница GetCourse: там же принимается оферта и там же
+   деньги, поэтому в лид-форме оферту не просим. Там же и рассрочка.
+   payUrlEur — в евро, Lava, для зарубежных карт. Пока пусто, эта половина
+   уводит в отдел заботы, и на экране об этом сказано прямо: обещать
+   автоматическую оплату, которой нет, значит терять человека уже после
+   того, как он решил заплатить.
+   Аудитория делится пополам, поэтому оба способа на экране равны: одинаковые
+   карточки, одинаковые кнопки, ни одного визуального намёка, что рублями
+   «правильнее». */
 const CONFIG = {
   sheetUrl: "https://script.google.com/macros/s/AKfycbzgho8KRyxxAoVrV2lkpS-2aCS4VjEbvzew1kaRjOQnx_X9qxtADNRQaNWQK-7GROkuUw/exec",
   payUrl: "https://anny-nizh.getplatinum.ru/payment/VyfTEMo",
-  payUrlIntl: "",
+  payUrlEur: "",
   teamChat: "https://t.me/m/LEHK_cjeNGU1",
   publicChannel: "https://t.me/violamaro1",
   testUrl: "https://andzenho.github.io/violamaro/koleso/",   // им же делятся
@@ -761,6 +781,9 @@ const CONFIG = {
      «Прикладной эмпатии». */
   docVersionConsent: "2026-08-10",
   price: "3 000 ₽",
+  /* Пересчёт 3 000 ₽ по курсу ЦБ на 26.08.2026 (1 € = 98,5182 ₽) = 30,45 €,
+     округлено вверх. Курс живёт своей жизнью: перед стартом продаж пересчитать. */
+  priceEur: "31 €",
   priceFull: "",
   /* Срок ранней цены. Пока пусто — строка про срок не печатается вовсе:
      выдуманный дедлайн хуже, чем его отсутствие. */
@@ -1393,9 +1416,8 @@ function lead(r) {
         </label>
       </div>
       <div class="foot">
-        <button class="go big" id="send">Оплатить рублями, ${CONFIG.price}&nbsp;<span aria-hidden="true">→</span></button>
-        <button class="go alt" id="send-intl">Оплатить зарубежной картой&nbsp;<span aria-hidden="true">→</span></button>
-        <p class="cta-note" id="hint">Оплата откроется в отдельном окне, там же условия участия.${CONFIG.payUrlIntl ? "" : " Зарубежной картой оплату оформляет отдел заботы: напишет и пришлёт ссылку."}</p>
+        <button class="go big" id="send">Дальше, к оплате&nbsp;<span aria-hidden="true">→</span></button>
+        <p class="cta-note" id="hint">Дальше выберете, чем платить. Рублями или в евро, оба способа рабочие.</p>
         <button class="ghost" id="back-offer">← Назад</button>
       </div>
     </div>`);
@@ -1420,12 +1442,10 @@ function lead(r) {
   [nameEl, tgEl].forEach(f => f.addEventListener("input", () => { if (f.value.trim()) f.classList.remove("err"); }));
   if (pd) pd.addEventListener("change", () => { if (pd.checked) clearWarn(); });
 
-  const btnIntl = n.querySelector("#send-intl");
-
-  /* Обе кнопки проходят одну проверку и один и тот же порядок: сначала
-     заявка в таблицу, потом оплата. Человек, закрывший оплату, всё равно
-     остаётся у нас контактом, и заботе есть кому написать. */
-  function goPay(way, pressed) {
+  /* Заявку отправляем здесь, а не на экране выбора способа. Человек,
+     который заполнил форму и завис над выбором валюты, — самый тёплый
+     из всех, и терять его контакт из-за лишнего экрана нельзя. */
+  btn.addEventListener("click", () => {
     const name = (nameEl.value || "").trim();
     const contact = (tgEl.value || "").trim();
     if (!name || !contact) {
@@ -1443,24 +1463,71 @@ function lead(r) {
     }
     clearWarn();
     btn.disabled = true;
-    if (btnIntl) btnIntl.disabled = true;
-    pressed.textContent = way === "intl" && !CONFIG.payUrlIntl ? "Открываю чат…" : "Открываю оплату…";
-    sendGo(r, name, contact, { pd: !!(pd && pd.checked), ads: !!(ads && ads.checked) }, way);
-    openPay(way);
-  }
-
-  btn.addEventListener("click", () => goPay("rub", btn));
-  if (btnIntl) btnIntl.addEventListener("click", () => goPay("intl", btnIntl));
+    sendGo(r, name, contact, { pd: !!(pd && pd.checked), ads: !!(ads && ads.checked) });
+    payway(r);
+  });
   n.querySelector("#back-offer").addEventListener("click", () => offer(r));
   linksThroughTelegram_(n);
   render(n);
 }
 
-/* Уводим на оплату. Способов два: рублями и зарубежной картой. Если адреса
-   под способ нет — в чат с командой, чтобы кнопка не вела в никуда.
+/* Экран выбора способа оплаты.
+   Аудитория делится примерно пополам на тех, кто платит российской картой,
+   и тех, у кого её нет. Поэтому способы равны: одинаковые карточки,
+   одинаковые кнопки, одинаковый вес. Любая подсказка «вот этот основной»
+   половине людей говорит, что они здесь второй сорт. */
+function payway(r) {
+  stage = "payway";
+  const eurLive = !!CONFIG.payUrlEur;
+
+  const n = el(`
+    <div class="card">
+      <div class="step">Событие «Неудобная»</div>
+      <h2>Чем вам удобнее заплатить</h2>
+      <p class="lede">Оба способа открывают доступ одинаково. Выбирайте тот, которым платить проще.</p>
+      <div class="ways">
+        <div class="way">
+          <div class="way-sum">${CONFIG.price}</div>
+          <div class="way-what">Российской картой</div>
+          <p class="way-note">На странице оплаты можно оформить рассрочку.</p>
+          <button class="go big" id="pay-rub">Оплатить рублями&nbsp;<span aria-hidden="true">→</span></button>
+        </div>
+        <div class="way">
+          <div class="way-sum">${CONFIG.priceEur}</div>
+          <div class="way-what">Зарубежной картой</div>
+          <p class="way-note">${eurLive
+            ? "Оплата через Lava, карты любой страны."
+            : "Отдел заботы пришлёт ссылку на оплату, напишите ему."}</p>
+          <button class="go big" id="pay-eur">Оплатить в евро&nbsp;<span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+      <p class="cta-note" id="pw-hint">Оплата откроется в отдельном окне, там же условия участия.</p>
+      <p class="quiet">Что-то не проходит, напишите нам: <a href="${CONFIG.careChat}" target="_blank" rel="noopener">${CONFIG.careChat.replace("https://t.me/", "@")}</a></p>
+      <button class="ghost" id="back-lead">← Назад</button>
+    </div>`);
+
+  const hint = n.querySelector("#pw-hint");
+  function go(way, btn) {
+    n.querySelectorAll("button.go").forEach(b => { b.disabled = true; });
+    btn.textContent = (way === "eur" && !eurLive) ? "Открываю чат…" : "Открываю оплату…";
+    /* Способ дописывается в уже сохранённую заявку, а не создаёт вторую
+       строку: иначе один человек выглядел бы в таблице как две заявки. */
+    sendWay(way);
+    openPay(way);
+    if (hint) hint.textContent = "Если окно не открылось, проверьте, не заблокировал ли его браузер.";
+  }
+  n.querySelector("#pay-rub").addEventListener("click", e => go("rub", e.currentTarget));
+  n.querySelector("#pay-eur").addEventListener("click", e => go("eur", e.currentTarget));
+  n.querySelector("#back-lead").addEventListener("click", () => lead(r));
+  linksThroughTelegram_(n);
+  render(n);
+}
+
+/* Уводим на оплату. Способов два: рублями и в евро. Если адреса под способ
+   нет — в чат с командой, чтобы кнопка не вела в никуда.
    Ссылки телеграмовские или обычные, различаем по адресу. */
 function openPay(way) {
-  const url = (way === "intl" ? CONFIG.payUrlIntl : CONFIG.payUrl)
+  const url = (way === "eur" ? CONFIG.payUrlEur : CONFIG.payUrl)
     || CONFIG.careChat || CONFIG.teamChat;
   if (!url) return;
   const tg = window.Telegram && window.Telegram.WebApp;
@@ -1475,7 +1542,7 @@ function openPay(way) {
 
 /* Отметка «пошёл платить». Формы здесь нет, контакт оставляет сама оплата, —
    но без этой записи мы не знаем, кто дошёл до кнопки и не дошёл до оплаты. */
-function sendGo(r, name, contact, consent, way) {
+function sendGo(r, name, contact, consent) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
   queue({
@@ -1490,9 +1557,6 @@ function sendGo(r, name, contact, consent, way) {
     userName: [u.first_name, u.last_name].filter(Boolean).join(" "),
     name: name || "",
     contact: contact || "",
-    /* Каким способом человек пошёл платить. Заботе это нужно сразу:
-       зарубежную карту она ведёт руками, рублёвую нет. */
-    pay: way === "intl" ? "зарубежная карта" : "рубли",
     /* Акцепт оферты собирает страница оплаты на GetCourse: там же деньги,
        там же и договор. Дважды за минуту принимать один документ незачем. */
     accept_pd: consent && consent.pd ? "да" : "",
@@ -1506,6 +1570,20 @@ const BUFFER_KEY = "viola-kl-pending";
 
 /* Данные уходят обычным GET с параметром: POST на веб-приложение Apps Script
    у анонимных запросов упирается в редирект и не доходит. Проверено. */
+/* Способ оплаты приходит вторым, отдельным сообщением: заявку мы сохранили
+   раньше, на выходе из формы. Приёмник по этой метке не заводит новую строку,
+   а дописывает колонку в последнюю заявку этого человека. */
+function sendWay(way) {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+  queue({
+    test: "koleso",
+    type: "pay",
+    userId: u.id || "",
+    pay: way === "eur" ? "евро" : "рубли"
+  });
+}
+
 function send_(payload) {
   return fetch(CONFIG.sheetUrl + "?payload=" + encodeURIComponent(JSON.stringify(payload)));
 }
