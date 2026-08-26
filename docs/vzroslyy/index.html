@@ -679,13 +679,18 @@ const CONFIG = {
   /* Правовые страницы живут на сайте оплаты — тексты и редакции там одни на всё. */
   careChat: "https://t.me/violamaroteam",   // отдел заботы, тот же, что на сайтах
   docs: {
+    offer:   "https://andzenho.github.io/Viola-Maro/offer",
     consent: "https://andzenho.github.io/Viola-Maro/consent",
     privacy: "https://andzenho.github.io/Viola-Maro/privacy",
     ads:     "https://andzenho.github.io/Viola-Maro/consent-ads"
   },
+  /* Редакции документов на момент акцепта, те же, что на сайте оплаты.
+     Приложения № 1 здесь намеренно нет: оно описывает состав «Прикладной
+     эмпатии», к событию не относится, и принимать его человек не должен. */
+  docVersionOffer:   "2026-08-10",
   docVersionConsent: "2026-08-10",
-  price: "1490 ₽",
-  priceFull: "1990 ₽",
+  price: "3000 ₽",
+  priceFull: "",
   /* Срок ранней цены. Пока пусто — строка про срок не печатается вовсе:
      выдуманный дедлайн хуже, чем его отсутствие. */
   priceUntil: ""
@@ -1244,6 +1249,10 @@ function lead(r) {
       <p class="promise">Доступ приходит сразу после оплаты. Если он почему-то не пришёл, отдел заботы напишет вам сам, но вы всегда можете написать первыми, и вам ответят. Мы проверяем каждую оплату руками и не закрываем вопрос, пока вы не зашли и не разобрались, как всё устроено.</p>
       <p class="quiet">Отдел заботы: <a href="${CONFIG.careChat}" target="_blank" rel="noopener">${CONFIG.careChat.replace("https://t.me/", "@")}</a></p>
       <div class="consents">
+        <label class="cb" id="cb-offer-l">
+          <input type="checkbox" id="cb-offer">
+          <span>Я принимаю условия <a href="${CONFIG.docs.offer}" target="_blank" rel="noopener">Публичной оферты</a>, подтверждаю, что мне исполнилось 18 лет и что я ознакомился(лась) с разделом 3 «Особые условия».</span>
+        </label>
         <label class="cb" id="cb-pd-l">
           <input type="checkbox" id="cb-pd">
           <span>Я даю <a href="${CONFIG.docs.consent}" target="_blank" rel="noopener">согласие</a> на обработку моих персональных данных и ознакомлен(а) с <a href="${CONFIG.docs.privacy}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>.</span>
@@ -1264,6 +1273,8 @@ function lead(r) {
   const tgEl = n.querySelector("#f-tg");
   const btn = n.querySelector("#send");
   const hint = n.querySelector("#hint");
+  const offerBox = n.querySelector("#cb-offer");
+  const offerLabel = n.querySelector("#cb-offer-l");
   const pd = n.querySelector("#cb-pd");
   const pdLabel = n.querySelector("#cb-pd-l");
   const ads = n.querySelector("#cb-ads");
@@ -1274,11 +1285,12 @@ function lead(r) {
     nameEl.classList.remove("err");
     tgEl.classList.remove("err");
     if (pdLabel) pdLabel.classList.remove("err");
+    if (offerLabel) offerLabel.classList.remove("err");
   }
   function warn(msg) { if (hint) { hint.textContent = msg; hint.classList.add("err"); } }
 
   [nameEl, tgEl].forEach(f => f.addEventListener("input", () => { if (f.value.trim()) f.classList.remove("err"); }));
-  if (pd) pd.addEventListener("change", () => { if (pd.checked) clearWarn(); });
+  [pd, offerBox].forEach(b => { if (b) b.addEventListener("change", () => { if (b.checked) clearWarn(); }); });
 
   btn.addEventListener("click", () => {
     const name = (nameEl.value || "").trim();
@@ -1290,6 +1302,14 @@ function lead(r) {
       (name ? tgEl : nameEl).focus();
       return;
     }
+    /* Порядок проверок сверху вниз по экрану: иначе подсветится галочка,
+       которая у человека выше поля зрения, и он не поймёт, что от него хотят. */
+    if (offerBox && !offerBox.checked) {
+      offerLabel.classList.add("err");
+      if (offerLabel.scrollIntoView) offerLabel.scrollIntoView({ behavior: "smooth", block: "center" });
+      warn("Без принятия оферты оплата невозможна.");
+      return;
+    }
     if (pd && !pd.checked) {
       pdLabel.classList.add("err");
       if (pdLabel.scrollIntoView) pdLabel.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1299,7 +1319,7 @@ function lead(r) {
     clearWarn();
     btn.disabled = true;
     btn.textContent = "Открываю оплату…";
-    sendGo(r, name, contact, { pd: !!(pd && pd.checked), ads: !!(ads && ads.checked) });
+    sendGo(r, name, contact, { offer: !!(offerBox && offerBox.checked), pd: !!(pd && pd.checked), ads: !!(ads && ads.checked) });
     openPay();
   });
   n.querySelector("#back-offer").addEventListener("click", () => offer(r));
@@ -1336,9 +1356,11 @@ function sendGo(r, name, contact, consent) {
     userId: u.id || "",
     name: name || "",
     contact: contact || "",
+    accept_offer: consent && consent.offer ? "да" : "",
     accept_pd: consent && consent.pd ? "да" : "",
     accept_ads: consent && consent.ads ? "да" : "",
     consent_ts: new Date().toISOString(),
+    doc_version_offer: CONFIG.docVersionOffer || "",
     doc_version_consent: CONFIG.docVersionConsent || ""
   });
 }
