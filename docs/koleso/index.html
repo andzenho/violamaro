@@ -1451,6 +1451,8 @@ function sendGo(r, name, contact, consent) {
     worst: r.worst.map(c => c.k).join(","),
     forks: forks,
     userId: u.id || "",
+    userLogin: u.username ? "@" + u.username : "",
+    userName: [u.first_name, u.last_name].filter(Boolean).join(" "),
     name: name || "",
     contact: contact || "",
     /* Акцепт оферты собирает страница оплаты на GetCourse: там же деньги,
@@ -1558,6 +1560,9 @@ function send(r) {
     forks: forks,
     answers: answers.slice(),
     userId: user.id || "",
+    /* Логин отдельным полем: по нему команда пишет человеку первой.
+       Имя из Телеграма для этого не годится, тёзок много. */
+    userLogin: user.username ? "@" + user.username : "",
     userName: [user.first_name, user.last_name].filter(Boolean).join(" ")
   };
   window.__result = payload;
