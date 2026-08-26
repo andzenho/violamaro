@@ -677,9 +677,13 @@ const CONFIG = {
   teamChat: "https://t.me/m/LEHK_cjeNGU1",
   publicChannel: "https://t.me/violamaro1",
   /* Правовые страницы живут на сайте оплаты — тексты и редакции там одни на всё. */
+  careChat: "https://t.me/violamaroteam",   // отдел заботы, тот же, что на сайтах
   docs: {
-    privacy: "https://andzenho.github.io/Viola-Maro/privacy"
+    consent: "https://andzenho.github.io/Viola-Maro/consent",
+    privacy: "https://andzenho.github.io/Viola-Maro/privacy",
+    ads:     "https://andzenho.github.io/Viola-Maro/consent-ads"
   },
+  docVersionConsent: "2026-08-10",
   price: "1490 ₽",
   priceFull: "1990 ₽",
   /* Срок ранней цены. Пока пусто — строка про срок не печатается вовсе:
@@ -1206,8 +1210,99 @@ function offer(r) {
       </div>
     </div>`);
 
-  n.querySelector("#pay").addEventListener("click", () => { sendGo(r); openPay(); });
+  n.querySelector("#pay").addEventListener("click", () => lead(r));
   n.querySelector("#back-res").addEventListener("click", () => result(r));
+  linksThroughTelegram_(n);
+  render(n);
+}
+
+/* ——— форма перед оплатой ———
+   Нужна не ради контакта: оплата его и так соберёт. Нужна затем, чтобы команда
+   знала, кого ждать, и заметила человека, у которого оплата прошла, а доступ нет.
+   Поэтому здесь же и снимаются тревоги «а что после оплаты» и «а если не придёт». */
+function lead(r) {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+  const known = esc([u.first_name, u.last_name].filter(Boolean).join(" "));
+  const tgName = esc(u.username ? "@" + u.username : "");
+
+  const n = el(`
+    <div class="card">
+      <div class="step">Событие «Я выбираю. Я ВЗРОСЛЫЙ»</div>
+      <h2>Занимаем ваше место</h2>
+      ${known && tgName
+        ? `<p class="lede">Записываем как <b>${known}</b>, ${tgName}. Если что-то не так, поправьте.</p>`
+        : `<p class="lede">Оставьте, как к вам обращаться и куда писать.</p>`}
+      <div class="fields">
+        <label>Как вас зовут
+          <input id="f-name" type="text" value="${known}" placeholder="Имя" autocomplete="name">
+        </label>
+        <label>Телеграм
+          <input id="f-tg" type="text" value="${tgName}" placeholder="@имя" autocomplete="off">
+        </label>
+      </div>
+      <p class="promise">Доступ приходит сразу после оплаты. Если он почему-то не пришёл, отдел заботы напишет вам сам, но вы всегда можете написать первыми, и вам ответят. Мы проверяем каждую оплату руками и не закрываем вопрос, пока вы не зашли и не разобрались, как всё устроено.</p>
+      <p class="quiet">Отдел заботы: <a href="${CONFIG.careChat}" target="_blank" rel="noopener">${CONFIG.careChat.replace("https://t.me/", "@")}</a></p>
+      <div class="consents">
+        <label class="cb" id="cb-pd-l">
+          <input type="checkbox" id="cb-pd">
+          <span>Я даю <a href="${CONFIG.docs.consent}" target="_blank" rel="noopener">согласие</a> на обработку моих персональных данных и ознакомлен(а) с <a href="${CONFIG.docs.privacy}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>.</span>
+        </label>
+        <label class="cb">
+          <input type="checkbox" id="cb-ads">
+          <span>Я хочу получать письма и сообщения о программах и эфирах. Отписаться можно в один клик. <a href="${CONFIG.docs.ads}" target="_blank" rel="noopener">Условия рассылки</a></span>
+        </label>
+      </div>
+      <div class="foot">
+        <button class="go big" id="send">Перейти к оплате, ${CONFIG.price}&nbsp;<span aria-hidden="true">→</span></button>
+        <p class="cta-note" id="hint">Оплата откроется в отдельном окне.</p>
+        <button class="ghost" id="back-offer">← Назад</button>
+      </div>
+    </div>`);
+
+  const nameEl = n.querySelector("#f-name");
+  const tgEl = n.querySelector("#f-tg");
+  const btn = n.querySelector("#send");
+  const hint = n.querySelector("#hint");
+  const pd = n.querySelector("#cb-pd");
+  const pdLabel = n.querySelector("#cb-pd-l");
+  const ads = n.querySelector("#cb-ads");
+  const hintText = hint ? hint.textContent : "";
+
+  function clearWarn() {
+    if (hint) { hint.classList.remove("err"); hint.textContent = hintText; }
+    nameEl.classList.remove("err");
+    tgEl.classList.remove("err");
+    if (pdLabel) pdLabel.classList.remove("err");
+  }
+  function warn(msg) { if (hint) { hint.textContent = msg; hint.classList.add("err"); } }
+
+  [nameEl, tgEl].forEach(f => f.addEventListener("input", () => { if (f.value.trim()) f.classList.remove("err"); }));
+  if (pd) pd.addEventListener("change", () => { if (pd.checked) clearWarn(); });
+
+  btn.addEventListener("click", () => {
+    const name = (nameEl.value || "").trim();
+    const contact = (tgEl.value || "").trim();
+    if (!name || !contact) {
+      if (!name) nameEl.classList.add("err");
+      if (!contact) tgEl.classList.add("err");
+      warn("Заполните оба поля, иначе мы не найдём вас после оплаты.");
+      (name ? tgEl : nameEl).focus();
+      return;
+    }
+    if (pd && !pd.checked) {
+      pdLabel.classList.add("err");
+      if (pdLabel.scrollIntoView) pdLabel.scrollIntoView({ behavior: "smooth", block: "center" });
+      warn("Отметьте согласие на обработку персональных данных.");
+      return;
+    }
+    clearWarn();
+    btn.disabled = true;
+    btn.textContent = "Открываю оплату…";
+    sendGo(r, name, contact, { pd: !!(pd && pd.checked), ads: !!(ads && ads.checked) });
+    openPay();
+  });
+  n.querySelector("#back-offer").addEventListener("click", () => offer(r));
   linksThroughTelegram_(n);
   render(n);
 }
@@ -1229,7 +1324,7 @@ function openPay() {
 
 /* Отметка «пошёл платить». Формы здесь нет, контакт оставляет сама оплата, —
    но без этой записи мы не знаем, кто дошёл до кнопки и не дошёл до оплаты. */
-function sendGo(r) {
+function sendGo(r, name, contact, consent) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
   queue({
@@ -1239,8 +1334,12 @@ function sendGo(r) {
     percent: r.pct,
     forks: forks,
     userId: u.id || "",
-    name: [u.first_name, u.last_name].filter(Boolean).join(" "),
-    contact: u.username ? "@" + u.username : ""
+    name: name || "",
+    contact: contact || "",
+    accept_pd: consent && consent.pd ? "да" : "",
+    accept_ads: consent && consent.ads ? "да" : "",
+    consent_ts: new Date().toISOString(),
+    doc_version_consent: CONFIG.docVersionConsent || ""
   });
 }
 
