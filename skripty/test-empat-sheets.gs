@@ -15,7 +15,7 @@
  * положите сюда. Разойдутся — проверки будут бить мимо, как 18 августа.
  */
 
-var ВЕРСИЯ = '2026-08-27 №4';
+var ВЕРСИЯ = '2026-08-27 №5';
 
 /* ═══ ИМЕНА ВКЛАДОК — ЕДИНСТВЕННОЕ МЕСТО, ГДЕ ОНИ ЗАДАЮТСЯ ═══════════
    Должны совпадать с именами вкладок в таблице ДОСЛОВНО. Разойдутся хоть
@@ -29,8 +29,8 @@ var ЛИСТЫ = {
   предзапись:  'Предзапись с теста',    // заявки из приложения теста
   сайтПред:    'Предзапись с сайта',    // заявки с сайта предзаписи
   сайтОплата:  'Заявки на продукт',     // заявки с сайта оплаты и брони
-  тестВзрослый:    'Тест взрослый',      // сырьё теста «Я выбираю. Я ВЗРОСЛЫЙ»
-  заявкиВзрослый:  'Я взрослый — заявки' // кто дошёл до кнопки оплаты события
+  тестКолесо:      'Колесо эмпата',      // сырьё теста «Колесо эмпата»
+  заявкиКолесо:    'Неудобные — заявки'  // кто дошёл до кнопки оплаты события
 };
 /* ════════════════════════════════════════════════════════════════════ */
 
@@ -52,19 +52,21 @@ var LEAD_HEADERS = [
   'Согласие на ПД', 'Реклама', 'Время акцепта', 'Ред. согласия'
 ];
 
-var VZ_HEADERS = [
-  'Дата', 'ID в Телеграме', 'Имя',
-  'Позиция', 'Взрослая позиция, %',
-  'Решение', 'Граница', 'Опора', 'Контроль',
-  'Деньги %', 'Близкие %', 'Дело %', 'Вы сами %',
-  'Где тяжелее', 'Что менять первым', 'Давно смотрит',
-  'Ответы (1–24)',
-  'Секунд', 'Быстро', 'Одна кнопка'
-];
+/* Колесо: по каждой сфере две величины, сколько отдаёт и сколько остаётся.
+   Зазор считаем сами, чтобы в таблице можно было сразу сортировать. */
+var KL_SPHERES = ['partner', 'semya', 'rabota', 'dengi', 'telo', 'delo'];
+var KL_NAMES = { partner: 'Партнёр', semya: 'Семья', rabota: 'Работа',
+                 dengi: 'Деньги', telo: 'Тело', delo: 'Своё дело' };
 
-var VZ_LEAD_HEADERS = [
+var KL_HEADERS = ['Дата', 'ID в Телеграме', 'Имя', 'Отдаю', 'Остаётся', 'Зазор']
+  .concat(KL_SPHERES.map(function (k) { return KL_NAMES[k] + ' отдаю'; }))
+  .concat(KL_SPHERES.map(function (k) { return KL_NAMES[k] + ' остаётся'; }))
+  .concat(['Самые тяжёлые', 'Где тяжелее', 'Давно смотрит',
+           'Ответы (1–12)', 'Секунд', 'Быстро', 'Одна кнопка']);
+
+var KL_LEAD_HEADERS = [
   'Дата', 'Имя', 'Телеграм', 'ID в Телеграме',
-  'Позиция', 'Взрослая позиция, %', 'Где тяжелее', 'Что менять первым', 'Давно смотрит',
+  'Отдаю', 'Остаётся', 'Самые тяжёлые', 'Где тяжелее', 'Давно смотрит',
   /* Акцепт теми же полями, что на сайте оплаты, чтобы сводить в одну картину.
      Колонки «Оферта» и «Ред. оферты» остаются пустыми намеренно: акцепт
      оферты собирает страница оплаты на GetCourse, там же и деньги. Колонки
@@ -139,7 +141,7 @@ function route_(d) {
     /* Метка теста стоит раньше проверки type: у второго теста заявка тоже
        type=lead, но лист у неё свой. Без этой ветки она легла бы в предзапись
        флагмана и смешалась с чужими контактами. */
-    if (d.test === 'vzroslyy') { return d.type === 'lead' ? saveVzLead_(d) : saveVz_(d); }
+    if (d.test === 'koleso') { return d.type === 'lead' ? saveKlLead_(d) : saveKl_(d); }
     if (d.type === 'lead') { return saveLead_(d); }
 
     var sheet = getSheet_();
@@ -164,40 +166,42 @@ function route_(d) {
   }
 }
 
-/** Сырьё теста «Я выбираю. Я ВЗРОСЛЫЙ». */
-function saveVz_(d) {
-  var sheet = getSheet2_(ЛИСТЫ.тестВзрослый, VZ_HEADERS);
-  var s = d.scales || {};
-  var m = {};
-  (d.map || []).forEach(function (x) { m[x.k] = x.pct; });
+/** Сырьё теста «Колесо эмпата». */
+function saveKl_(d) {
+  var sheet = getSheet2_(ЛИСТЫ.тестКолесо, KL_HEADERS);
+  var w = {};
+  (d.wheel || []).forEach(function (x) { w[x.k] = x; });
 
-  sheet.appendRow([
+  var row = [
     new Date(),
     d.userId || '',
     какТекст_(d.userName || ''),
-    vzName_(d.rank),
-    (d.percent || d.percent === 0) ? d.percent : '',
-    s.R, s.G, s.O, s.K,
-    m.dengi, m.blizkie, m.delo, m.ya,
-    pick_(d.forks, 'bol'), pick_(d.forks, 'zapros'), pick_(d.forks, 'davno'),
+    num_(d.otdayu), num_(d.ostaetsya), num_(d.zazor)
+  ];
+  KL_SPHERES.forEach(function (k) { row.push(w[k] ? num_(w[k].out) : ''); });
+  KL_SPHERES.forEach(function (k) { row.push(w[k] ? num_(w[k].inn) : ''); });
+  row = row.concat([
+    d.worst || '',
+    pick_(d.forks, 'bol'), pick_(d.forks, 'davno'),
     (d.answers || []).join(','),
     d.seconds || '', d.fast ? 'да' : '', d.monotone ? 'да' : ''
   ]);
+
+  sheet.appendRow(row);
   return json_({ ok: true, версия: ВЕРСИЯ, лист: sheet.getName() });
 }
 
-/** Кто дошёл до кнопки оплаты события. Формы в этом тесте нет — контакт
-    оставляет сама оплата, но без этой отметки не видно, кто до неё не дошёл. */
-function saveVzLead_(d) {
-  var sheet = getSheet2_(ЛИСТЫ.заявкиВзрослый, VZ_LEAD_HEADERS);
+/** Кто дошёл до кнопки оплаты «Неудобных». */
+function saveKlLead_(d) {
+  var sheet = getSheet2_(ЛИСТЫ.заявкиКолесо, KL_LEAD_HEADERS);
   sheet.appendRow([
     new Date(),
     какТекст_(d.name || ''),
     какТекст_(d.contact || ''),
     d.userId || '',
-    vzName_(d.rank),
-    (d.percent || d.percent === 0) ? d.percent : '',
-    pick_(d.forks, 'bol'), pick_(d.forks, 'zapros'), pick_(d.forks, 'davno'),
+    num_(d.otdayu), num_(d.ostaetsya),
+    d.worst || '',
+    pick_(d.forks, 'bol'), pick_(d.forks, 'davno'),
     d.accept_offer || '',
     d.accept_pd || '',
     d.accept_ads || '',
@@ -206,6 +210,11 @@ function saveVzLead_(d) {
     d.doc_version_consent || ''
   ]);
   return json_({ ok: true, версия: ВЕРСИЯ, лист: sheet.getName() });
+}
+
+/** Ноль это тоже значение: без этой обёртки он превращался бы в пустую ячейку. */
+function num_(v) {
+  return (v === 0 || v) ? v : '';
 }
 
 /** Заявка на предзапись — отдельным листом, чтобы не мешать сырьё теста и контакты. */
@@ -339,17 +348,6 @@ function rankName_(key) {
     reader: 'Считывающий',
     caring: 'Сочувствующий',
     other: 'Другая настройка'
-  };
-  return names[key] || key || '';
-}
-
-function vzName_(key) {
-  var names = {
-    waiting: 'Ждёт разрешения',
-    merged:  'Живёт чужой жизнью',
-    holding: 'Держится за руку',
-    adult:   'Взрослая позиция',
-    other:   'Другая история'
   };
   return names[key] || key || '';
 }
