@@ -493,18 +493,18 @@
   .wheel .ring { fill: none; stroke: var(--line); stroke-width: 1; }
   .wheel .ax { stroke: var(--line); stroke-width: 1; }
   .wheel .axt { font-size: 10px; fill: var(--ink-mute); letter-spacing: .04em; }
-  .wheel .out { fill: var(--accent-soft); fill-opacity: .75; stroke: var(--accent); stroke-width: 1.5; }
-  .wheel .inn { fill: var(--band-low); fill-opacity: .38; stroke: var(--band-low); stroke-width: 2; }
-  .legend { display: flex; gap: 1.1rem; font-size: .82rem; color: var(--ink-mute); }
-  .lg { display: inline-flex; align-items: center; gap: .35rem; }
-  .lg::before { content: ""; width: 12px; height: 12px; border-radius: 3px; }
-  .lg-out::before { background: var(--accent-soft); border: 1.5px solid var(--accent); }
-  .lg-inn::before { background: var(--band-low); }
+  /* Единственный контур. Плотнее прежнего: раньше он лежал поверх второго
+     и просвечивал, теперь стоит один на пустом кольце. */
+  .wheel .inn { fill: var(--accent); fill-opacity: .42; stroke: var(--accent); stroke-width: 2; }
 
   .score { font-size: 1.1rem; line-height: 1.45; text-align: center; }
   .score b { font-family: 'Prata', Georgia, serif; font-size: 1.5rem; color: var(--accent); }
 
   .unpack { display: flex; flex-direction: column; gap: 1rem; }
+  .read { display: flex; flex-direction: column; gap: .8rem; }
+  .read p { margin: 0; line-height: 1.5; }
+  .read b { font-family: 'Prata', Georgia, serif; font-weight: 400; font-size: 1.1rem; color: var(--accent); }
+  .read-what { font-size: .82rem; color: var(--ink-mute); }
   .unpack-h {
     font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-mute);
   }
@@ -524,11 +524,6 @@
     margin: .2rem 0 0; padding: .6rem .8rem; border-left: 2px solid var(--accent);
     background: var(--surface-2); line-height: 1.5;
   }
-  /* Чтение всех шести сфер. Две тяжёлые разобраны выше подробно,
-     здесь человек видит расшифровку целого колеса, а не двух лучей. */
-  .read { display: flex; flex-direction: column; gap: .75rem; }
-  .read p { margin: 0; line-height: 1.5; }
-  .read b { font-family: 'Prata', Georgia, serif; font-weight: 400; color: var(--accent); }
 
   @media (prefers-reduced-motion: reduce) {
     button.go.big { transition: none; }
@@ -599,6 +594,7 @@
   }
 
   .gets { display: flex; flex-direction: column; gap: .55rem; }
+  .gets-foot { margin: .6rem 0 0; font-size: .92rem; color: var(--ink-soft); }
   .gets-h {
     font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
     color: var(--ink-mute);
@@ -752,7 +748,7 @@
    на эмпатию: приёмник один, листы в таблице разные.
    payUrl — рублями, страница GetCourse: там же принимается оферта и там же
    деньги, поэтому в лид-форме оферту не просим. Там же и рассрочка.
-   payUrlEur — в евро, Lava, для зарубежных карт. Пока пусто, эта половина
+   payUrlUsd — в долларах, Lava, для зарубежных карт. Пусто — эта половина
    уводит в отдел заботы, и на экране об этом сказано прямо: обещать
    автоматическую оплату, которой нет, значит терять человека уже после
    того, как он решил заплатить.
@@ -762,7 +758,7 @@
 const CONFIG = {
   sheetUrl: "https://script.google.com/macros/s/AKfycbzgho8KRyxxAoVrV2lkpS-2aCS4VjEbvzew1kaRjOQnx_X9qxtADNRQaNWQK-7GROkuUw/exec",
   payUrl: "https://anny-nizh.getplatinum.ru/payment/VyfTEMo",
-  payUrlEur: "",
+  payUrlUsd: "https://app.lava.top/products/b307a68e-b477-4396-add9-c340b3445088",
   teamChat: "https://t.me/m/LEHK_cjeNGU1",
   publicChannel: "https://t.me/violamaro1",
   testUrl: "https://andzenho.github.io/violamaro/koleso/",   // им же делятся
@@ -781,9 +777,11 @@ const CONFIG = {
      «Прикладной эмпатии». */
   docVersionConsent: "2026-08-10",
   price: "3 000 ₽",
-  /* Пересчёт 3 000 ₽ по курсу ЦБ на 26.08.2026 (1 € = 98,5182 ₽) = 30,45 €,
-     округлено вверх. Курс живёт своей жизнью: перед стартом продаж пересчитать. */
-  priceEur: "31 €",
+  /* Ровно та сумма, что стоит в карточке товара на Lava. Расходиться нельзя:
+     человек видит здесь одну цену, а на оплате другую — и уходит.
+     По курсу ЦБ на 26.08.2026 (1 $ = 84,4635 ₽) это 2 956 ₽, то есть на 1,5 %
+     дешевле рублёвой половины. Меняете цену в Lava — меняйте и здесь. */
+  priceUsd: "35 $",
   priceFull: "",
   /* Срок ранней цены. Пока пусто — строка про срок не печатается вовсе:
      выдуманный дедлайн хуже, чем его отсутствие. */
@@ -907,9 +905,10 @@ const UNPACK = {
   }
 };
 
-/* Чтение всех шести сфер. Две тяжёлые разобраны выше подробно, но человек
-   пришёл смотреть на своё колесо целиком, а не на два луча. Уровень берём
-   по тому, сколько остаётся, и по зазору с тем, сколько человек отдаёт. */
+/* Чтение всех шести сфер. Две тяжёлые разобраны ниже подробно, но человек
+   пришёл посмотреть на всё своё колесо, а не на два луча. Фигура показывает,
+   где тонко; эти строки говорят, что там происходит и чем это обернулось.
+   Одно другое не заменяет: картинка узнаётся, слова называют. */
 const READ = {
   partner: {
     bad:  "Вас тут любят удобной или удобным. Настоящих вас в этих отношениях почти нет.",
@@ -943,6 +942,17 @@ const READ = {
   }
 };
 
+/* Что за сфера. Названия на лучах короткие, и «Своё дело» человек читает
+   как бизнес, хотя речь про любое своё занятие. Одна строка снимает вопрос. */
+const SCOPE = {
+  partner: "близкие отношения",
+  semya:   "родители, дети, родня",
+  rabota:  "работа и признание",
+  dengi:   "деньги и оплата труда",
+  telo:    "силы, отдых, здоровье",
+  delo:    "своё занятие, планы, мечты"
+};
+
 function readLevel(c) {
   if (c.inn <= 3 || c.gap >= 5) return "bad";
   if (c.inn >= 7 && c.gap <= 1) return "good";
@@ -965,25 +975,30 @@ const OFFER = {
   tag: "Событие",
   eyebrow: "Три дня для эмпатов",
   title: "НЕУДОБНАЯ",
-  lead: "11–13 сентября. <span class=\"hl\">Стоимость засчитывается в оплату практикума «Прикладная эмпатия».</span>",
+  lead: "11–13 сентября. <span class=\"hl\">Все участники получают скидку 3 000 ₽ на один из продуктов Виолы.</span>",
   body: [
     "Ореол матери Терезы греет, но носить его тяжело. Станьте неудобной и почувствуйте, каково это. Перестать жить для других и начать жить свою жизнь на полную.",
     "Когда с вами считаются, ваш труд ценят, а силы остаются вам. И при этом вы не теряете себя, вы остаётесь тем, кто вы есть, и наконец знаете, чего хотите.",
     "И сразу честно, за три дня жизнь не меняется, Виола говорит это прямо. За три дня появляется состояние и первый шаг."
   ],
   insideHead: "Три дня",
+  /* Слово «запись» у первого дня не употребляем: лекция эксклюзивная,
+     сделана под событие, и «в записи» читается как «повтор старого».
+     Витринное правило из конструкции события. */
   inside: [
-    "<b>Пятница.</b> Лекция «Право на свою жизнь»<span class=\"wq\">в записи, 30–40 минут. Почему вы всем удобны и во что это обходится. К лекции рабочий лист</span>",
-    "<b>Суббота.</b> Аудиомедитация на подъём<span class=\"wq\">пятнадцать минут утром, остаётся у вас навсегда</span>",
-    "<b>Воскресенье.</b> Прямой эфир с Виолой<span class=\"wq\">разбор ваших вопросов и честный разговор о том, что делать дальше</span>"
+    "<b>Пятница.</b> Лекция «Цена непрожитой жизни»<span class=\"wq\">эксклюзивная, создана специально для этого события. Во что вам уже обошлось стояние на месте. Что забрало тело, что стало с отношениями, куда ушли деньги и сколько ушло лет. Смотрите в своём часовом поясе, когда удобно</span>",
+    "<b>Суббота.</b> Медитация и одно задание<span class=\"wq\">аудиомедитация Виолы, а после неё вы выписываете своими словами, что болит именно у вас. Не как у всех эмпатов, а у вас. Этот лист станет вашей картой для третьего дня</span>",
+    "<b>Воскресенье.</b> Прямой эфир с Виолой<span class=\"wq\">разбираем собранные вопросы, подробно и по одному. Останется запись с таймкодами, чтобы вернуться и переслушать нужное</span>"
   ],
   getsHead: "Что останется с вами",
   gets: [
-    "Ваше колесо и рабочий лист",
-    "Лекция Виолы в записи, возвращаться можно сколько угодно",
-    "Аудиомедитация навсегда",
-    "Запись эфира с разборами"
+    "Лекция «Цена непрожитой жизни», эксклюзивная, только для участников",
+    "Аудиомедитация",
+    "Ваша карта: выписанное своими словами, что болит и с чего начинать",
+    "Запись эфира с таймкодами",
+    "Скидка 3 000 ₽ на один из продуктов Виолы. Решите идти дальше, и событие для вас окажется бесплатным"
   ],
+  getsFoot: "Все материалы остаются у вас навсегда.",
   bonusHead: "И лекция в подарок тем, кто оплатит первыми",
   bonus: [
     "<b>«Любовь и деньги эмпатов».</b> Про то, почему и любовь, и деньги про одно и то же состояние наполненности."
@@ -991,7 +1006,7 @@ const OFFER = {
   /* Дисклеймер стоит выше, в теле: честность рано укрепляет доверие,
      а прямо над кнопкой она отговаривает. Здесь закрываем на силе. */
   beforeCta: [
-    "Лекция и медитация в записи, смотреть можно в своём часовом поясе. Живой только эфир третьего дня, и он тоже останется в записи.",
+    "Лекцию и медитацию смотрите в своём часовом поясе, когда удобно. Живой только эфир третьего дня, и он тоже останется, с таймкодами.",
     "Вы уже умеете всё, что нужно. Слышать человека раньше, чем он заговорил. Организовать чужую жизнь за день. И вот осталось развернуть это на себя."
   ],
   cta: "Занять место"
@@ -1008,11 +1023,11 @@ function verdict(r, hasDeep) {
     return "Скажу прямо. Перекос сильный. Вы отдаёте заметно больше, чем оставляете себе. Как это исправить, разбираем на «Неудобной».";
   if (hasDeep)
     return "Скажу прямо. В целом вы держитесь, но там, где разобрано выше, у вас плохо. Само это не проходит. Как это выправить, разбираем на «Неудобной».";
-  return "Скажу прямо. С колесом у вас порядок, так бывает нечасто. Слабее других те сферы, что выше, туда и стоит смотреть. Этим мы и занимаемся на «Неудобной».";
+  return "Скажу прямо. С колесом у вас порядок, так бывает нечасто. Слабее других те сферы, где фигура тоньше, туда и стоит смотреть. Этим мы и занимаемся на «Неудобной».";
 }
 
 const ANCHOR = "11–13 сентября у Виолы «Неудобная». Три дня про то, как перестать жить для других и начать жить свою жизнь.";
-const ANCHOR_2 = "Лекция и медитация в записи, третий день живой. Место можно занять сейчас.";
+const ANCHOR_2 = "Лекцию и медитацию смотрите когда удобно, живой только эфир третьего дня. Место можно занять сейчас.";
 
 /* ——— состояние ——— */
 let stage = "intro";      // intro | q | fork | result
@@ -1111,10 +1126,14 @@ function wheelSvg(w) {
     return '<polygon points="' + poly([v,v,v,v,v,v]) + '" class="ring"/>';
   }).join("");
 
-  return '<svg viewBox="0 0 320 228" class="wheel" role="img" aria-label="Колесо: сколько вы отдаёте и сколько остаётся вам">' +
+  /* Контур один: сколько остаётся вам. Второй, «сколько отдаёте», убран
+     сознательно. Человеку не нужно сравнивать две фигуры, чтобы понять,
+     что где-то пусто: пустое место между кольцом и фигурой говорит это само.
+     Фигура начинается с полного кольца и сдувается до настоящего размера,
+     так видно, сколько ушло. */
+  return '<svg viewBox="0 0 320 228" class="wheel" role="img" aria-label="Колесо: сколько остаётся вам по шести сферам жизни">' +
     rings + axes +
-    '<polygon points="' + poly(w.map(function (c) { return c.out; })) + '" class="out"/>' +
-    '<polygon id="inn" points="' + poly(w.map(function (c) { return c.out; }), FLOOR) + '" class="inn"/>' +
+    '<polygon id="inn" points="' + poly([10, 10, 10, 10, 10, 10]) + '" class="inn"/>' +
     '</svg>';
 }
 
@@ -1123,7 +1142,7 @@ function wheelSvg(w) {
 function animateWheel(node, w) {
   const el = node.querySelector("#inn");
   if (!el) return;
-  const from = w.map(function (c) { return c.out; });
+  const from = w.map(function () { return 10; });
   const to = w.map(function (c) { return c.inn; });
   let t0 = 0;
   function step(ts) {
@@ -1269,16 +1288,12 @@ function result(prev) {
       </div>
       <div class="wheel-wrap">
         ${wheelSvg(r.wheel)}
-        <div class="legend">
-          <span class="lg lg-out">отдаёте</span>
-          <span class="lg lg-inn">остаётся вам</span>
-        </div>
       </div>
-      <p class="score">Вы отдаёте на <b>${r.out}</b> из 10. Вам остаётся <b>${r.inn}</b> из 10.</p>
+      <p class="score">Вам остаётся <b>${r.inn}</b> из 10.</p>
       <div class="unpack">
-        <div class="unpack-h">Всё колесо целиком</div>
+        <div class="unpack-h">Что происходит по каждой сфере</div>
         <div class="read">
-          ${r.wheel.map(c => `<p><b>${c.t}.</b> ${READ[c.k][readLevel(c)]}</p>`).join("")}
+          ${r.wheel.map(c => `<p><b>${c.t}</b> <span class="read-what">${SCOPE[c.k]}</span><br>${READ[c.k][readLevel(c)]}</p>`).join("")}
         </div>
       </div>
       ${deep.length ? `
@@ -1355,6 +1370,7 @@ function offer(r) {
       <div class="gets">
         <div class="gets-h">${OFFER.getsHead}</div>
         <ul>${OFFER.gets.map(i => `<li>${i}</li>`).join("")}</ul>
+        ${OFFER.getsFoot ? `<p class="gets-foot">${OFFER.getsFoot}</p>` : ""}
       </div>
       <div class="gets bonus">
         <div class="gets-h">${OFFER.bonusHead}</div>
@@ -1417,7 +1433,7 @@ function lead(r) {
       </div>
       <div class="foot">
         <button class="go big" id="send">Дальше, к оплате&nbsp;<span aria-hidden="true">→</span></button>
-        <p class="cta-note" id="hint">Дальше выберете, чем платить. Рублями или в евро, оба способа рабочие.</p>
+        <p class="cta-note" id="hint">Дальше выберете, чем платить. Рублями или в долларах, оба способа рабочие.</p>
         <button class="ghost" id="back-offer">← Назад</button>
       </div>
     </div>`);
@@ -1478,7 +1494,7 @@ function lead(r) {
    половине людей говорит, что они здесь второй сорт. */
 function payway(r) {
   stage = "payway";
-  const eurLive = !!CONFIG.payUrlEur;
+  const usdLive = !!CONFIG.payUrlUsd;
 
   const n = el(`
     <div class="card">
@@ -1493,12 +1509,12 @@ function payway(r) {
           <button class="go big" id="pay-rub">Оплатить рублями&nbsp;<span aria-hidden="true">→</span></button>
         </div>
         <div class="way">
-          <div class="way-sum">${CONFIG.priceEur}</div>
+          <div class="way-sum">${CONFIG.priceUsd}</div>
           <div class="way-what">Зарубежной картой</div>
-          <p class="way-note">${eurLive
+          <p class="way-note">${usdLive
             ? "Оплата через Lava, карты любой страны."
             : "Отдел заботы пришлёт ссылку на оплату, напишите ему."}</p>
-          <button class="go big" id="pay-eur">Оплатить в евро&nbsp;<span aria-hidden="true">→</span></button>
+          <button class="go big" id="pay-usd">Оплатить в долларах&nbsp;<span aria-hidden="true">→</span></button>
         </div>
       </div>
       <p class="cta-note" id="pw-hint">Оплата откроется в отдельном окне, там же условия участия.</p>
@@ -1509,7 +1525,7 @@ function payway(r) {
   const hint = n.querySelector("#pw-hint");
   function go(way, btn) {
     n.querySelectorAll("button.go").forEach(b => { b.disabled = true; });
-    btn.textContent = (way === "eur" && !eurLive) ? "Открываю чат…" : "Открываю оплату…";
+    btn.textContent = (way === "usd" && !usdLive) ? "Открываю чат…" : "Открываю оплату…";
     /* Способ дописывается в уже сохранённую заявку, а не создаёт вторую
        строку: иначе один человек выглядел бы в таблице как две заявки. */
     sendWay(way);
@@ -1517,17 +1533,17 @@ function payway(r) {
     if (hint) hint.textContent = "Если окно не открылось, проверьте, не заблокировал ли его браузер.";
   }
   n.querySelector("#pay-rub").addEventListener("click", e => go("rub", e.currentTarget));
-  n.querySelector("#pay-eur").addEventListener("click", e => go("eur", e.currentTarget));
+  n.querySelector("#pay-usd").addEventListener("click", e => go("usd", e.currentTarget));
   n.querySelector("#back-lead").addEventListener("click", () => lead(r));
   linksThroughTelegram_(n);
   render(n);
 }
 
-/* Уводим на оплату. Способов два: рублями и в евро. Если адреса под способ
-   нет — в чат с командой, чтобы кнопка не вела в никуда.
+/* Уводим на оплату. Способов два: рублями и в долларах. Если адреса под
+   способ нет — в чат с командой, чтобы кнопка не вела в никуда.
    Ссылки телеграмовские или обычные, различаем по адресу. */
 function openPay(way) {
-  const url = (way === "eur" ? CONFIG.payUrlEur : CONFIG.payUrl)
+  const url = (way === "usd" ? CONFIG.payUrlUsd : CONFIG.payUrl)
     || CONFIG.careChat || CONFIG.teamChat;
   if (!url) return;
   const tg = window.Telegram && window.Telegram.WebApp;
@@ -1580,7 +1596,7 @@ function sendWay(way) {
     test: "koleso",
     type: "pay",
     userId: u.id || "",
-    pay: way === "eur" ? "евро" : "рубли"
+    pay: way === "usd" ? "доллары" : "рубли"
   });
 }
 
