@@ -120,6 +120,11 @@
     --btn-bg: linear-gradient(160deg, #4A392F 0%, #2B211C 100%);
     --btn-ink: #F6F0E8;
     --btn-shadow: 0 10px 26px -12px rgba(43, 33, 28, .65), inset 0 1px 0 rgba(255, 255, 255, .12);
+    /* Три уровня карты. Без них человек видит полосы, но не понимает,
+       где норма: полоса на 47% — это хорошо или плохо? Цвет отвечает сразу. */
+    --band-low: #A33B26;
+    --band-mid: #C29A6C;
+    --band-hi:  #4A392F;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -140,6 +145,9 @@
       --btn-bg: linear-gradient(160deg, #D8B991 0%, #A3835F 100%);
       --btn-ink: #241C18;
       --btn-shadow: 0 10px 26px -12px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .18);
+      --band-low: #E08A72;
+      --band-mid: #8A7358;
+      --band-hi:  #D8B991;
     }
   }
 
@@ -160,6 +168,9 @@
     --btn-bg: linear-gradient(160deg, #D8B991 0%, #A3835F 100%);
     --btn-ink: #241C18;
     --btn-shadow: 0 10px 26px -12px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .18);
+    --band-low: #E08A72;
+    --band-mid: #8A7358;
+    --band-hi:  #D8B991;
   }
 
   * { box-sizing: border-box; }
@@ -381,11 +392,43 @@
     font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
     color: var(--ink-mute); margin-bottom: .15rem;
   }
-  .map-row { display: grid; grid-template-columns: 5.6rem 1fr 2.6rem; gap: .6rem; align-items: center; }
+  .map-row {
+    display: grid; grid-template-columns: 6.4rem 1fr; gap: .2rem .7rem;
+    align-items: center;
+  }
   .map-name { font-size: .95rem; color: var(--ink); }
-  .map-bar { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
-  .map-bar span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
-  .map-val { font-size: .9rem; color: var(--ink-soft); text-align: right; font-variant-numeric: tabular-nums; }
+  .map-bar { height: 12px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+  .map-bar span { display: block; height: 100%; border-radius: 999px; background: var(--band-mid); }
+  /* Метка стоит своей строкой под полосой, а не третьей колонкой: «решают за вас»
+     в 2,6 rem не помещается, а сокращать её до процента мы как раз не хотим. */
+  .map-val { grid-column: 2; font-size: .82rem; color: var(--ink-mute); margin-top: -.1rem; }
+  .map-row.b-lo  .map-bar span { background: var(--band-low); }
+  .map-row.b-lo  .map-val { color: var(--band-low); font-weight: 600; }
+  .map-row.b-hi  .map-bar span { background: var(--band-hi); }
+  .map-row.b-hi  .map-val { color: var(--band-hi); font-weight: 600; }
+  /* Худшую сферу дополнительно держим жирным именем: цвет цветом, но на карте
+     из четырёх строк глазу нужна одна точка входа. */
+  .map-row.is-low .map-name { font-weight: 700; }
+
+  /* Находка — то, ради чего человек проходил тест. Стоит выше текста
+     намеренно: сначала картинка, потом объяснение. */
+  .find {
+    display: flex; flex-direction: column; gap: .7rem;
+    background: var(--accent-soft);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+  }
+  .find-row { display: flex; flex-direction: column; gap: .1rem; }
+  .find-cap { font-size: .8rem; letter-spacing: .04em; color: var(--ink-soft); }
+  .find-val {
+    font-family: 'Prata', Georgia, "Times New Roman", serif;
+    font-size: 1.5rem; line-height: 1.15;
+  }
+  .find-val.b-lo  { color: var(--band-low); }
+  .find-val.b-mid { color: var(--ink); }
+  .find-val.b-hi  { color: var(--band-hi); }
+  .find .find-flat { color: var(--ink); }
+  .find-flat { font-size: .95rem; line-height: 1.5; color: var(--ink-soft); }
   .map-note { font-size: .82rem; color: var(--ink-mute); line-height: 1.45; margin-top: .2rem; }
 
   /* Акцепт под кнопкой. Мельче подписи: это правовая сноска, а не аргумент. */
@@ -685,7 +728,7 @@ const SPHERES = [
   { k: "dengi",   t: "Деньги" },
   { k: "blizkie", t: "Близкие" },
   { k: "delo",    t: "Дело" },
-  { k: "ya",      t: "Вы сами" }
+  { k: "ya",      t: "Вы для себя" }
 ];
 
 /* вилки — в баллы не идут, уходят в таблицу */
@@ -851,6 +894,15 @@ function score() {
     return { k: x.k, t: x.t, pct: c.max ? Math.round((1 - c.got / c.max) * 100) : 0 };
   });
 
+  /* Худшая и лучшая сфера. Худшая — то, ради чего идут на событие;
+     лучшая — доказательство, что человек уже умеет, просто не везде.
+     Показывать только дефициты нельзя: по её рамке позиция была защитой
+     и работала, и без «здесь у вас получается» экран читается приговором. */
+  const sorted = map.slice().sort(function (a, b) { return a.pct - b.pct; });
+  const low = sorted[0];
+  const high = sorted[sorted.length - 1];
+  const spread = high.pct - low.pct;
+
   const total = sc.R + sc.G + sc.O;          // максимум 63
   const pct = Math.max(15, Math.min(95, Math.round((1 - total / 63) * 100)));
 
@@ -874,7 +926,27 @@ function score() {
   else if (sc.G >= sc.O) key = "merged";
   else key = "holding";
 
-  return { key: key, pct: pct, map: map, scales: { R: sc.R, G: sc.G, O: sc.O, K: sc.K } };
+  return {
+    key: key, pct: pct, map: map,
+    low: low, high: high, spread: spread,
+    scales: { R: sc.R, G: sc.G, O: sc.O, K: sc.K }
+  };
+}
+
+/* Слово вместо процента. «27%» читается как оценка в дневнике, и у этой
+   аудитории числа будут низкими у всех — эффект обратный тому, что нужно.
+   Полоса показывает количество, слово ставит диагноз. Проценты уходят
+   в таблицу как уходили: считать это нам, а не человеку. */
+function mapWord(pct) {
+  if (pct >= 67) return "решаете вы";
+  if (pct >= 34) return "пополам";
+  return "решают за вас";
+}
+
+function mapBand(pct) {
+  if (pct >= 67) return "b-hi";
+  if (pct >= 34) return "b-mid";
+  return "b-lo";
 }
 
 /* ——— экраны ——— */
@@ -1012,18 +1084,34 @@ function result(prev) {
         <div class="cap">${t.cap}</div>
         <h1>${t.name}</h1>
       </div>
-      <div class="body-copy">${t.body.map(p => `<p>${p}</p>`).join("")}</div>
       ${r.key === "other" ? "" : `
+        ${r.spread >= 17 ? `
+          <div class="find">
+            <div class="find-row">
+              <div class="find-cap">Сильнее всего за вас решают</div>
+              <div class="find-val ${mapBand(r.low.pct)}">${r.low.t}</div>
+            </div>
+            ${r.high.pct >= 34 ? `
+              <div class="find-row">
+                <!-- Подпись зависит от уровня. Обещать «держите руль» там, где карта
+                     ниже показывает «пополам», нельзя: экран противоречит сам себе. -->
+                <div class="find-cap">${r.high.pct >= 67 ? "А здесь вы уже держите руль" : "А легче всего сейчас"}</div>
+                <div class="find-val ${mapBand(r.high.pct)}">${r.high.t}</div>
+              </div>` : `
+              <p class="find-flat">Пока ни одна сфера не осталась за вами целиком. Это не приговор: так выглядит позиция, которая когда-то вас берегла.</p>`}
+          </div>` : `
+          <p class="find-flat">По всем четырём сферам у вас примерно ровно. Это редкий случай: обычно где-то человек держит руль, а где-то отдал совсем.</p>`}
         <div class="map">
           <div class="map-h">Где решаете вы, а где за вас</div>
           ${r.map.map(x => `
-            <div class="map-row">
+            <div class="map-row ${mapBand(x.pct)}${x.k === r.low.k && r.spread >= 17 ? " is-low" : ""}">
               <div class="map-name">${x.t}</div>
               <div class="map-bar"><span style="width:${Math.max(3, x.pct)}%"></span></div>
-              <div class="map-val">${x.pct}%</div>
+              <div class="map-val">${mapWord(x.pct)}</div>
             </div>`).join("")}
           <p class="map-note">Чем длиннее полоса, тем больше в этой сфере решаете вы.</p>
         </div>`}
+      <div class="body-copy">${t.body.map(p => `<p>${p}</p>`).join("")}</div>
       ${t.bridge ? `<p class="bridge">${t.bridge}<span class="anchor">${ANCHOR}</span><span class="anchor-2">${ANCHOR_2}</span></p>` : ""}
       <div class="foot">
         ${t.bridge ? `<button class="go big" id="offer">Что за событие? <span aria-hidden="true">→</span></button>` : ""}
