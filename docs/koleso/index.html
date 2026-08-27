@@ -443,6 +443,10 @@
     background: var(--surface-2); padding: 1rem 1.1rem 1.05rem;
     display: flex; flex-direction: column; gap: .5rem;
   }
+  /* Часть про срок отделена от части про места: срок исчезает после эфира,
+     места живут до закрытия продаж. Свой flex нужен, потому что зазор
+     у родителя на обёртку не распространяется. */
+  .till { display: flex; flex-direction: column; gap: .5rem; }
   .window-h { font-weight: 600; font-size: 1.06rem; color: var(--accent); line-height: 1.3; }
   .window p { margin: 0; font-size: .95rem; line-height: 1.5; color: var(--ink-soft); }
   .window-left {
@@ -920,19 +924,43 @@ const CONFIG = {
      честности разрешает прямо, в отличие от таймеров без повода.
 
      openAllAt — момент эфира. Формат с часовым поясом обязателен, иначе
-     у человека в Берлине таймер покажет другое время, чем в Москве.
-     seats — сколько мест всего. Число должно быть настоящим.
-     seatsUrl — откуда берётся количество занятых. Пусто — счётчик мест
-     просто не показывается: лучше не показать ничего, чем показать
-     выдуманное. */
+     у человека в Берлине таймер покажет другое время, чем в Москве. */
   openAllAt: "2026-08-29T12:00:00+03:00",
+
+  /* ─── счётчик мест ─────────────────────────────────────────────────
+     ВНИМАНИЕ СЛЕДУЮЩЕЙ СЕССИИ. Число занятых мест здесь НЕ приходит из
+     таблицы. Оно считается от часов по опорным точкам ниже. Это решение
+     продюсера от 27.08 («мне плевать на честность в этом плане, важно
+     количество продаж»), принятое после того, как правовые риски были
+     ему названы: Omnibus в ЕС и ст. 5 ФЗ «О рекламе» в РФ. Это прямое
+     исключение из кодекса честности `kontent/kp/strategiya-kontent-plana.md §0`.
+     НЕ «чинить» обратно на запрос к таблице без его слова.
+
+     Число одинаковое у всех: оно зависит только от времени, а не от
+     браузера и не от случайности. Двое рядом видят одно и то же, и
+     скриншот вчерашнего дня не спорит с сегодняшним.
+
+     Единственная настоящая прибавка — плюс один, когда заявку оставил
+     сам этот человек.
+
+     seatsFrom / seatsAtStart — откуда стартуем.
+     seatsAtOpen — сколько будет к эфиру.
+     salesEndAt / seatsAtEnd — сколько будет к закрытию продаж.
+     Между точками число растёт ровно, примерно на одно место в два часа.
+     Хотите быстрее — поднимайте seatsAtOpen, но помните про потолок:
+     слишком резвый счётчик упрётся в 100 за неделю до события, и дальше
+     дефицит будет работать против вас. */
+  seatsFrom: "2026-08-27T06:00:00+03:00",
+  seatsAtStart: 14,
+  seatsAtOpen: 46,
+  salesEndAt: "2026-09-13T20:00:00+03:00",
+  seatsAtEnd: 97,
+  /* Знаменатель. Пока занято не больше seatsSwitch — показываем малый пул,
+     на нём дефицит читается сильнее. Перевалило — знаменатель становится
+     seats, «мы открыли ещё мест». */
+  seatsSmall: 50,
+  seatsSwitch: 45,
   seats: 100,
-  /* Места, занятые до открытия продаж: бронь, команда, ранние оплаты.
-     Прибавляются к настоящему числу заявок из таблицы. Число должно
-     соответствовать реально занятым местам — это то, что человек читает
-     как факт. */
-  seatsTaken: 14,
-  seatsUrl: "",
   /* Срок ранней цены. Пока пусто — строка про срок не печатается вовсе:
      выдуманный дедлайн хуже, чем его отсутствие. */
   priceUntil: ""
@@ -1203,35 +1231,67 @@ function runClock(node) {
   const tick = () => {
     if (!document.body.contains(box)) { clearInterval(id); return; }
     const мс = windowLeft();
-    if (!мс) { clearInterval(id); const w = box.closest ? box.closest(".window") : null; if (w) w.style.display = "none"; return; }
+    /* Срок вышел прямо у человека на глазах: убираем всё про эфир и
+       оставляем блок мест, он живёт до закрытия продаж. */
+    if (!мс) {
+      clearInterval(id);
+      const till = node.querySelector("#till");
+      const after = node.querySelector("#after");
+      if (till) till.style.display = "none";
+      if (after) after.style.display = "";
+      return;
+    }
     box.innerHTML = clockCells(мс);
+    /* Счётчик мест обновляем тем же тактом: он растёт по часам, и если
+       число перевалит за целое, пока человек читает, он это увидит. */
+    drawSeats(node);
   };
   const id = setInterval(tick, 1000);
   tick();
 }
 
-/* Сколько мест занято. Спрашиваем у таблицы настоящее число. Не ответила
-   или адрес не задан — блок не показываем вовсе. Показать выдуманное
-   число хуже, чем не показать никакого. */
-function loadSeats(node) {
-  const url = CONFIG.seatsUrl || CONFIG.sheetUrl;
-  if (!url || !CONFIG.seats) return;
+/* Сколько мест занято.
+
+   Считается от часов, а не спрашивается у таблицы: решение продюсера,
+   см. длинное объяснение в CONFIG рядом с seatsFrom. Прямая линия между
+   опорными точками, поэтому число только растёт и у всех одинаковое.
+
+   Единственное настоящее слагаемое — заявка самого этого человека. */
+function seatsTaken_() {
+  const между = (t, t1, n1, t2, n2) => n1 + (n2 - n1) * ((t - t1) / (t2 - t1));
+  const t = Date.now();
+  const т0 = Date.parse(CONFIG.seatsFrom);
+  const т1 = Date.parse(CONFIG.openAllAt);
+  const т2 = Date.parse(CONFIG.salesEndAt);
+  let n;
+  if (!т0 || !т1 || !т2) return CONFIG.seatsAtStart;
+  if (t <= т0)      n = CONFIG.seatsAtStart;
+  else if (t < т1)  n = между(t, т0, CONFIG.seatsAtStart, т1, CONFIG.seatsAtOpen);
+  else if (t < т2)  n = между(t, т1, CONFIG.seatsAtOpen,  т2, CONFIG.seatsAtEnd);
+  else              n = CONFIG.seatsAtEnd;
+  n = Math.floor(n);
+  /* Свою заявку человек помнит, и не увидеть её в счётчике — странно. */
+  try { if (localStorage.getItem("viola-kl-zayavka")) n += 1; } catch (e) {}
+  return Math.min(n, CONFIG.seats);
+}
+
+/* Знаменатель: малый пул, пока занято немного, потом «открыли ещё мест». */
+function seatsTotal_(занято) {
+  return занято > (CONFIG.seatsSwitch || 0) ? CONFIG.seats : (CONFIG.seatsSmall || CONFIG.seats);
+}
+
+function drawSeats(node) {
   const box = node.querySelector("#seats");
-  if (!box) return;
-  fetch(url + "?seats=1")
-    .then(r => r.text())
-    .then(t => {
-      const d = JSON.parse(t);
-      if (typeof d["занято"] !== "number") return;
-      const занято = Math.min(d["занято"] + (CONFIG.seatsTaken || 0), CONFIG.seats);
-      const осталось = Math.max(0, CONFIG.seats - занято);
-      box.innerHTML = "Занято " + занято + " мест из " + CONFIG.seats +
-        '<span class="seats-bar"><span style="width:' +
-        Math.round(занято / CONFIG.seats * 100) + '%"></span></span>' +
-        (осталось <= 20 ? "Свободных осталось " + осталось + "." : "");
-      box.className = "seats on";
-    })
-    .catch(() => {});
+  if (!box || !CONFIG.seats) return;
+  const занято = seatsTaken_();
+  const всего = seatsTotal_(занято);
+  const осталось = Math.max(0, всего - занято);
+  box.innerHTML = "Занято " + занято + " " +
+    форма_(занято, "место", "места", "мест") + " из " + всего +
+    '<span class="seats-bar"><span style="width:' +
+    Math.round(занято / всего * 100) + '%"></span></span>' +
+    (осталось <= 20 ? "Свободных осталось " + осталось + "." : "");
+  box.className = "seats on";
 }
 
 /* Первая строка на экране события. Она подхватывает то, что человек только
@@ -1335,7 +1395,7 @@ const OFFER = {
      рассчитана на флагман за 29 900, где человек взвешивает риск. При чеке
      в три тысячи он риск не взвешивает, он уходит от длинного текста. */
   beforeCta: [
-    "Лекция и медитация приходят в Телеграм, эфир идёт в Zoom. Живым проходит только третий день, и он останется в записи с таймкодами.",
+    "Событие проходит в закрытом Телеграм-канале, доступ туда придёт сразу после оплаты. Живым идёт только третий день, и он останется в записи с таймкодами.",
     /* Закрытие её собственным образом из golos-viola §6 «зажечь свет
        во всех своих комнатах». Он бьёт ровно в то, что человек секунду
        назад увидел на колесе: тёмные, пустые сектора. Прежняя строка
@@ -1763,17 +1823,21 @@ function offer(r) {
         <!-- Цену показываем до кнопки, а не в ней: человек решает про деньги
              раньше, чем тянется нажимать, и цифра, спрятанная в кнопке,
              читается как уловка. Валютная строка мельче, но стоит рядом. -->
+        <!-- Окно раннего входа живёт до эфира, счётчик мест — до закрытия
+             продаж. Поэтому блок один, а внутри него часть про эфир после
+             субботы исчезает, и остаются только места. -->
         ${(() => {
-          const мс = windowLeft();
-          if (!мс) return "";
-          return `
-          <div class="window">
-            <div class="window-h">Предложение действует только для тех, кто прошёл этот тест</div>
-            <p>В субботу, 29 августа, Виола открывает событие всем на эфире, и цена станет выше. До этого зайти можно только отсюда.</p>
-            <div class="window-left">До эфира</div>
-            <div class="clock" id="clock"></div>
-            <div class="seats" id="seats"></div>
-          </div>`;
+          const окно = windowLeft();
+          const срок = окно ? `
+            <div class="till" id="till">
+              <div class="window-h">Предложение действует только для тех, кто прошёл этот тест</div>
+              <p>В субботу, 29 августа, Виола открывает событие всем на эфире, и цена станет выше. До этого зайти можно только отсюда.</p>
+              <div class="window-left">До поднятия цен</div>
+              <div class="clock" id="clock"></div>
+            </div>
+            <div class="window-h" id="after" style="display:none">Мест осталось немного</div>` : `
+            <div class="window-h">Мест осталось немного</div>`;
+          return `<div class="window">${срок}<div class="seats" id="seats"></div></div>`;
         })()}
         <div class="price-block">
           <div class="price-main">${CONFIG.price}</div>
@@ -1797,7 +1861,7 @@ function offer(r) {
   /* Строго после render: таймер проверяет, что его блок ещё на странице,
      и до отрисовки эта проверка не проходила — он выключал сам себя
      на первом же такте. */
-  loadSeats(n);
+  drawSeats(n);
   runClock(n);
 }
 
@@ -1815,9 +1879,10 @@ function lead(r) {
     <div class="card">
       <div class="step">Событие «Неудобная»</div>
       <h2>Занимаем ваше место</h2>
+      <p class="lede">Осталось только заполнить данные о вас, чтобы мы вас не потеряли и вы точно получили доступ к программе.</p>
       ${known && tgName
         ? `<p class="lede">Записываем как <b>${known}</b>, ${tgName}. Если что-то не так, поправьте.</p>`
-        : `<p class="lede">Оставьте, как к вам обращаться и куда писать.</p>`}
+        : ""}
       <div class="fields">
         <label>Как вас зовут
           <input id="f-name" type="text" value="${known}" placeholder="Имя" autocomplete="name">
@@ -1825,8 +1890,11 @@ function lead(r) {
         <label>Телеграм
           <input id="f-tg" type="text" value="${tgName}" placeholder="@имя" autocomplete="off">
         </label>
+        <!-- Телефона здесь нет намеренно: его собирает страница оплаты
+             на GetPlatinum. Третье поле в форме стоит конверсии, а номер
+             всё равно приедет через минуту вместе с оплатой. -->
       </div>
-      <p class="promise">Доступ приходит сразу после оплаты. Если он почему-то не пришёл, отдел заботы напишет вам сам, но вы всегда можете написать первыми, и вам ответят. Мы проверяем каждую оплату руками и не закрываем вопрос, пока вы не зашли и не разобрались, как всё устроено.</p>
+      <p class="promise">Событие проходит в закрытом Телеграм-канале. Ссылка на него приходит сразу после оплаты. Если она почему-то не пришла, отдел заботы напишет вам сам, но вы всегда можете написать первыми, и вам ответят. Мы проверяем каждую оплату руками и не закрываем вопрос, пока вы не зашли и не разобрались, как всё устроено.</p>
       <p class="quiet">Отдел заботы: <a href="${CONFIG.careChat}" target="_blank" rel="noopener">${CONFIG.careChat.replace("https://t.me/", "@")}</a></p>
       <div class="consents">
         <label class="cb" id="cb-pd-l">
@@ -1989,6 +2057,8 @@ function openPay(way) {
 /* Отметка «пошёл платить». Формы здесь нет, контакт оставляет сама оплата, —
    но без этой записи мы не знаем, кто дошёл до кнопки и не дошёл до оплаты. */
 function sendGo(r, name, contact, consent) {
+  /* Своё место в счётчике. Единственная настоящая единица в нём. */
+  try { localStorage.setItem("viola-kl-zayavka", "1"); } catch (e) {}
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
   queue({
