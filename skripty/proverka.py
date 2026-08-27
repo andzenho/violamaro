@@ -264,6 +264,33 @@ def sverka_s_korpusom(predlozheniya):
 
 # ----------------------------------------------------------------------
 
+def otbrosit_shapku_kp(text, path=""):
+    """Файлы контент-плана начинаются со служебной шапки:
+
+        формат: ...
+        тема: ...
+        статус: ...
+        ---
+        <текст поста>
+
+    Шапка — не текст Виолы: она искажает и метрики (длина фраз, доля
+    коротких), и лимиты Telegram, и сверку с корпусом. Отбрасываем её.
+    Обычные тексты без шапки возвращаем как есть.
+    """
+    lines = text.split("\n")
+    if not lines or not lines[0].lower().startswith(("формат:", "тема:", "статус:")):
+        return text
+    for i, line in enumerate(lines[:12]):
+        if line.strip() == "---":
+            ostatok = "\n".join(lines[i + 1:]).strip()
+            if ostatok:
+                if path:
+                    print(f"(шапка контент-плана отброшена, проверяю только текст поста)\n")
+                return ostatok
+            break
+    return text
+
+
 def main(argv):
     if len(argv) != 2:
         print("Использование: python3 skripty/proverka.py путь/к/тексту.txt")
@@ -274,6 +301,7 @@ def main(argv):
         return 1
     with open(path, "r", encoding="utf-8") as f:
         text = f.read()
+    text = otbrosit_shapku_kp(text, path)
     otchet(text)
     return 0
 
