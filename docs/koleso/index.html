@@ -190,8 +190,8 @@
     background: var(--ground);
     color: var(--ink);
     font-family: 'Golos Text', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 17px;
-    line-height: 1.6;
+    font-size: 17.5px;
+    line-height: 1.65;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -233,7 +233,7 @@
     border-radius: 14px;
     padding: 1.6rem 1.4rem;
     box-shadow: var(--shadow);
-    display: flex; flex-direction: column; gap: 1.4rem;
+    display: flex; flex-direction: column; gap: 1.7rem;
   }
 
   .step {
@@ -604,48 +604,64 @@
     line-height: 1.45;
   }
 
-  .inside {
-    display: flex; flex-direction: column; gap: .6rem;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    padding: 1.1rem 0;
-  }
+  /* Три дня. Раньше это был плотный список с точками, и три абзаца описания
+     слипались в один блок: глаз не находил, где кончается один день
+     и начинается другой. Теперь каждый день — своя карточка с воздухом
+     внутри, как на сайте флагмана. */
+  .inside { display: flex; flex-direction: column; gap: .9rem; }
   .inside-h {
-    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--ink-mute);
+    font-weight: 600; font-size: 1.22rem; line-height: 1.3; color: var(--ink);
+    padding-top: .5rem; border-top: 1px solid var(--line);
   }
-  .inside ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .45rem; }
-  .inside li { position: relative; padding-left: 1.1rem; color: var(--ink); font-size: 1rem; line-height: 1.5; }
-  .inside li b { color: var(--ink-mute); font-weight: 400; margin-right: .35rem; }
-  .inside li::before {
-    content: ""; position: absolute; left: 0; top: .62em;
-    width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
+  .inside ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .8rem; }
+  /* Название дня — заголовок карточки: полужирный и крупнее описания.
+     Раньше они были одного кегля и веса и читались одним куском. */
+  .inside li {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.05rem 1.1rem 1.15rem;
+    color: var(--ink); font-weight: 600; font-size: 1.06rem; line-height: 1.4;
+  }
+  /* Дата и название дня — заголовок карточки, а не бледная приписка.
+     Раньше они красились в самый тусклый цвет и терялись. */
+  .inside li b {
+    display: block; margin-bottom: .3rem;
+    color: var(--accent); font-weight: 600; font-size: 1.02rem;
   }
   .inside .format { color: var(--ink-mute); font-size: .88rem; }
-  /* Вопрос недели — внутренний голос человека, поэтому курсив и отдельная строка. */
+  /* Описание дня. Курсива нет: на трёх строках подряд он читается тяжело. */
   .inside li .wq {
-    display: block; margin-top: .18rem;
-    color: var(--ink-soft); font-size: .92rem; line-height: 1.4; font-style: italic;
+    display: block; margin-top: .5rem;
+    color: var(--ink-soft); font-weight: 400; font-size: .96rem; line-height: 1.55;
   }
 
-  .gets { display: flex; flex-direction: column; gap: .55rem; }
-  .gets-foot { margin: .6rem 0 0; font-size: .92rem; color: var(--ink-soft); }
+  .gets { display: flex; flex-direction: column; gap: .8rem; }
+  .gets-foot { margin: .7rem 0 0; font-size: .95rem; color: var(--ink-soft); }
   .gets-h {
-    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--ink-mute);
+    font-weight: 600; font-size: 1.22rem; line-height: 1.3; color: var(--ink);
+    padding-top: .5rem; border-top: 1px solid var(--line);
   }
-  .gets ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .4rem; }
+  .gets ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+  /* Волосяные линии между пунктами: список перестал быть кашей, каждый
+     пункт читается отдельно. Цвет основной, а не приглушённый: это блок
+     ценности, ради него человек и платит. */
   .gets li {
-    position: relative; padding-left: 1.05rem;
-    color: var(--ink-soft); font-size: .95rem; line-height: 1.45;
+    position: relative; padding: .6rem 0 .6rem 1.2rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink); font-size: 1rem; line-height: 1.5;
   }
-  .gets li::before { content: "—"; position: absolute; left: 0; color: var(--ink-mute); }
+  .gets li:last-child { border-bottom: 0; }
+  .gets li::before { content: "—"; position: absolute; left: 0; top: .6rem; color: var(--accent); }
   /* Подарки за ранний вход — тот же список, но выделен фоном и своей отметкой. */
   .gets.bonus {
     background: var(--surface-2);
-    border-radius: 3px;
-    padding: 1.05rem 1.1rem;
+    border: 1px solid var(--accent-soft);
+    border-radius: 14px;
+    padding: 1.1rem 1.15rem;
   }
+  .gets.bonus .gets-h { border-top: 0; padding-top: 0; font-size: 1.05rem; }
+  .gets.bonus li { border-bottom: 0; padding: .2rem 0 0 1.75rem; }
   .gets.bonus .gets-h { color: var(--accent); }
   /* Подарки метим эмодзи: на длинном экране взгляд цепляется за него раньше, чем за текст. */
   .gets.bonus li { color: var(--ink); padding-left: 1.75rem; }
@@ -1626,15 +1642,38 @@ function payway(r) {
     </div>`);
 
   const hint = n.querySelector("#pw-hint");
+  const hintWas = hint ? hint.textContent : "";
+  const buttons = [].slice.call(n.querySelectorAll(".way button.go"));
+  const labels = buttons.map(x => x.innerHTML);
+
+  /* Возвращаем кнопки в рабочее состояние. Человек уходит на оплату
+     и часто возвращается: передумал, не прошла карта, хочет другую валюту.
+     Раньше кнопки гасились навсегда, и нажать на этом экране было уже
+     нечего — тупик ровно в том месте, где человек готов заплатить. */
+  function unlock() {
+    buttons.forEach((x, i) => { x.disabled = false; x.innerHTML = labels[i]; });
+    if (hint) hint.textContent = hintWas;
+  }
+
   function go(way, btn) {
-    n.querySelectorAll("button.go").forEach(b => { b.disabled = true; });
+    /* Гасим на пару секунд, чтобы двойное нажатие не отправило способ дважды
+       и не открыло два окна. Дальше кнопки снова живые. */
+    buttons.forEach(x => { x.disabled = true; });
     btn.textContent = (way === "usd" && !usdLive) ? "Открываю чат…" : "Открываю оплату…";
     /* Способ дописывается в уже сохранённую заявку, а не создаёт вторую
        строку: иначе один человек выглядел бы в таблице как две заявки. */
     sendWay(way);
     openPay(way);
     if (hint) hint.textContent = "Если окно не открылось, проверьте, не заблокировал ли его браузер.";
+    setTimeout(unlock, 2500);
   }
+
+  /* И на всякий случай возвращаем кнопки сразу, как только человек снова
+     смотрит на приложение: из окна оплаты он может вернуться и раньше. */
+  const wake = () => { if (!document.hidden) unlock(); };
+  document.addEventListener("visibilitychange", wake);
+  window.addEventListener("focus", wake);
+
   n.querySelector("#pay-rub").addEventListener("click", e => go("rub", e.currentTarget));
   n.querySelector("#pay-usd").addEventListener("click", e => go("usd", e.currentTarget));
   n.querySelector("#back-lead").addEventListener("click", () => lead(r));
