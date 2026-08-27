@@ -1,6 +1,6 @@
 # Оффер флагмана «Я выбираю себя» (черновик под визирование Виолы)
 
-11.08.2026 · Собрано в парадигме `produkt/transformatsii.md` + карта внимания `produkt/transformatsiya-za-dengi.md` + бриф ЦА `analitika/ca-ya-vybirayu-sebya.md` + голос `baza/golos-viola.md`.
+11.08.2026 · Собрано в парадигме `produkt/transformatsii.md` + карта внимания `produkt/transformatsiya-za-dengi.md` + бриф ЦА `arhiv/vina-staryy-flagman/ca-ya-vybirayu-sebya.md` + голос `baza/golos-viola.md`.
 
 **Статус.** Это **скелет оффера и банк формулировок**, не финальный лендинг. Все строки «от лица Виолы» — черновик, идут ей на визирование (§7 голоса). Цена 24 990 и объёмы — допущение, замер только событием.
 

@@ -1,6 +1,6 @@
 # Оффер флагмана «Любовь и деньги» — первый экран под кастдев
 
-11.08.2026 · Собран из `produkt/flagman-sborka-jtbd.md` (JTBD), `baza/kanon-lyubov-i-dengi.md` (эфир), `analitika/ca-master.md` + `ca-empatia.md` (язык ЦА), голос — `baza/golos-viola.md`.
+11.08.2026 · Собран из `arhiv/lyubov-i-dengi/flagman-sborka-jtbd.md` (JTBD), `baza/kanon-lyubov-i-dengi.md` (эфир), `analitika/ca-master.md` + `ca-empatia.md` (язык ЦА), голос — `baza/golos-viola.md`.
 
 **Название продукта — «Любовь и деньги»** (желание Виолы, поддержано продюсером). Это имя её бонусной лекции, на которую «народ визгует» (`sozvon §5`).
 

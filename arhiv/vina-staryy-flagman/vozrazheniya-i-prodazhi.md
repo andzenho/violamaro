@@ -6,7 +6,7 @@
 
 11.08.2026 · Прогон оффера флагмана «Я выбираю себя» через ЦА. **Это моделирование на реальных ответах анкеты** (обезличенно, архетипы из настоящих ответов), не живой опрос. Замер спроса — только событие и созвоны. Для копирайтера лендинга и скриптов созвонов.
 
-Опора: `analitika/anketa-pervye-dannye.md`, `analitika/ca-voc.md`, позиционирование `produkt/transformatsii.md`, тарифы `produkt/strategiya.md`.
+Опора: `arhiv/vina-staryy-flagman/anketa-pervye-dannye.md`, `analitika/ca-voc.md`, позиционирование `produkt/transformatsii.md`, тарифы `produkt/strategiya.md`.
 
 ---
 

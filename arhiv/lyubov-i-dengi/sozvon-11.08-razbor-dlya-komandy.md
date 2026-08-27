@@ -297,4 +297,4 @@
 - Аудиторию собираем **с нуля**, рычаг — объём трафика из Shorts, а не «идеальная идея».
 
 ---
-*Источники в репозитории: карта внимания — `produkt/transformatsiya-za-dengi.md`; фрейм — `produkt/transformatsii.md`; оффер — `arhiv/vina-staryy-flagman/ofer-ya-vybirayu-sebya.md`; разбор комментариев — `analitika/kommentarii-razbor.md`; язык аудитории — `analitika/ca-voc.md`; анкета — `analitika/anketa-pervye-dannye.md`; старые продукты — `produkt/produkty-viola-staryye.md`; стратегия — `produkt/strategiya.md`.*
+*Источники в репозитории: карта внимания — `produkt/transformatsiya-za-dengi.md`; фрейм — `produkt/transformatsii.md`; оффер — `arhiv/vina-staryy-flagman/ofer-ya-vybirayu-sebya.md`; разбор комментариев — `analitika/kommentarii-razbor.md`; язык аудитории — `analitika/ca-voc.md`; анкета — `arhiv/vina-staryy-flagman/anketa-pervye-dannye.md`; старые продукты — `produkt/produkty-viola-staryye.md`; стратегия — `produkt/strategiya.md`.*
