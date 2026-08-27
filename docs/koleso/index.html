@@ -302,10 +302,26 @@
   .title-block .step + .step { margin-top: -.15rem; }
 
   /* Название программы на экране предзаписи — главный акцент страницы */
+  /* Название события — самое крупное на экране. До 28.08 оно было
+     2,4rem и уступало заголовку результата, хотя это витрина продукта
+     и первое, что человек видит после колеса. */
   h2.offer-title {
     font-weight: 700;
-    font-size: 2.4rem; line-height: 1;
-    letter-spacing: -.02em;
+    font-size: 3.2rem; line-height: .95;
+    letter-spacing: -.035em;
+    color: var(--ink);
+  }
+  /* «НЕУДОБНАЯ» — одно длинное слово, переносить его негде. На 320
+     пикселях при 3,2rem оно вылезает за карточку и даёт горизонтальную
+     прокрутку всей странице. Медиазапрос, а не clamp: clamp старые
+     вебвью Андроида не понимают. */
+  @media (max-width: 360px) {
+    h2.offer-title { font-size: 2.6rem; }
+  }
+  /* Надзаголовок над названием: крупнее и темнее обычного .step.
+     Он говорит, что это за формат и для кого, и терялся в цвете подписи. */
+  .title-block .step.loud {
+    font-size: .84rem; letter-spacing: .18em; font-weight: 600;
     color: var(--ink);
   }
 
@@ -2133,7 +2149,7 @@ function offer(r) {
     <div class="card">
       <div class="title-block">
         <div class="step"><span class="tag">${OFFER.tag}</span></div>
-        <div class="step">${OFFER.eyebrow}</div>
+        <div class="step loud">${OFFER.eyebrow}</div>
         <h2 class="offer-title">${OFFER.title}</h2>
       </div>
       <!-- Обещание идёт сразу под названием, до дат и до скидки. Человек
