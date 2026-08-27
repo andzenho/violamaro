@@ -503,6 +503,30 @@
   }
   .seats-left { display: block; font-size: .95rem; font-weight: 600; color: var(--ink); }
 
+  /* Полоса статуса на форме и на оплате. Держится над содержимым карточки
+     и отделена от него линией: это фон сделки, а не часть разговора.
+     Две строки, а не одна: на 320 пикселях подпись и цифра в один ряд
+     не помещаются, а перенос посреди цифры выглядит как поломка. */
+  .strip {
+    display: flex; flex-direction: column; gap: .18rem;
+    padding: .6rem .8rem .55rem; margin-bottom: .2rem;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2);
+  }
+  .strip-row { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; }
+  .strip-k { font-size: .8rem; color: var(--ink-mute); }
+  .strip-v {
+    font-size: .98rem; font-weight: 600; color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .strip-bar {
+    display: block; height: 5px; margin-top: .45rem;
+    border-radius: 999px; background: var(--line); overflow: hidden;
+  }
+  .strip-bar span {
+    display: block; height: 100%; background: var(--accent);
+    border-radius: 999px; transition: width .5s ease-out;
+  }
+
   /* Цена над кнопкой. Крупная рублёвая, под ней мельче валютная: обе видны
      сразу, но глаз не мечется между двумя одинаковыми цифрами. */
   .price-block {
@@ -1341,6 +1365,61 @@ function drawSeats(node) {
   if (left) left.innerHTML = осталось <= 20 ? "Свободных осталось " + осталось : "";
 }
 
+/* ——— узкая полоса статуса для формы и оплаты ———
+
+   На экране события стоит большой блок: заголовок, объяснение причины,
+   четыре клетки таймера, крупное число мест. Повторять его ещё дважды
+   нельзя. Аудитория теста — эмпаты, люди с высокой чувствительностью
+   к давлению; для них третий одинаковый экран с дедлайном читается не
+   как срочность, а как то, что их продавливают, и они уходят.
+
+   Поэтому дальше идёт одна строка в две линии над всем остальным:
+   слева подпись, справа цифра, снизу тонкая полоса заполнения.
+   Цифры те же самые — обе берутся из тех же функций, что и большой блок,
+   и прибавка внутри визита у них общая. Разойтись они не могут.
+
+   Причину («до поднятия цен») здесь не повторяем: человек прочитал её
+   экраном раньше, и второй раз это уже не объяснение, а нажим. */
+function stripHtml() {
+  return '<div class="strip" id="strip">' +
+    '<div class="strip-row"><span class="strip-k">До поднятия цен</span>' +
+    '<span class="strip-v" id="strip-t">—</span></div>' +
+    '<div class="strip-row"><span class="strip-k">Мест занято</span>' +
+    '<span class="strip-v" id="strip-s">—</span></div>' +
+    '<span class="strip-bar"><span id="strip-fill"></span></span>' +
+    '</div>';
+}
+
+/* Одно и то же значение на всех экранах обеспечивается не копированием,
+   а тем, что источник один. Здесь только отрисовка. */
+function runStrip(node) {
+  const box = node.querySelector("#strip");
+  if (!box) return;
+  const t = box.querySelector("#strip-t");
+  const s = box.querySelector("#strip-s");
+  const fill = box.querySelector("#strip-fill");
+  const rowT = t && t.parentNode;
+  const tick = () => {
+    if (!document.body.contains(box)) { clearInterval(id); return; }
+    const мс = windowLeft();
+    /* Срок вышел — строка про него уходит, места остаются. */
+    if (!мс) { if (rowT) rowT.style.display = "none"; }
+    else if (t) {
+      const всего = Math.floor(мс / 1000);
+      const д = Math.floor(всего / 86400);
+      const дв = n => (n < 10 ? "0" : "") + n;
+      t.innerHTML = (д ? д + " " + форма_(д, "день", "дня", "дней") + " " : "") +
+        дв(Math.floor((всего % 86400) / 3600)) + ":" +
+        дв(Math.floor((всего % 3600) / 60)) + ":" + дв(всего % 60);
+    }
+    const занято = seatsTaken_();
+    if (s) s.innerHTML = занято + " из " + CONFIG.seats;
+    if (fill) fill.style.width = Math.round(занято / CONFIG.seats * 100) + "%";
+  };
+  const id = setInterval(tick, 1000);
+  tick();
+}
+
 /* Первая строка на экране события. Она подхватывает то, что человек только
    что увидел, и называет его сферы по именам. Раньше здесь стояли два числа
    из прежней версии результата, которых на экране давно нет. */
@@ -1942,6 +2021,7 @@ function lead(r) {
 
   const n = el(`
     <div class="card">
+      ${stripHtml()}
       <div class="step">Событие «Неудобная»</div>
       <h2>Занимаем ваше место</h2>
       <p class="lede">Осталось только заполнить данные о вас, чтобы мы вас не потеряли и вы точно получили доступ к программе.</p>
@@ -2025,6 +2105,7 @@ function lead(r) {
   n.querySelector("#back-offer").addEventListener("click", () => offer(r));
   linksThroughTelegram_(n);
   render(n);
+  runStrip(n);
 }
 
 /* Экран выбора способа оплаты.
@@ -2038,6 +2119,7 @@ function payway(r) {
 
   const n = el(`
     <div class="card">
+      ${stripHtml()}
       <div class="step">Событие «Неудобная»</div>
       <h2>Чем вам удобнее заплатить</h2>
       <p class="lede">Оба способа открывают доступ одинаково. Выбирайте тот, которым платить проще.</p>
@@ -2100,6 +2182,7 @@ function payway(r) {
   n.querySelector("#back-lead").addEventListener("click", () => lead(r));
   linksThroughTelegram_(n);
   render(n);
+  runStrip(n);
 }
 
 /* Уводим на оплату. Способов два: рублями и в долларах. Если адреса под
