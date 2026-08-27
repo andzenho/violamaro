@@ -799,8 +799,10 @@
 "use strict";
 
 /* ——— куда уходит прохождение ———
-   sheetUrl — адрес приёмника из skripty/test-empat-sheets.gs, тот же, что у теста
-   на эмпатию: приёмник один, листы в таблице разные.
+   sheetUrl — адрес приёмника из skripty/test-empat-sheets.gs. У «Колеса»
+   он свой: тест на эмпатию до сих пор пишет через развёртывание версии
+   2026-08-19 №1, которое про «Колесо» ничего не знает. Трогать тот адрес
+   мы не стали — он работает, и ломать живой тест ради единообразия незачем.
    payUrl — рублями, страница GetCourse: там же принимается оферта и там же
    деньги, поэтому в лид-форме оферту не просим. Там же и рассрочка.
    payUrlUsd — в долларах, Lava, для зарубежных карт. Пусто — эта половина
@@ -811,7 +813,7 @@
    карточки, одинаковые кнопки, ни одного визуального намёка, что рублями
    «правильнее». */
 const CONFIG = {
-  sheetUrl: "https://script.google.com/macros/s/AKfycbzgho8KRyxxAoVrV2lkpS-2aCS4VjEbvzew1kaRjOQnx_X9qxtADNRQaNWQK-7GROkuUw/exec",
+  sheetUrl: "https://script.google.com/macros/s/AKfycbxtHZ0DCZ4S38AMeE8pqOFUCkYlduxj9qacGLrw4DawXWg7imdx9v7X6m2fxZVLm6XHzg/exec",
   payUrl: "https://anny-nizh.getplatinum.ru/payment/VyfTEMo",
   payUrlUsd: "https://app.lava.top/products/b307a68e-b477-4396-add9-c340b3445088",
   teamChat: "https://t.me/m/LEHK_cjeNGU1",
