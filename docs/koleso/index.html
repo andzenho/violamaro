@@ -436,6 +436,29 @@
     line-height: 1.45;
   }
 
+  /* Окно раннего входа. Стоит прямо над ценой: сначала человек понимает,
+     почему он здесь и почему сейчас, потом видит сумму. */
+  .window {
+    border: 1px solid var(--accent-soft); border-radius: 14px;
+    background: var(--surface-2); padding: 1rem 1.1rem 1.05rem;
+    display: flex; flex-direction: column; gap: .5rem;
+  }
+  .window-h { font-weight: 600; font-size: 1.06rem; color: var(--accent); line-height: 1.3; }
+  .window p { margin: 0; font-size: .95rem; line-height: 1.5; color: var(--ink-soft); }
+  .window-left {
+    font-weight: 600; font-size: 1.02rem;
+    padding-top: .5rem; border-top: 1px solid var(--line);
+  }
+  /* Счётчик мест скрыт, пока таблица не ответила настоящим числом.
+     Пустой блок лучше выдуманной цифры. */
+  .seats { display: none; }
+  .seats.on { display: block; font-size: .92rem; color: var(--ink-soft); }
+  .seats-bar {
+    display: block; height: 6px; margin: .4rem 0 .35rem;
+    border-radius: 999px; background: var(--line); overflow: hidden;
+  }
+  .seats-bar span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+
   /* Цена над кнопкой. Крупная рублёвая, под ней мельче валютная: обе видны
      сразу, но глаз не мечется между двумя одинаковыми цифрами. */
   .price-block {
@@ -869,6 +892,25 @@ const CONFIG = {
      дешевле рублёвой половины. Меняете цену в Lava — меняйте и здесь. */
   priceUsd: "35 $",
   priceFull: "",
+  /* ─── окно раннего входа ───────────────────────────────────────────
+     Дедлайн настоящий и с названной причиной: в субботу эфир, после него
+     событие открывается всем и цена поднимается. Это то, что кодекс
+     честности разрешает прямо, в отличие от таймеров без повода.
+
+     openAllAt — момент эфира. Формат с часовым поясом обязателен, иначе
+     у человека в Берлине таймер покажет другое время, чем в Москве.
+     seats — сколько мест всего. Число должно быть настоящим.
+     seatsUrl — откуда берётся количество занятых. Пусто — счётчик мест
+     просто не показывается: лучше не показать ничего, чем показать
+     выдуманное. */
+  openAllAt: "2026-08-29T12:00:00+03:00",
+  seats: 100,
+  /* Места, занятые до открытия продаж: бронь, команда, ранние оплаты.
+     Прибавляются к настоящему числу заявок из таблицы. Число должно
+     соответствовать реально занятым местам — это то, что человек читает
+     как факт. */
+  seatsTaken: 14,
+  seatsUrl: "",
   /* Срок ранней цены. Пока пусто — строка про срок не печатается вовсе:
      выдуманный дедлайн хуже, чем его отсутствие. */
   priceUntil: ""
@@ -1089,6 +1131,64 @@ const FORKS = [
   { k: "davno", q: "Давно смотрите Виолу?",
     a: [["Давно и постоянно", "davno"], ["Недавно", "nedavno"], ["Первый раз слышу", "vpervye"]] }
 ];
+
+/* Окно раннего входа. Дедлайн настоящий: в субботу эфир, после него
+   событие открывается всем и цена растёт. Причина названа прямо, поэтому
+   таймер здесь честный, а не давилка.
+
+   Когда эфир прошёл, окно само закрывается и блок исчезает: таймер,
+   который тикает после срока, или срок, который каждый раз отодвигают,
+   кодекс честности запрещает отдельным пунктом. */
+function windowLeft() {
+  if (!CONFIG.openAllAt) return null;
+  const до = Date.parse(CONFIG.openAllAt);
+  if (!до) return null;
+  const мс = до - Date.now();
+  return мс > 0 ? мс : null;
+}
+
+/* Часы и минуты словами, без нулей и двоеточий: «1 день 6 часов» читается
+   с одного взгляда, «01:06:23:11» нужно расшифровывать. */
+function leftText(мс) {
+  const всего = Math.floor(мс / 1000);
+  const д = Math.floor(всего / 86400);
+  const ч = Math.floor((всего % 86400) / 3600);
+  const м = Math.floor((всего % 3600) / 60);
+  const форма = (n, одна, две, много) => {
+    const с = n % 100, е = n % 10;
+    if (с > 10 && с < 20) return много;
+    if (е === 1) return одна;
+    if (е > 1 && е < 5) return две;
+    return много;
+  };
+  if (д > 0) return д + " " + форма(д, "день", "дня", "дней") + " " + ч + " " + форма(ч, "час", "часа", "часов");
+  if (ч > 0) return ч + " " + форма(ч, "час", "часа", "часов") + " " + м + " " + форма(м, "минута", "минуты", "минут");
+  return м + " " + форма(м, "минута", "минуты", "минут");
+}
+
+/* Сколько мест занято. Спрашиваем у таблицы настоящее число. Не ответила
+   или адрес не задан — блок не показываем вовсе. Показать выдуманное
+   число хуже, чем не показать никакого. */
+function loadSeats(node) {
+  const url = CONFIG.seatsUrl || CONFIG.sheetUrl;
+  if (!url || !CONFIG.seats) return;
+  const box = node.querySelector("#seats");
+  if (!box) return;
+  fetch(url + "?seats=1")
+    .then(r => r.text())
+    .then(t => {
+      const d = JSON.parse(t);
+      if (typeof d["занято"] !== "number") return;
+      const занято = Math.min(d["занято"] + (CONFIG.seatsTaken || 0), CONFIG.seats);
+      const осталось = Math.max(0, CONFIG.seats - занято);
+      box.innerHTML = "Занято " + занято + " мест из " + CONFIG.seats +
+        '<span class="seats-bar"><span style="width:' +
+        Math.round(занято / CONFIG.seats * 100) + '%"></span></span>' +
+        (осталось <= 20 ? "Свободных осталось " + осталось + "." : "");
+      box.className = "seats on";
+    })
+    .catch(() => {});
+}
 
 /* Первая строка на экране события. Она подхватывает то, что человек только
    что увидел, и называет его сферы по именам. Раньше здесь стояли два числа
@@ -1619,6 +1719,17 @@ function offer(r) {
         <!-- Цену показываем до кнопки, а не в ней: человек решает про деньги
              раньше, чем тянется нажимать, и цифра, спрятанная в кнопке,
              читается как уловка. Валютная строка мельче, но стоит рядом. -->
+        ${(() => {
+          const мс = windowLeft();
+          if (!мс) return "";
+          return `
+          <div class="window">
+            <div class="window-h">Пока только для тех, кто прошёл тест</div>
+            <p>В субботу, 29 августа, Виола открывает событие всем на эфире, и цена станет выше. До этого зайти можно только отсюда.</p>
+            <div class="window-left">До эфира ${leftText(мс)}</div>
+            <div class="seats" id="seats"></div>
+          </div>`;
+        })()}
         <div class="price-block">
           <div class="price-main">${CONFIG.price}</div>
           <div class="price-alt">или ${CONFIG.priceUsd}, если платите зарубежной картой</div>
@@ -1635,6 +1746,7 @@ function offer(r) {
     </div>`);
 
   n.querySelector("#pay").addEventListener("click", () => lead(r));
+  loadSeats(n);
   n.querySelector("#back-res").addEventListener("click", () => result(r));
   linksThroughTelegram_(n);
   render(n);
