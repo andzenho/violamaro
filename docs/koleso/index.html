@@ -1,7 +1,11 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#241C18">
+<meta name="theme-color" content="#FBFAF7">
+<!-- Страница светлая всегда. Без этой строки браузер в тёмном режиме
+     сам перекрашивает поля ввода, полосу прокрутки и автозаполнение
+     в тёмное, и на белой карточке появляются чёрные прямоугольники. -->
+<meta name="color-scheme" content="light">
 <!-- Карточка ссылки. Телеграм берёт og:title и og:description; без них
      в канале и в пересылке ссылка выглядит голой строкой адреса.
      Картинки намеренно нет — превью текстовое. -->
@@ -134,7 +138,11 @@
     --ink-mute: #867C71;
     --line: #E8E2D8;
     --line-strong: #D3C9B9;
-    --accent: #8A5A2B;
+    /* Акцент — цвет текста, не коричневый. 28.08 продюсер: на светлом
+       фоне коричневый выглядит грязно. У референса цветной ровно один
+       элемент — маркер; всё остальное чёрное. Коричневый остался только
+       в --mark и --accent-soft, то есть в заливках, а не в буквах. */
+    --accent: #191512;
     --accent-soft: #F6E3BE;
     /* Цвет маркера. Отдельной переменной, потому что в тёмной теме
        он не осветляется, а меняется целиком. */
@@ -156,34 +164,15 @@
     --band-hi:  #191512;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --ground: #241C18;
-      --surface: #2B211C;
-      --surface-2: #352822;
-      --ink: #F6F0E8;
-      --ink-soft: #D8C9BA;
-      --ink-mute: #A29385;
-      --line: #3E312A;
-      --line-strong: #55443A;
-      --accent: #C9A87F;
-      --accent-soft: #3A2C22;
-      /* В тёмной теме маркер не осветляется, а становится плотной
-         золотой плашкой с тёмным текстом: светлый текст на светлом
-         золоте не читается вовсе. */
-      --mark: #E4C489;
-      --mark-ink: #241C18;
-      --warn: #E08A72;
-      --deep: #F6F0E8;
-      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 18px 40px -20px rgba(0, 0, 0, .6);
-      --btn-bg: #F0E6D8;
-      --btn-ink: #191512;
-      --btn-shadow: 0 8px 20px -12px rgba(0, 0, 0, .7);
-      --band-low: #E08A72;
-      --band-mid: #8A7358;
-      --band-hi:  #D8B991;
-    }
-  }
+  /* Автопереключения на тёмную тему здесь нет, и это решение, а не пропуск.
+     28.08 Виола попросила светлый дизайн, продюсер выбрал светлую палитру
+     как стандарт. Пока стоял @media (prefers-color-scheme: dark), человек
+     с тёмным режимом в системе видел тёмную страницу и справедливо считал,
+     что дизайн не поменялся.
+
+     Тёмная палитра ниже не выброшена: она включается вручную атрибутом
+     data-theme="dark" на <html>. Вернуть автоматику — снова обернуть её
+     в @media, одна строка. */
 
   :root[data-theme="dark"] {
       --ground: #241C18;
@@ -256,13 +245,18 @@
   .tick.now { height: 22px; background: var(--accent); }
 
   /* — карточка — */
+  /* Карточка перестала быть карточкой 28.08. Рамка, тень и скруглённый
+     угол делали из экрана окошко: контент сидел внутри коробки, а вокруг
+     оставалось поле. У референса контент лежит прямо на странице, как
+     слайд карусели, и работает не рамка, а воздух между блоками.
+     Поэтому фона, рамки и тени здесь больше нет, а зазор вырос. */
   .card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 1.6rem 1.4rem;
-    box-shadow: var(--shadow);
-    display: flex; flex-direction: column; gap: 1.7rem;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: .4rem 0 0;
+    box-shadow: none;
+    display: flex; flex-direction: column; gap: 2rem;
   }
 
   .step {
@@ -275,21 +269,21 @@
      четыре подряд, и каждый надо прочитать внимательно. */
   h1 {
     font-weight: 700;
+    letter-spacing: -.035em;
+    text-wrap: balance;
+    margin: 0;
+    font-size: 2.7rem; line-height: 1.03;
+  }
+  h2 {
+    font-weight: 700;
     letter-spacing: -.025em;
     text-wrap: balance;
     margin: 0;
-    font-size: 2rem; line-height: 1.12;
-  }
-  h2 {
-    font-weight: 600;
-    letter-spacing: -.01em;
-    text-wrap: balance;
-    margin: 0;
-    font-size: 1.4rem; line-height: 1.3;
+    font-size: 1.75rem; line-height: 1.18;
   }
   /* Вопросы длинные, потому что понятные. На маленьком экране
      длинный вопрос набирается мельче, чтобы ответы остались видны. */
-  h2.long { font-size: 1.18rem; }
+  h2.long { font-size: 1.45rem; }
 
   /* Надзаголовок и заголовок держим одним блоком, чтобы между ними не влезал общий отступ карточки */
   .title-block { display: flex; flex-direction: column; gap: .5rem; }
@@ -335,7 +329,10 @@
     font-size: 1rem;
   }
 
-  .answers { display: flex; flex-direction: column; gap: .55rem; }
+  /* Зазор между ответами вырос вместе с рамкой: плотная рамка на .55rem
+     склеивала кнопки в решётку, и глаз читал их как таблицу, а не как
+     четыре отдельных выбора. */
+  .answers { display: flex; flex-direction: column; gap: .75rem; }
 
   button.ans {
     appearance: none;
@@ -343,13 +340,15 @@
     font: inherit;
     color: var(--ink);
     background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: 10px;
-    padding: .85rem 1rem;
+    border: 1.5px solid var(--ink);
+    border-radius: 12px;
+    padding: 1.05rem 1.15rem;
     cursor: pointer;
     transition: background-color .15s ease, border-color .15s ease, transform .08s ease;
   }
-  button.ans:hover { background: var(--surface-2); border-color: var(--accent); }
+  /* Наведение и выбор меняют не рамку, а заливку: рамка уже плотная,
+     и её потемнение на глаз не читается. */
+  button.ans:hover { background: var(--ink); color: var(--surface); }
   button.ans:active { transform: scale(.99); }
 
   button.go {
@@ -403,7 +402,13 @@
     letter-spacing: -.02em; color: var(--ink);
   }
   .way-what { font-weight: 600; }
-  .way-note { margin: 0 0 .35rem; font-size: .92rem; color: var(--ink-soft); line-height: 1.45; }
+  /* Две строки минимум: у одного способа пояснение длиннее, и без этого
+     карточки разной высоты. Аудитория делится пополам, поэтому равенство
+     половин здесь не косметика. */
+  .way-note {
+    margin: 0 0 .35rem; font-size: .92rem; color: var(--ink-soft);
+    line-height: 1.45; min-height: 2.9em;
+  }
   /* margin-top: auto прижимает кнопки к низу карточки. Пояснения разной
      длины, и без этого кнопки вставали на разной высоте — глаз читает это
      как «одна главнее». */
@@ -634,7 +639,9 @@
   .wheel .axt { font-size: 10px; fill: var(--ink-mute); letter-spacing: .04em; }
   /* Единственный контур. Плотнее прежнего: раньше он лежал поверх второго
      и просвечивал, теперь стоит один на пустом кольце. */
-  .wheel .inn { fill: var(--accent); fill-opacity: .42; stroke: var(--accent); stroke-width: 2; }
+  /* Фигура заливается золотом, а обводится цветом текста: коричневая
+     заливка на светлом фоне выглядела как пятно. */
+  .wheel .inn { fill: var(--mark); fill-opacity: .55; stroke: var(--ink); stroke-width: 2; }
 
   .score { font-size: 1.1rem; line-height: 1.45; text-align: center; }
 
@@ -858,6 +865,19 @@
     background: var(--mark); color: var(--mark-ink);
     box-shadow: 0 0 0 .18em var(--mark);
     border-radius: 2px; font-weight: 600;
+  }
+
+  /* Маркер по заголовку — главный приём референса и то, из-за чего экран
+     читается как «другой дизайн», а не как «те же буквы другого цвета».
+     Полоса ложится за каждой строкой отдельно, потому что span строчный:
+     фон строчного элемента рисуется по фрагментам строк, а не общим
+     прямоугольником. Отступ даём тенью, а не padding: padding раздвинул
+     бы строки и разорвал заголовок. */
+  .mark {
+    background: var(--mark); color: var(--mark-ink);
+    box-shadow: .22em 0 0 var(--mark), -.22em 0 0 var(--mark);
+    box-decoration-break: clone; -webkit-box-decoration-break: clone;
+    line-height: 1.28;
   }
 
   /* Рамка экрана: человек должен сразу понять, что продажи ещё не идут,
@@ -1810,7 +1830,7 @@ function intro() {
   stage = "intro";
   const n = el(`
     <div class="card">
-      <h1>Колесо эмпата</h1>
+      <h1><span class="mark">Колесо эмпата</span></h1>
       <div class="body-copy intro-voice">
         <p>Вы отдаёте много. А вот сколько при этом остаётся вам, это вопрос.</p>
         <p>Тут двадцать четыре вопроса про шесть сфер жизни. Партнёр, семья, работа, деньги, тело, своё дело.</p>
@@ -1885,7 +1905,7 @@ function result(prev) {
     <div class="card">
       <div class="verdict">
         <div class="cap">ваш результат</div>
-        <h1>Где у вас полно, а где пусто</h1>
+        <h1><span class="mark">Где у вас полно, а где пусто</span></h1>
         <p class="how">Каждый луч это одна сфера вашей жизни. Чем он длиннее, тем больше в этой сфере остаётся вам. Где фигура тонкая, там просело.</p>
       </div>
       <div class="wheel-wrap">
