@@ -446,8 +446,27 @@
   .window-h { font-weight: 600; font-size: 1.06rem; color: var(--accent); line-height: 1.3; }
   .window p { margin: 0; font-size: .95rem; line-height: 1.5; color: var(--ink-soft); }
   .window-left {
-    font-weight: 600; font-size: 1.02rem;
-    padding-top: .5rem; border-top: 1px solid var(--line);
+    font-weight: 600; font-size: .95rem; text-align: center;
+    padding-top: .7rem; border-top: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+  /* Обратный отсчёт отдельным блоком по центру. Клетки одной ширины,
+     цифры моноширинными: иначе на каждой смене секунды строка дёргалась бы,
+     подстраиваясь под ширину «1» и «8». */
+  .clock { display: flex; justify-content: center; gap: .45rem; }
+  .cl {
+    display: flex; flex-direction: column; align-items: center;
+    min-width: 3.6rem; padding: .5rem .3rem .45rem;
+    border-radius: 12px; background: var(--surface); border: 1px solid var(--line-strong);
+  }
+  .cl b {
+    font-family: 'Prata', Georgia, serif; font-weight: 400;
+    font-size: 1.6rem; line-height: 1.1; color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .cl i {
+    font-style: normal; font-size: .68rem; line-height: 1.2;
+    color: var(--ink-mute); margin-top: .15rem; text-align: center;
   }
   /* Счётчик мест скрыт, пока таблица не ответила настоящим числом.
      Пустой блок лучше выдуманной цифры. */
@@ -462,14 +481,17 @@
   /* Цена над кнопкой. Крупная рублёвая, под ней мельче валютная: обе видны
      сразу, но глаз не мечется между двумя одинаковыми цифрами. */
   .price-block {
-    display: flex; flex-direction: column; gap: .2rem; align-items: center;
-    text-align: center; margin: .2rem 0 .3rem;
+    display: flex; flex-direction: column; gap: .25rem; align-items: center;
+    text-align: center; margin: .4rem 0;
+    padding: 1.1rem 1rem 1rem;
+    border-radius: 16px; background: var(--surface-2);
+    border: 1px solid var(--line-strong);
   }
   .price-main {
-    font-family: 'Prata', Georgia, serif; font-size: 2.1rem; line-height: 1.1;
+    font-family: 'Prata', Georgia, serif; font-size: 3rem; line-height: 1;
     color: var(--accent);
   }
-  .price-alt { font-size: .95rem; color: var(--ink-soft); }
+  .price-alt { font-size: 1rem; color: var(--ink); }
   .price-note { margin: .35rem 0 0; font-size: .88rem; color: var(--ink-mute); line-height: 1.45; }
 
   .cta-note {
@@ -1147,23 +1169,45 @@ function windowLeft() {
   return мс > 0 ? мс : null;
 }
 
-/* Часы и минуты словами, без нулей и двоеточий: «1 день 6 часов» читается
-   с одного взгляда, «01:06:23:11» нужно расшифровывать. */
-function leftText(мс) {
-  const всего = Math.floor(мс / 1000);
+/* Склонение подписи под числом: 1 день, 2 дня, 5 дней. */
+function форма_(n, одна, две, много) {
+  const с = n % 100, е = n % 10;
+  if (с > 10 && с < 20) return много;
+  if (е === 1) return одна;
+  if (е > 1 && е < 5) return две;
+  return много;
+}
+
+/* Четыре клетки обратного отсчёта. Секунды идут живыми: неподвижный
+   таймер человек читает как картинку, а движущийся как факт. */
+function clockCells(мс) {
+  const всего = Math.max(0, Math.floor(мс / 1000));
   const д = Math.floor(всего / 86400);
   const ч = Math.floor((всего % 86400) / 3600);
   const м = Math.floor((всего % 3600) / 60);
-  const форма = (n, одна, две, много) => {
-    const с = n % 100, е = n % 10;
-    if (с > 10 && с < 20) return много;
-    if (е === 1) return одна;
-    if (е > 1 && е < 5) return две;
-    return много;
+  const с = всего % 60;
+  const дв = n => (n < 10 ? "0" : "") + n;
+  const cell = (v, п) => '<span class="cl"><b>' + v + '</b><i>' + п + '</i></span>';
+  return cell(д, форма_(д, "день", "дня", "дней")) +
+         cell(дв(ч), форма_(ч, "час", "часа", "часов")) +
+         cell(дв(м), форма_(м, "минута", "минуты", "минут")) +
+         cell(дв(с), форма_(с, "секунда", "секунды", "секунд"));
+}
+
+/* Тикаем раз в секунду. Останавливаемся сами, когда узел ушёл с экрана:
+   человек листает между экранами, и брошенный интервал иначе продолжал бы
+   писать в оторванный от страницы блок до конца сессии. */
+function runClock(node) {
+  const box = node.querySelector("#clock");
+  if (!box) return;
+  const tick = () => {
+    if (!document.body.contains(box)) { clearInterval(id); return; }
+    const мс = windowLeft();
+    if (!мс) { clearInterval(id); const w = box.closest ? box.closest(".window") : null; if (w) w.style.display = "none"; return; }
+    box.innerHTML = clockCells(мс);
   };
-  if (д > 0) return д + " " + форма(д, "день", "дня", "дней") + " " + ч + " " + форма(ч, "час", "часа", "часов");
-  if (ч > 0) return ч + " " + форма(ч, "час", "часа", "часов") + " " + м + " " + форма(м, "минута", "минуты", "минут");
-  return м + " " + форма(м, "минута", "минуты", "минут");
+  const id = setInterval(tick, 1000);
+  tick();
 }
 
 /* Сколько мест занято. Спрашиваем у таблицы настоящее число. Не ответила
@@ -1726,7 +1770,8 @@ function offer(r) {
           <div class="window">
             <div class="window-h">Пока только для тех, кто прошёл тест</div>
             <p>В субботу, 29 августа, Виола открывает событие всем на эфире, и цена станет выше. До этого зайти можно только отсюда.</p>
-            <div class="window-left">До эфира ${leftText(мс)}</div>
+            <div class="window-left">До эфира</div>
+            <div class="clock" id="clock"></div>
             <div class="seats" id="seats"></div>
           </div>`;
         })()}
@@ -1746,10 +1791,14 @@ function offer(r) {
     </div>`);
 
   n.querySelector("#pay").addEventListener("click", () => lead(r));
-  loadSeats(n);
   n.querySelector("#back-res").addEventListener("click", () => result(r));
   linksThroughTelegram_(n);
   render(n);
+  /* Строго после render: таймер проверяет, что его блок ещё на странице,
+     и до отрисовки эта проверка не проходила — он выключал сам себя
+     на первом же такте. */
+  loadSeats(n);
+  runClock(n);
 }
 
 /* ——— форма перед оплатой ———
