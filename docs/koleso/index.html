@@ -472,15 +472,29 @@
     font-style: normal; font-size: .68rem; line-height: 1.2;
     color: var(--ink-mute); margin-top: .15rem; text-align: center;
   }
-  /* Счётчик мест скрыт, пока таблица не ответила настоящим числом.
-     Пустой блок лучше выдуманной цифры. */
+  /* Счётчик мест. Отделён линией сверху и стоит по центру: это второе
+     число блока после таймера, и мельче подписи оно тонуло. */
   .seats { display: none; }
-  .seats.on { display: block; font-size: .92rem; color: var(--ink-soft); }
+  .seats.on {
+    display: block; text-align: center;
+    padding-top: .75rem; border-top: 1px solid var(--line);
+  }
+  .seats-n {
+    display: block; font-family: var(--serif); font-size: 1.75rem;
+    line-height: 1.1; color: var(--accent); font-variant-numeric: tabular-nums;
+  }
+  .seats-cap { display: block; font-size: .82rem; color: var(--ink-mute); margin-top: .2rem; }
   .seats-bar {
-    display: block; height: 6px; margin: .4rem 0 .35rem;
+    display: block; height: 10px; margin: .55rem 0 .4rem;
     border-radius: 999px; background: var(--line); overflow: hidden;
   }
-  .seats-bar span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+  .seats-bar span {
+    display: block; height: 100%; background: var(--accent); border-radius: 999px;
+    /* Полоса доезжает до своей длины за полсекунды. На глаз это читается
+       как «прямо сейчас заняли ещё», а прыжок читался бы как перерисовка. */
+    transition: width .5s ease-out;
+  }
+  .seats-left { display: block; font-size: .95rem; font-weight: 600; color: var(--ink); }
 
   /* Цена над кнопкой. Крупная рублёвая, под ней мельче валютная: обе видны
      сразу, но глаз не мечется между двумя одинаковыми цифрами. */
@@ -1297,12 +1311,27 @@ function drawSeats(node) {
   const занято = seatsTaken_();
   const всего = CONFIG.seats;
   const осталось = Math.max(0, всего - занято);
-  box.innerHTML = "Занято " + занято + " " +
-    форма_(занято, "место", "места", "мест") + " из " + всего +
-    '<span class="seats-bar"><span style="width:' +
-    Math.round(занято / всего * 100) + '%"></span></span>' +
-    (осталось <= 20 ? "Свободных осталось " + осталось + "." : "");
-  box.className = "seats on";
+
+  /* Разметку собираем один раз, дальше меняем только цифры. Иначе полоса
+     на каждом такте рождалась бы заново и её плавный доезд не работал бы. */
+  if (!box.getAttribute("data-built")) {
+    box.setAttribute("data-built", "1");
+    box.innerHTML =
+      '<span class="seats-n" id="seats-n"></span>' +
+      /* Подпись читается вместе с числом: «55 из 100 мест уже занято».
+         Склонение идёт по сотне, поэтому оно не меняется и слово стоит
+         жёстко — иначе на каждом шаге пришлось бы пересчитывать. */
+      '<span class="seats-cap">мест уже занято</span>' +
+      '<span class="seats-bar"><span id="seats-fill"></span></span>' +
+      '<span class="seats-left" id="seats-left"></span>';
+    box.className = "seats on";
+  }
+  const n = box.querySelector("#seats-n");
+  const fill = box.querySelector("#seats-fill");
+  const left = box.querySelector("#seats-left");
+  if (n) n.innerHTML = занято + " из " + всего;
+  if (fill) fill.style.width = Math.round(занято / всего * 100) + "%";
+  if (left) left.innerHTML = осталось <= 20 ? "Свободных осталось " + осталось : "";
 }
 
 /* Первая строка на экране события. Она подхватывает то, что человек только
