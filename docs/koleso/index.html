@@ -522,7 +522,7 @@
   .read { display: flex; flex-direction: column; gap: 1rem; }
   .read-row { display: flex; flex-direction: column; gap: .1rem; }
   .read-head { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
-  .read b { font-weight: 600; font-size: 1.08rem; color: var(--accent); }
+  .read b { font-weight: 600; font-size: 1.18rem; color: var(--accent); }
   /* Оценка словом, а не цветом в одиночку: на чёрно-белом экране и при
      дальтонизме строка всё равно читается. */
   .read-lvl {
@@ -539,13 +539,13 @@
      Теперь это настоящий заголовок, тем же шрифтом, что и остальные. */
   .unpack-h {
     font-weight: 600;
-    font-size: 1.22rem; line-height: 1.3; color: var(--ink);
+    font-size: 1.45rem; line-height: 1.25; color: var(--ink);
     letter-spacing: 0; text-transform: none;
-    padding-top: .5rem; border-top: 1px solid var(--line);
+    padding-top: .8rem; border-top: 1px solid var(--line-strong);
   }
   .un-block { display: flex; flex-direction: column; gap: .4rem; }
   .un-name {
-    font-weight: 600; font-size: 1.1rem; color: var(--accent);
+    font-weight: 600; font-size: 1.18rem; color: var(--accent);
   }
   .un-block ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .5rem; }
   .un-block li { position: relative; padding-left: 1.1rem; line-height: 1.5; }
@@ -610,8 +610,8 @@
      внутри, как на сайте флагмана. */
   .inside { display: flex; flex-direction: column; gap: .9rem; }
   .inside-h {
-    font-weight: 600; font-size: 1.22rem; line-height: 1.3; color: var(--ink);
-    padding-top: .5rem; border-top: 1px solid var(--line);
+    font-weight: 600; font-size: 1.45rem; line-height: 1.25; color: var(--ink);
+    padding-top: .8rem; border-top: 1px solid var(--line-strong);
   }
   .inside ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .8rem; }
   /* Название дня — заголовок карточки: полужирный и крупнее описания.
@@ -625,9 +625,13 @@
   }
   /* Дата и название дня — заголовок карточки, а не бледная приписка.
      Раньше они красились в самый тусклый цвет и терялись. */
+  /* Дата плашкой, а не строкой текста: человек листает и ищет глазами
+     именно числа, чтобы понять, попадает он в эти дни или нет. */
   .inside li b {
-    display: block; margin-bottom: .3rem;
-    color: var(--accent); font-weight: 600; font-size: 1.02rem;
+    display: table; margin-bottom: .6rem;
+    background: var(--accent-soft); color: var(--accent);
+    padding: .25rem .65rem; border-radius: 999px;
+    font-weight: 600; font-size: .88rem; letter-spacing: .01em; line-height: 1.3;
   }
   .inside .format { color: var(--ink-mute); font-size: .88rem; }
   /* Описание дня. Курсива нет: на трёх строках подряд он читается тяжело. */
@@ -639,8 +643,8 @@
   .gets { display: flex; flex-direction: column; gap: .8rem; }
   .gets-foot { margin: .7rem 0 0; font-size: .95rem; color: var(--ink-soft); }
   .gets-h {
-    font-weight: 600; font-size: 1.22rem; line-height: 1.3; color: var(--ink);
-    padding-top: .5rem; border-top: 1px solid var(--line);
+    font-weight: 600; font-size: 1.45rem; line-height: 1.25; color: var(--ink);
+    padding-top: .8rem; border-top: 1px solid var(--line-strong);
   }
   .gets ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
   /* Волосяные линии между пунктами: список перестал быть кашей, каждый
@@ -660,7 +664,7 @@
     border-radius: 14px;
     padding: 1.1rem 1.15rem;
   }
-  .gets.bonus .gets-h { border-top: 0; padding-top: 0; font-size: 1.05rem; }
+  .gets.bonus .gets-h { border-top: 0; padding-top: 0; font-size: 1.15rem; }
   .gets.bonus li { border-bottom: 0; padding: .2rem 0 0 1.75rem; }
   .gets.bonus .gets-h { color: var(--accent); }
   /* Подарки метим эмодзи: на длинном экране взгляд цепляется за него раньше, чем за текст. */
@@ -1073,9 +1077,9 @@ const OFFER = {
      сделана под событие, и «в записи» читается как «повтор старого».
      Витринное правило из конструкции события. */
   inside: [
-    "<b>11 сентября, пятница.</b> Лекция «Цена непрожитой жизни»<span class=\"wq\">Виола сделала эту лекцию специально для события. Вы увидите, во что вам уже обошлось стояние на месте: что забрало тело, что стало с отношениями, куда ушли деньги и сколько ушло лет. Смотреть можно в своём часовом поясе, когда вам удобно</span>",
-    "<b>12 сентября, суббота.</b> Медитация и одно задание<span class=\"wq\">Вы слушаете аудиомедитацию Виолы, а после неё выписываете своими словами, что болит именно у вас. Не общими фразами про эмпатов, своими. Этот лист станет вашей картой для третьего дня</span>",
-    "<b>13 сентября, воскресенье.</b> Прямой эфир с Виолой<span class=\"wq\">Виола разбирает собранные вопросы, подробно и по одному. После эфира останется запись с таймкодами, чтобы вы вернулись и переслушали нужное</span>"
+    "<b>11 сентября, пятница</b> Лекция «Цена непрожитой жизни»<span class=\"wq\">Виола сделала эту лекцию специально для события. Вы увидите, во что вам уже обошлось стояние на месте: что забрало тело, что стало с отношениями, куда ушли деньги и сколько ушло лет. Смотреть можно в своём часовом поясе, когда вам удобно</span>",
+    "<b>12 сентября, суббота</b> Медитация и одно задание<span class=\"wq\">Вы слушаете аудиомедитацию Виолы, а после неё выписываете своими словами, что болит именно у вас. Не общими фразами про эмпатов, своими. Этот лист станет вашей картой для третьего дня</span>",
+    "<b>13 сентября, воскресенье</b> Прямой эфир с Виолой<span class=\"wq\">Виола разбирает собранные вопросы, подробно и по одному. После эфира останется запись с таймкодами, чтобы вы вернулись и переслушали нужное</span>"
   ],
   getsHead: "Что останется с вами",
   gets: [
