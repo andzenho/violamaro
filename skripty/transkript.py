@@ -170,7 +170,24 @@ def argumenty_yt_dlp(args):
         dop += ["--cookies", args.cookies]
     if args.brauzer:
         dop += ["--cookies-from-browser", args.brauzer]
+    dop += js_runtime()
     return dop
+
+
+def js_runtime():
+    """YouTube без JS-движка отдаёт не все форматы.
+
+    yt-dlp по умолчанию ищет только deno. Если его нет, а node или bun
+    стоят — подсовываем их, чтобы не ставить лишний рантайм.
+    """
+    if shutil.which("deno"):
+        return []
+    for dvizhok in ("node", "bun"):
+        if shutil.which(dvizhok):
+            return ["--js-runtimes", dvizhok]
+    print("! нет JS-движка (deno / node / bun) — YouTube может отдать "
+          "не все форматы. Поставь: brew install deno")
+    return []
 
 
 def svedeniya(url, args):
@@ -179,27 +196,45 @@ def svedeniya(url, args):
     cmd = ["yt-dlp", "--no-playlist", "--dump-single-json", "--skip-download"]
     cmd += argumenty_yt_dlp(args) + [url]
     p = subprocess.run(cmd, capture_output=True, text=True)
-    if p.returncode != 0:
-        podskazka = ""
-        if "instagram" in url.lower():
-            podskazka = ("\nInstagram почти всегда требует куки: "
-                         "добавь --brauzer chrome (или --cookies cookies.txt).")
+    if p.returncode != 0 or not p.stdout.strip():
         umer("yt-dlp не смог прочитать ссылку.\n" +
-             p.stderr.strip()[-800:] + podskazka)
+             p.stderr.strip()[-800:] + podskazka_po_oshibke(url, p.stderr))
     return json.loads(p.stdout)
+
+
+def podskazka_po_oshibke(url, stderr):
+    """Понятный совет вместо простыни от yt-dlp."""
+    e = (stderr or "").lower()
+    instagram = "instagram" in (url or "").lower()
+    if "not a bot" in e or "sign in to confirm" in e or "403" in e or \
+            "cookies" in e or "login required" in e or "rate-limit" in e:
+        gde = "Instagram" if instagram else "YouTube"
+        return ("\n\n%s требует авторизации: запусти с --brauzer chrome "
+                "(или safari / firefox), тогда yt-dlp возьмёт куки из "
+                "залогиненного браузера. Либо --cookies cookies.txt.\n"
+                "Если это облачная сессия Claude Code — ссылки отсюда не "
+                "качаются вообще, IP дата-центра забанен. Гони на своей машине."
+                % gde)
+    if instagram:
+        return ("\n\nInstagram почти всегда требует куки: "
+                "добавь --brauzer chrome (или --cookies cookies.txt).")
+    if "unavailable" in e or "private" in e or "removed" in e:
+        return "\n\nРолик недоступен: удалён, приватный или ограничен по региону."
+    return ""
 
 
 def skachat_audio(url, katalog, args):
     shag("качаю аудиодорожку (видеопоток не трогаем)")
     shablon = os.path.join(katalog, "%(id)s.%(ext)s")
     cmd = ["yt-dlp", "--no-playlist", "-f", "bestaudio/best",
-           "-o", shablon, "--no-progress", "--quiet"]
+           "-o", shablon, "--no-progress", "--no-warnings"]
     cmd += argumenty_yt_dlp(args) + [url]
-    zapustit(cmd)
+    p = subprocess.run(cmd, capture_output=True, text=True)
     fayly = [os.path.join(katalog, n) for n in os.listdir(katalog)]
-    fayly = [f for f in fayly if os.path.isfile(f)]
+    fayly = [f for f in fayly if os.path.isfile(f) and os.path.getsize(f) > 0]
     if not fayly:
-        umer("yt-dlp ничего не скачал.")
+        umer("yt-dlp не скачал аудио.\n" + p.stderr.strip()[-800:] +
+             podskazka_po_oshibke(url, p.stderr))
     return max(fayly, key=os.path.getsize)
 
 
@@ -507,7 +542,8 @@ def spisok_kanala(url, args):
     cmd += argumenty_yt_dlp(args) + [url]
     p = subprocess.run(cmd, capture_output=True, text=True)
     if p.returncode != 0 and not p.stdout.strip():
-        umer("не удалось прочитать канал.\n" + p.stderr.strip()[-800:])
+        umer("не удалось прочитать канал.\n" + p.stderr.strip()[-800:] +
+             podskazka_po_oshibke(url, p.stderr))
     out = []
     for stroka in p.stdout.splitlines():
         stroka = stroka.strip()

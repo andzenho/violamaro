@@ -14,14 +14,17 @@
   файл уходит в AssemblyAI (`universal-2`, `ru`), ответ раскладывается по
   абзацам с таймкодами, ложится в `korpus/NN-slug.txt` с шапкой-источником,
   дальше сам запускается `razbor.py`. Только stdlib; нужны бинарники
-  `yt-dlp`, `ffmpeg`; ключ — `ASSEMBLYAI_API_KEY` или файл `.assemblyai-key`
+  `yt-dlp`, `ffmpeg` и JS-движок для YouTube (`deno`, либо уже стоящий
+  `node` — скрипт подставит его сам); ключ — `ASSEMBLYAI_API_KEY` или файл `.assemblyai-key`
   в корне (оба в `.gitignore`). Имена и термины Виолы подсказываются модели
   из `slovar-transkripta.json`. Обработанные ролики помнятся в
   `.transkript/index.json` — повторно не платим. Вызывается и командой
   `/transkript`.
   `python3 skripty/transkript.py <ссылка|файл> [--suho] [--kommit]`
   `python3 skripty/transkript.py --kanal <канал> --limit 5` — только новые ролики
-  Instagram почти всегда просит куки: `--brauzer chrome` или `--cookies cookies.txt`.
+  Instagram почти всегда просит куки, YouTube — периодически («Sign in to confirm
+  you're not a bot»): `--brauzer chrome` или `--cookies cookies.txt`. Скрипт
+  распознаёт эту ошибку и говорит, что делать.
   Созвоны и эфиры на два голоса: `--govoryashchie 2`.
   **Ускорение аудио (`--skorost`) по умолчанию выключено намеренно:** час
   расшифровки стоит $0.15, ×2 экономит 7 центов и роняет точность на русском.
