@@ -22,6 +22,19 @@
   доп-колонки не трогает). Настройка — `analitika/README.md`.
   `python3 skripty/ca_sync.py --list-tabs | (без флага) | --apply`
 
+- `bot_probe.py` — кому бот может написать первым: прогоняет список Telegram ID
+  через Bot API (`sendChatAction`, без видимых сообщений) и по каждому даёт
+  вердикт — reachable / no_access (нет разрешения писать) / blocked. Нужен для
+  аудита людей из мини-аппа, которые в чат бота не писали. Только stdlib; токен —
+  `TG_BOT_TOKEN`. Вход — файл с ID по строке или CSV с колонкой `userId`.
+  `TG_BOT_TOKEN=... python3 skripty/bot_probe.py ids.txt [--out otchet.csv]`
+
+- `sait.js` — открыть сайт настоящим Chromium и снять сырьё: текст в порядке
+  чтения, структуру (заголовки, CTA, формы, цены), ссылки, скриншот. Нужен там,
+  где `WebFetch` бесполезен: Tilda, Taplink, любой SPA. Node, не Python; разовая
+  настройка — `sh skripty/sait_setup.sh`. Вызывается и командой `/sait`.
+  `node skripty/sait.js <адрес>`
+
 `sheets_sync.py` и `ca_sync.py` — **единственные скрипты с внешними зависимостями**
 (Google Sheets API нельзя вызвать без библиотеки), ставятся из
 `skripty/requirements-sheets.txt`. Оба используют один ключ сервис-аккаунта.

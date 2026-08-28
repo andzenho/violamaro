@@ -1,9 +1,13 @@
-# Страница теста
+# docs/ — то, что опубликовано
 
-`index.html` — копия `produkt/test-empat.html`, отсюда её раздаёт GitHub Pages.
-
-Правки вносим в `produkt/test-empat.html`, затем копируем:
-
-    cp produkt/test-empat.html docs/index.html
+`index.html` — **страница теста «Какой ты эмпат», единственный исходник**.
+Правим прямо здесь, GitHub Pages раздаёт этот файл после пуша в `main`.
 
 Адрес страницы: https://andzenho.github.io/violamaro/
+
+Раньше рядом лежала копия `produkt/test-empat.html` — снята 15.08, копии
+расходились. Содержательные исходники теста остались в `produkt/`:
+`test-empat.md` (вопросы, типы, разбор) и `test-empat-chistovik.md` (чистовые
+формулировки). Меняем смысл — там, меняем вёрстку — здесь.
+
+`promt-dlya-agenta-violy.md` — промт для отдельного агента Виолы.
