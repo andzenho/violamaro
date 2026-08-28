@@ -20,6 +20,9 @@
   из `slovar-transkripta.json`. Обработанные ролики помнятся в
   `.transkript/index.json` — повторно не платим. Вызывается и командой
   `/transkript`.
+  Разовая настройка: `sh skripty/transkript_setup.sh <ключ AssemblyAI>` —
+  ставит недостающее через brew, кладёт ключ в `.assemblyai-key`, прогоняет
+  самопроверку. Идемпотентно.
   `python3 skripty/transkript.py <ссылка|файл> [--suho] [--kommit]`
   `python3 skripty/transkript.py --kanal <канал> --limit 5` — только новые ролики
   Instagram почти всегда просит куки, YouTube — периодически («Sign in to confirm
