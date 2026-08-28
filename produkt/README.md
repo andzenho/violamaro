@@ -45,6 +45,8 @@
 `arhiv/lyubov-i-dengi/sozvon-viola-11.08-itogi.md` — решения с созвона (разворот на эмпатов) · `arhiv/lyubov-i-dengi/sozvon-11.08-razbor-dlya-komandy.md` — тот же созвон, развёрнуто для команды · `fakty-viola.md` — цифры и решения · `produkty-viola-staryye.md` — её старые лендинги: цены, тарифы, образы.
 
 **Рабочие разборы** (сырьё решений, при спорах поднимать их)
-`efir-lyubov-i-dengi-razbor.md` · `vebinar-empaty-dengi-razbor.md` · `dengi-dlya-empata-razbor.md` · `arhiv/lyubov-i-dengi/flagman-sborka-jtbd.md` · `blok-do-posle-prorabotka.md`.
+`arhiv/razbory-istochnikov/efir-lyubov-i-dengi-razbor.md` · `arhiv/razbory-istochnikov/vebinar-empaty-dengi-razbor.md` · `arhiv/razbory-istochnikov/dengi-dlya-empata-razbor.md` · `arhiv/razbory-istochnikov/programma-otnosheniya-razbor.md` · `arhiv/lyubov-i-dengi/flagman-sborka-jtbd.md` · `arhiv/lyubov-i-dengi/blok-do-posle-prorabotka.md`.
+
+⚠️ Разборы уехали в `arhiv/razbory-istochnikov/` — это сырьё решений, а не мёртвый архив: при спорах о смыслах поднимать их оттуда.
 
 Устаревшие офферы — в `arhiv/ofery-promezhutochnye/`, при обычной работе не читать.

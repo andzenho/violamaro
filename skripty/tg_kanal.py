@@ -153,18 +153,33 @@ def svesti(posty, zapisi, papka, primenit):
         if k:
             po_klyuchu.setdefault(k, p)
 
+    # Пост, у которого в КП уже записана ссылка на существующий в канале
+    # пост, считаем сопоставленным по ней, а не по тексту. Иначе любая
+    # правка текста при публикации (а её делают почти всегда: заголовок,
+    # эмодзи, «текстовая версия» под видео) навсегда роняет запись в
+    # «числятся готовыми, но в канале не найдены».
+    po_id = {}
+    for p in posty:
+        if not p["sluzhebnoe"]:
+            po_id[str(p["id"])] = p
+
     nashli, propali, lishnie = [], [], []
     sopostavlennye = set()
     for z in zapisi:
         if not z["text"]:
             continue
-        k = klyuch(z["text"])
-        p = po_klyuchu.get(k)
+        p = None
+        m = re.search(r"/(\d+)\s*$", (z["ssylka"] or "").strip())
+        if m:
+            p = po_id.get(m.group(1))
         if p is None:
-            for kk, pp in po_klyuchu.items():
-                if k and (kk.startswith(k[:40]) or k.startswith(kk[:40])):
-                    p = pp
-                    break
+            k = klyuch(z["text"])
+            p = po_klyuchu.get(k)
+            if p is None:
+                for kk, pp in po_klyuchu.items():
+                    if k and (kk.startswith(k[:40]) or k.startswith(kk[:40])):
+                        p = pp
+                        break
         if p:
             sopostavlennye.add(p["id"])
             nashli.append((z, p))
