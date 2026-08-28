@@ -29,6 +29,13 @@
   самопроверку. Идемпотентно.
   `python3 skripty/transkript.py <ссылка|файл> [--suho] [--kommit]`
   `python3 skripty/transkript.py --kanal <канал> --limit 5` — только новые ролики
+- `transkript_test.py` — самопроверка `transkript.py` без ключа и без сети:
+  поднимает поддельный AssemblyAI, который проверяет тело запроса по
+  документации, и поддельные yt-dlp/ffmpeg; прогон идёт в копии дерева
+  во временной папке, `korpus/` не трогается. Гонять после любой правки
+  скрипта: параметры у AssemblyAI меняются, и сломанный запрос иначе
+  всплывёт только на живом ролике и за деньги.
+  `python3 skripty/transkript_test.py`
   Instagram почти всегда просит куки, YouTube — периодически («Sign in to confirm
   you're not a bot»): `--brauzer chrome` или `--cookies cookies.txt`. Скрипт
   распознаёт эту ошибку и говорит, что делать.

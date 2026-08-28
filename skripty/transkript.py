@@ -375,7 +375,10 @@ def otpravit(audio, key, args):
     podskazka, napisanie = slovar()
     telo = {
         "audio_url": up,
-        "speech_model": args.model,
+        # Именно speech_models, списком. Одиночный speech_model объявлен
+        # устаревшим: на современное имя модели он отвечает 400, на
+        # legacy-имя молча уводит в модель по умолчанию.
+        "speech_models": [args.model],
         "language_code": args.yazyk,
         "punctuate": True,
         "format_text": True,
@@ -393,17 +396,28 @@ def otpravit(audio, key, args):
     shag("ставлю в очередь: %s, язык %s%s"
          % (args.model, args.yazyk,
             ", говорящие размечаются" if args.govoryashchie is not None else ""))
-    try:
-        zadacha = zapros("POST", "/transcript", key, telo=telo)
-    except RuntimeError as e:
-        # часть параметров живёт не на всех моделях — снимаем и пробуем ещё раз
-        if "word_boost" in str(e) or "boost_param" in str(e):
-            telo.pop("word_boost", None)
-            telo.pop("boost_param", None)
-            print("   (словарь-подсказка не поддержан этой моделью — снял)")
+    # Часть параметров живёт не на всех моделях. Если API назвал такой
+    # параметр в ошибке — снимаем его и пробуем снова, вместо того чтобы
+    # ронять весь разбор из-за необязательной подсказки.
+    snimaemye = ("word_boost", "boost_param", "custom_spelling",
+                 "speakers_expected", "disfluencies")
+    zadacha = None
+    for _ in range(len(snimaemye) + 1):
+        try:
             zadacha = zapros("POST", "/transcript", key, telo=telo)
-        else:
-            raise
+            break
+        except RuntimeError as e:
+            lishnie = [k for k in snimaemye if k in telo and k in str(e)]
+            if not lishnie:
+                raise
+            for k in lishnie:
+                telo.pop(k, None)
+            if "word_boost" in lishnie:
+                telo.pop("boost_param", None)
+            print("   (AssemblyAI не принял %s — снял, пробую снова)"
+                  % ", ".join(lishnie))
+    if zadacha is None:
+        raise RuntimeError("AssemblyAI не принял запрос")
     return zadacha["id"]
 
 
