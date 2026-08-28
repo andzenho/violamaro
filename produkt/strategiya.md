@@ -44,7 +44,7 @@
 - Цена движется только вверх по окнам продаж (`produkt/marafon-po-sferam.md`).
 
 ## Воронка
-Shorts/YouTube/охваты → Telegram `violamaro1` → лид-магнит + тест → **анкета предзаписи** (`https://andzenho.github.io/Viola-Maro/pre/`) → закрытый канал **«Кабинет Виолы Маро»** → **Отдел заботы @violamarohelper** → оплата. Крючки и правила контента — `kontent/kp/strategiya-kontent-plana.md`.
+Shorts/YouTube/охваты → Telegram `violamaro1` → лид-магнит + тест → **анкета предзаписи** (`https://andzenho.github.io/Viola-Maro/pre/`) → закрытый канал **«Кабинет Виолы Маро»** → **Отдел заботы @violamaroteam** → оплата. Крючки и правила контента — `kontent/kp/strategiya-kontent-plana.md`.
 
 ## Таймлайн
 - **Анкета предзаписи:** 16.08 – 04.09.
