@@ -6,6 +6,27 @@
   `python3 skripty/proverka.py путь/к/тексту.txt`
 - `razbor.py` — разбор нового транскрипта: что нового относительно базы.
   `python3 skripty/razbor.py korpus/новый.txt`
+- `transkript.py` — видео Виолы (YouTube / Instagram / локальный файл) →
+  готовый транскрипт в `korpus/`. Одна команда вместо ручной цепочки
+  «скачать → убрать картинку → ускорить → сжать → залить в AssemblyAI»:
+  `yt-dlp` тянет **только аудиодорожку** (видеопоток не качается вообще),
+  `ffmpeg` сводит её в моно 16 кГц Opus 24 кбит/с (≈10 МБ на час),
+  файл уходит в AssemblyAI (`universal-2`, `ru`), ответ раскладывается по
+  абзацам с таймкодами, ложится в `korpus/NN-slug.txt` с шапкой-источником,
+  дальше сам запускается `razbor.py`. Только stdlib; нужны бинарники
+  `yt-dlp`, `ffmpeg`; ключ — `ASSEMBLYAI_API_KEY` или файл `.assemblyai-key`
+  в корне (оба в `.gitignore`). Имена и термины Виолы подсказываются модели
+  из `slovar-transkripta.json`. Обработанные ролики помнятся в
+  `.transkript/index.json` — повторно не платим. Вызывается и командой
+  `/transkript`.
+  `python3 skripty/transkript.py <ссылка|файл> [--suho] [--kommit]`
+  `python3 skripty/transkript.py --kanal <канал> --limit 5` — только новые ролики
+  Instagram почти всегда просит куки: `--brauzer chrome` или `--cookies cookies.txt`.
+  Созвоны и эфиры на два голоса: `--govoryashchie 2`.
+  **Ускорение аудио (`--skorost`) по умолчанию выключено намеренно:** час
+  расшифровки стоит $0.15, ×2 экономит 7 центов и роняет точность на русском.
+  Экономия времени берётся не отсюда, а с того, что видеопоток не качается,
+  а звук ужимается до опуса.
 - `yt_comments.py` — выгрузка комментариев из-под видео/Shorts через YouTube Data
   API v3 (работает из облака, не скрейпинг). Только stdlib; нужен ключ
   `YOUTUBE_API_KEY`. Сырьё кладётся в `analitika/kommentarii/`.

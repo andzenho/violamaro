@@ -52,11 +52,23 @@ FORMULY = ["это всегда", "это когда", "нужно", "я гов�
 # Общие утилиты
 # ----------------------------------------------------------------------
 
+def bez_taymkodov(text):
+    """Убрать таймкоды и служебную разметку, чтобы не портили метрики.
+
+    Транскрипты от skripty/transkript.py идут с таймкодами вида [12:34],
+    старые файлы бывают в формате .srt.
+    """
+    text = re.sub(r"\[\d{1,2}:\d{2}(?::\d{2})?\]", " ", text)
+    text = re.sub(r"^\d+\s*$", " ", text, flags=re.M)
+    text = re.sub(r"^.*-->.*$", " ", text, flags=re.M)
+    return text
+
+
 def chitat(path):
     if not os.path.isfile(path):
         return None
     with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+        return bez_taymkodov(f.read())
 
 
 def normalizovat(s):

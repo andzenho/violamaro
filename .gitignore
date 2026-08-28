@@ -35,3 +35,9 @@ analitika/kommentarii/**/*.jsonl
 analitika/kommentarii/**/*.txt
 analitika/kommentarii/*.json
 analitika/kommentarii/**/*.json
+
+# Ключ AssemblyAI для skripty/transkript.py — НИКОГДА не коммитить
+.assemblyai-key
+
+# Сырые ответы AssemblyAI (пословные таймкоды, тяжёлые). Индекс — коммитим.
+.transkript/otvety/
