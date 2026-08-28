@@ -60,6 +60,36 @@
   доп-колонки не трогает). Настройка — `analitika/README.md`.
   `python3 skripty/ca_sync.py --list-tabs | (без флага) | --apply`
 
+- `tg_comments.py` — HTML-экспорт Telegram → речь Виолы отдельно, комментарии
+  аудитории отдельно. Только stdlib.
+  `python3 skripty/tg_comments.py <файл.html> [ещё файлы]`
+
+- `tg_kanal.py` — что реально вышло в публичном TG-канале, и сверка статусов КП.
+  Читает `t.me/s/<канал>` без бота и токенов, находит посты в статусе «написан»,
+  которые уже опубликованы. `--apply` проставляет `опубликован` и `ссылка:`.
+  `python3 skripty/tg_kanal.py [--channel violamaro1] [--list] [--apply]`
+
+- `yt_stats.py` — карта внимания канала: просмотры и лайки по всем видео.
+  Нужен ключ YouTube Data API.
+  `YT_API_KEY=... python3 skripty/yt_stats.py`
+
+- `kp_export.py` — контент-план → текст для ручной вставки в таблицу, без Google.
+  `python3 skripty/kp_export.py`
+
+- `kontekst_pak.py` — собирает один файл-контекст для ассистента вне Claude Code.
+  `python3 skripty/kontekst_pak.py`
+
+- `sverka_offera.py` — сверка оффера между копиями (презентация, лендинг, репозиторий).
+  `python3 skripty/sverka_offera.py`
+
+- `lending_promt.py` — собирает промпт для Claude Design из брифа и клиентской части.
+  `python3 skripty/lending_promt.py [--apply]`
+
+- `kontrast.py` — сравнение двух текстов по метрикам голоса.
+  `python3 skripty/kontrast.py <файл1> <файл2>`
+
+- `reels_stats.py` — статистика по рилсам.
+
 - `bot_probe.py` — кому бот может написать первым: прогоняет список Telegram ID
   через Bot API (`sendChatAction`, без видимых сообщений) и по каждому даёт
   вердикт — reachable / no_access (нет разрешения писать) / blocked. Нужен для

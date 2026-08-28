@@ -306,7 +306,7 @@
 | `baza/printsipy-viola.md` | Модель психики, определение терапии, границы метода, красные линии |
 | `baza/tehniki-viola.md` | Каталог техник с дословными формулировками, Т1–Т8 |
 | `baza/kanon-viny.md` | Тема вины целиком, дословные формулировки |
-| `baza/kastdev-kommentarii.md` | Разбор комментариев YouTube, август 2026 |
+| `analitika/kommentarii/` + `analitika/README.md` | Разбор комментариев YouTube, август 2026 (файла `baza/kastdev-kommentarii.md` не существует, ссылка была ошибочной) |
 | `baza/reestr-istochnikov.md` | Карта и реестр источников |
 
 ### Ключевое из кастдева
