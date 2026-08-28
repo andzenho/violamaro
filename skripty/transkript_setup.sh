@@ -2,7 +2,8 @@
 # Разовая настройка окружения для skripty/transkript.py (локальная машина).
 # Идемпотентно: можно запускать сколько угодно раз.
 #
-#   1) ставит ffmpeg, yt-dlp и JS-движок deno (нужен YouTube);
+#   1) ставит yt-dlp, JS-движок deno (нужен YouTube) и ffmpeg
+#      (необязателен — только ужимает заливку и нужен для --skorost);
 #   2) принимает ключ AssemblyAI и кладёт его в .assemblyai-key (в .gitignore);
 #   3) прогоняет самопроверку.
 #
@@ -70,8 +71,7 @@ if command -v ffmpeg >/dev/null 2>&1; then
   python3 skripty/transkript.py "$PROBA" --suho --bez-razbora || SBOY=1
   rm -rf "$(dirname "$PROBA")"
 else
-  echo "пропущена — нет ffmpeg"
-  SBOY=1
+  echo "пропущена — нет ffmpeg (не блокирует: файлы уйдут как есть)"
 fi
 
 echo

@@ -242,15 +242,18 @@ def skachat_audio(url, katalog, args):
 # 2. Подготовка звука
 # ----------------------------------------------------------------------
 
-def dlitelnost(path):
-    p = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-         "-of", "default=nw=1:nk=1", path],
-        capture_output=True, text=True)
-    try:
-        return float(p.stdout.strip())
-    except ValueError:
-        return 0.0
+def dlitelnost(path, zapasnaya=0.0):
+    """Секунды. ffprobe точнее, но без него сойдут данные yt-dlp."""
+    if shutil.which("ffprobe"):
+        p = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=nw=1:nk=1", path],
+            capture_output=True, text=True)
+        try:
+            return float(p.stdout.strip())
+        except ValueError:
+            pass
+    return float(zapasnaya or 0.0)
 
 
 def est_libopus():
@@ -273,7 +276,23 @@ def tsep_atempo(skorost):
     return ",".join("atempo=%.4f" % z for z in zvenya)
 
 
-def podgotovit_audio(istochnik, katalog, skorost):
+def podgotovit_audio(istochnik, katalog, skorost, kak_est=False):
+    """Ужать звук перед заливкой.
+
+    Шаг необязательный: AssemblyAI и так приводит всё к 16 кГц, а
+    `yt-dlp -f bestaudio` отдаёт готовый одиночный аудиофайл. Сведение
+    экономит только объём заливки — на канале это минуты, на одном
+    ролике секунды. Нет ffmpeg — отправляем как есть.
+    """
+    if kak_est or not shutil.which("ffmpeg"):
+        if abs(skorost - 1.0) > 1e-6:
+            umer("ускорение (--skorost) без ffmpeg невозможно. "
+                 "Поставь ffmpeg или убери флаг.")
+        if not kak_est:
+            print("! ffmpeg не найден — отправляю файл как есть. "
+                  "Качество расшифровки то же, заливка дольше. "
+                  "Поставить: brew install ffmpeg")
+        return istochnik
     opus = est_libopus()
     vyhod = os.path.join(katalog, "audio." + ("ogg" if opus else "m4a"))
     filtr = []
@@ -293,6 +312,18 @@ def podgotovit_audio(istochnik, katalog, skorost):
 # ----------------------------------------------------------------------
 # 3. AssemblyAI
 # ----------------------------------------------------------------------
+
+def proverit_predely(audio, sekund):
+    """Потолки AssemblyAI: 2.2 ГБ на заливку, 10 часов на расшифровку."""
+    razmer = os.path.getsize(audio)
+    if razmer > 2.2e9:
+        umer("файл %.1f ГБ — потолок заливки в AssemblyAI 2.2 ГБ. "
+             "Поставь ffmpeg, он ужмёт звук в десятки раз."
+             % (razmer / 1e9))
+    if sekund > 10 * 3600:
+        umer("%.1f часа — потолок расшифровки 10 часов. Режь на части."
+             % (sekund / 3600))
+
 
 def zapros(metod, put, key, telo=None, fayl=None, popytok=4):
     url = put if put.startswith("http") else API + put
@@ -476,21 +507,23 @@ def obrabotat(istochnik, args, key):
     print("  " + nazvanie)
     print("=" * 60)
 
-    nuzhen("ffmpeg", "brew install ffmpeg")
-    nuzhen("ffprobe", "brew install ffmpeg")
-
     katalog = tempfile.mkdtemp(prefix="transkript-")
     try:
         syroy = istochnik if lokalnyy else skachat_audio(istochnik, katalog, args)
-        ishodnaya_dlina = dlitelnost(syroy)
-        audio = podgotovit_audio(syroy, katalog, args.skorost)
+        ishodnaya_dlina = dlitelnost(syroy, info.get("duration"))
+        audio = podgotovit_audio(syroy, katalog, args.skorost, args.kak_est)
+        proverit_predely(audio, ishodnaya_dlina / args.skorost)
         oplachivaemaya = ishodnaya_dlina / args.skorost
         tsena = oplachivaemaya / 3600.0 * (
             CENA_ZA_CHAS + (CENA_DIARIZATSIYA
                             if args.govoryashchie is not None else 0))
-        print("   исходник %s → к оплате %s ≈ $%.3f · файл %.1f МБ"
-              % (vremya(ishodnaya_dlina), vremya(oplachivaemaya),
-                 tsena, os.path.getsize(audio) / 1e6))
+        if ishodnaya_dlina > 0:
+            print("   исходник %s → к оплате %s ≈ $%.3f · файл %.1f МБ"
+                  % (vremya(ishodnaya_dlina), vremya(oplachivaemaya),
+                     tsena, os.path.getsize(audio) / 1e6))
+        else:
+            print("   длительность неизвестна (нет ffprobe) — цену покажет "
+                  "счёт · файл %.1f МБ" % (os.path.getsize(audio) / 1e6))
 
         if args.suho:
             print("   (сухой прогон — в AssemblyAI ничего не ушло)")
@@ -607,6 +640,9 @@ def parser():
     p.add_argument("--nomer", help="номер файла в korpus/ (иначе следующий)")
     p.add_argument("--cookies", help="файл cookies.txt (нужен для Instagram)")
     p.add_argument("--brauzer", help="взять куки из браузера: chrome, safari, firefox")
+    p.add_argument("--kak-est", action="store_true", dest="kak_est",
+                   help="не сводить звук через ffmpeg, отправить скачанный "
+                        "файл как есть (на качество не влияет, заливка дольше)")
     p.add_argument("--suho", action="store_true",
                    help="сухой прогон: скачать, посчитать цену, ничего не отправлять")
     p.add_argument("--zanovo", action="store_true",
