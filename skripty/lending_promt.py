@@ -4,21 +4,37 @@
 Бриф (`produkt/lending-promt-dizayn.md`) + клиентская часть продукта
 (`produkt/praktikum-dlya-empatov.md`, между метками ✂️) → готовый промпт.
 
-    python3 skripty/lending_promt.py            # сухой прогон: что получится
-    python3 skripty/lending_promt.py --apply    # записать produkt/lending-promt-gotovyy.md
-    python3 skripty/lending_promt.py --stdout   # напечатать в консоль
+    python3 skripty/lending_promt.py                      # сухой прогон, флагман
+    python3 skripty/lending_promt.py --apply              # записать lending-promt-gotovyy.md
+    python3 skripty/lending_promt.py --sobytie            # сухой прогон, событие «Неудобные»
+    python3 skripty/lending_promt.py --sobytie --apply    # записать neudobnye-promt-gotovyy.md
+    python3 skripty/lending_promt.py --stdout             # напечатать в консоль
 
-Источник правды по тексту — praktikum-dlya-empatov.md. Собранный файл
-перезаписывается, правки вносить в бриф и в продукт, а не в него.
+Источник правды по тексту — praktikum-dlya-empatov.md (флагман) либо
+neudobnye-lending.md (событие). Собранный файл перезаписывается, правки
+вносить в бриф и в текст, а не в него.
 """
 
 import sys
 from pathlib import Path
 
 KOREN = Path(__file__).resolve().parent.parent
-BRIF = KOREN / "produkt" / "lending-promt-dizayn.md"
-PRODUKT = KOREN / "produkt" / "praktikum-dlya-empatov.md"
-GOTOVYY = KOREN / "produkt" / "lending-promt-gotovyy.md"
+
+# Два набора: флагман «Прикладная эмпатия» и событие «Неудобные».
+NABORY = {
+    "flagman": {
+        "brif": "lending-promt-dizayn.md",
+        "produkt": "praktikum-dlya-empatov.md",
+        "gotovyy": "lending-promt-gotovyy.md",
+    },
+    "sobytie": {
+        "brif": "neudobnye-promt-dizayn.md",
+        "produkt": "neudobnye-lending.md",
+        "gotovyy": "neudobnye-promt-gotovyy.md",
+    },
+}
+
+BRIF = PRODUKT = GOTOVYY = None  # проставляются в main() по выбранному набору
 
 NACHALO = "<!-- НАЧАЛО ПРОМПТА -->"
 KONETS = "<!-- КОНЕЦ ПРОМПТА -->"
@@ -28,7 +44,7 @@ REZ_KONETS = "# ✂️ КОНЕЦ КЛИЕНТСКОЙ ЧАСТИ"
 
 SHAPKA = (
     "<!-- Собрано скриптом skripty/lending_promt.py. Не править руками: "
-    "бриф — produkt/lending-promt-dizayn.md, текст — produkt/praktikum-dlya-empatov.md. -->\n\n"
+    "правки вносить в бриф и в исходный текст. -->\n\n"
 )
 
 
@@ -62,11 +78,21 @@ def sobrat() -> str:
     return SHAPKA + vzyat_brif().replace(METKA, vzyat_klientskuyu_chast()) + "\n"
 
 
+def vybrat_nabor(flagi: set) -> None:
+    """Проставить пути под выбранный набор: --sobytie или флагман по умолчанию."""
+    global BRIF, PRODUKT, GOTOVYY
+    nabor = NABORY["sobytie" if "--sobytie" in flagi else "flagman"]
+    BRIF = KOREN / "produkt" / nabor["brif"]
+    PRODUKT = KOREN / "produkt" / nabor["produkt"]
+    GOTOVYY = KOREN / "produkt" / nabor["gotovyy"]
+
+
 def main() -> None:
     flagi = set(sys.argv[1:])
-    neizvestnye = flagi - {"--apply", "--stdout"}
+    neizvestnye = flagi - {"--apply", "--stdout", "--sobytie"}
     if neizvestnye:
         oshibka(f"неизвестные ключи: {', '.join(sorted(neizvestnye))}")
+    vybrat_nabor(flagi)
 
     promt = sobrat()
     znakov = len(promt)
@@ -86,7 +112,8 @@ def main() -> None:
     print(f"  текст:  {PRODUKT.relative_to(KOREN)} (клиентская часть между ✂️)")
     print(f"  выход:  {GOTOVYY.relative_to(KOREN)}")
     print(f"  объём:  {strok} строк, {znakov} знаков")
-    print("Записать: python3 skripty/lending_promt.py --apply")
+    klyuch = " --sobytie" if "--sobytie" in flagi else ""
+    print(f"Записать: python3 skripty/lending_promt.py{klyuch} --apply")
 
 
 if __name__ == "__main__":
