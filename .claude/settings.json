@@ -21,5 +21,12 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(date:*)",
+      "Bash(TZ=Europe/Moscow date:*)",
+      "Bash(TZ=Europe/Rome date:*)"
+    ]
   }
 }
