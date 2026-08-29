@@ -10,6 +10,40 @@
   "enabledPlugins": {
     "watch@claude-video": true
   },
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(git branch:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(sed -n:*)",
+      "Bash(python3 skripty/ves.py:*)",
+      "Bash(python3 skripty/proverka.py:*)",
+      "Bash(python3 skripty/razbor.py:*)",
+      "Bash(python3 skripty/razbor_kommentov.py:*)",
+      "Bash(python3 skripty/perenos.py:*)",
+      "Bash(python3 skripty/karta_korpusa.py:*)",
+      "Bash(python3 skripty/kp_export.py:*)",
+      "Bash(python3 skripty/lending_promt.py:*)",
+      "Bash(python3 skripty/kontrast.py:*)",
+      "Read(//home/user/violamaro/**)",
+      "Glob(//home/user/violamaro/**)",
+      "Grep(//home/user/violamaro/**)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
