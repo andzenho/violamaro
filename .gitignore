@@ -35,8 +35,3 @@ analitika/kommentarii/**/*.jsonl
 analitika/kommentarii/**/*.txt
 analitika/kommentarii/*.json
 analitika/kommentarii/**/*.json
-
-# Граф знаний graphify — производный артефакт, пересобирается из репозитория.
-# В git не держим: бинарный по смыслу, конфликтует при слиянии, весит больше
-# самого репозитория. Что индексируется — в .graphifyignore.
-graphify-out/
