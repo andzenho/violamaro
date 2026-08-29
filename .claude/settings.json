@@ -30,6 +30,7 @@
       "Bash(head:*)",
       "Bash(tail:*)",
       "Bash(sed -n:*)",
+      "Bash(python3 skripty/plan.py:*)",
       "Bash(python3 skripty/ves.py:*)",
       "Bash(python3 skripty/proverka.py:*)",
       "Bash(python3 skripty/razbor.py:*)",
