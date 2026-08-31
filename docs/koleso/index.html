@@ -1856,6 +1856,14 @@ const dial = document.getElementById("dial");
 const counter = document.getElementById("counter");
 
 function paintDial() {
+  /* Шкала прогресса — часть теста. На оффере, форме и выборе оплаты
+     показывать нечего: у пришедшего по прямой ссылке теста не было,
+     а у прошедшего он уже позади. Полоса из двадцати четырёх клеток
+     там читается как незаконченное дело. */
+  const вТесте = stage === "intro" || stage === "q" || stage === "fork" || stage === "result";
+  dial.style.display = вТесте ? "" : "none";
+  if (!вТесте) { counter.textContent = ""; return; }
+
   const total = Q.length + FORKS.length;
   const done = stage === "result" ? total : (stage === "fork" ? Q.length + idx : idx);
   let html = "";
@@ -2179,6 +2187,7 @@ function open_(url) {
 }
 
 function offer(r) {
+  stage = "offer";
   const n = el(`
     <div class="card">
       <div class="title-block">
@@ -2290,6 +2299,7 @@ function offer(r) {
    знала, кого ждать, и заметила человека, у которого оплата прошла, а доступ нет.
    Поэтому здесь же и снимаются тревоги «а что после оплаты» и «а если не придёт». */
 function lead(r) {
+  stage = "lead";
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
   const known = esc([u.first_name, u.last_name].filter(Boolean).join(" "));
