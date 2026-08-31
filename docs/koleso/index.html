@@ -2485,9 +2485,13 @@ function sendGo(r, name, contact, consent) {
   queue({
     test: "koleso",
     type: "lead",
-    otdayu: r.out,
-    ostaetsya: r.inn,
-    worst: r.worst.map(c => c.k).join(","),
+    /* r отсутствует, когда человек пришёл по прямой ссылке на оффер и
+       теста не проходил. Тогда колеса нет, и вместо цифр ставим метку —
+       по ней в таблице видно, откуда пришёл лид. */
+    otdayu: r ? r.out : "",
+    ostaetsya: r ? r.inn : "",
+    worst: r ? r.worst.map(c => c.k).join(",") : "",
+    istochnik: r ? "test" : "pryamaya-ssylka",
     forks: forks,
     userId: u.id || "",
     userLogin: u.username ? "@" + u.username : "",
