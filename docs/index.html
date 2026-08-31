@@ -524,7 +524,8 @@ const OFFER = {
     { h: "Сто мест", d: "В воскресенье Виола отвечает на вопросы живьём: больше ста за вечер не разобрать.", wide: true }
   ],
   cta: "Занять место",
-  note: "Два поля: имя и телеграм. Двадцать секунд — остальное мы уже знаем из вашего теста."
+  note: "Два поля: имя и телеграм. Двадцать секунд — остальное мы уже знаем из вашего теста.",
+  noteDirect: "Два поля: имя и телеграм. Двадцать секунд."
 };
 
 /* ——— «ваши суперспособности»: выводим из ответов, а не раздаём всем одинаково.
@@ -750,7 +751,7 @@ function open_(url) {
 function offer(r) {
   const n = el(`
     <div class="card">
-      <div class="step">Что дальше</div>
+      ${r ? `<div class="step">Что дальше</div>` : ""}
       <h2>${OFFER.title}</h2>
       <p class="lede">${OFFER.lead}</p>
       <div class="body-copy">${OFFER.body.map(p => `<p>${p}</p>`).join("")}</div>
@@ -764,12 +765,13 @@ function offer(r) {
       </div>
       <div class="foot">
         <button class="go big" id="form">${OFFER.cta} <span aria-hidden="true">→</span></button>
-        <p class="cta-note">${OFFER.note}</p>
-        <button class="ghost" id="back-res">← Вернуться к результату</button>
+        <p class="cta-note">${r ? OFFER.note : OFFER.noteDirect}</p>
+        ${r ? `<button class="ghost" id="back-res">← Вернуться к результату</button>` : ""}
       </div>
     </div>`);
   n.querySelector("#form").addEventListener("click", () => lead(r));
-  n.querySelector("#back-res").addEventListener("click", () => result(r));
+  const back = n.querySelector("#back-res");
+  if (back) back.addEventListener("click", () => result(r));
   render(n);
 }
 
@@ -809,21 +811,11 @@ function lead(r) {
   const hint = n.querySelector("#hint");
   let talk = "";
 
-  n.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
-    talk = c.dataset.v;
-    n.querySelectorAll(".chip").forEach(x => x.className = "chip");
-    c.className = "chip on";
-  }));
-
   btn.addEventListener("click", () => {
     const name = (nameEl.value || "").trim();
     const contact = (tgEl.value || "").trim();
     if (!name || !contact) {
       hint.textContent = "Заполните оба поля — иначе не сможем вас позвать.";
-      return;
-    }
-    if (!talk) {
-      hint.textContent = "Ответьте про разговор — одним касанием.";
       return;
     }
     btn.disabled = true;
@@ -882,7 +874,7 @@ function sendLead(r, name, contact, talk) {
   const lead = {
     type: "lead",
     name: name, contact: contact, talk: talk || "",
-    rank: r.key, percent: r.pct,
+    rank: r ? r.key : "direct", percent: r ? r.pct : "",
     userId: u.id || "", forks: forks
   };
   buffer(lead);
@@ -951,5 +943,18 @@ if (window.Telegram && window.Telegram.WebApp) {
   window.Telegram.WebApp.ready();
   window.Telegram.WebApp.expand();
 }
-intro();
+
+/* ——— прямой вход сразу на оффер, минуя тест ———
+   Три способа, чтобы ссылка работала и в браузере, и как мини-апп:
+   #neudobnye · ?p=neudobnye · Телеграм startapp=neudobnye */
+function pryamoyVhod() {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const sp = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || "";
+  const h = (location.hash || "").replace("#", "");
+  let q = "";
+  try { q = new URLSearchParams(location.search).get("p") || ""; } catch (e) {}
+  return sp === "neudobnye" || h === "neudobnye" || q === "neudobnye";
+}
+
+if (pryamoyVhod()) offer(null); else intro();
 </script>
