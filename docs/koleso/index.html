@@ -953,6 +953,33 @@
     border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink);
   }
   .dates-n { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
+
+  /* Подарок: скидка на флагман. Раньше это была строка прозой с маркером,
+     и сумма тонула в предложении. Теперь набрано тем же приёмом, что даты:
+     мелкая прописная надстрочка, крупное число, пояснение под ним. Число —
+     единственное, что человек должен унести с этого блока.
+
+     Заливка --accent-soft, а не --mark: маркер на странице один и стоит
+     на заголовке, второй такой же спорил бы с ним за внимание.
+     Текст только --ink и --ink-soft: --ink-mute на этой заливке даёт 3.24,
+     ниже порога. Посчитано, не на глаз. */
+  .gift {
+    display: flex; flex-direction: column; gap: .3rem;
+    padding: 1rem 1.15rem; margin: .1rem 0;
+    border-radius: 16px;
+    background: var(--accent-soft);
+    border: 1px solid var(--line-strong);
+  }
+  .gift-h {
+    font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 600;
+  }
+  .gift-n {
+    font-size: 2.1rem; font-weight: 700; line-height: 1;
+    letter-spacing: -.03em; color: var(--ink);
+  }
+  .gift-t { font-size: 1rem; line-height: 1.4; color: var(--ink); }
+  .gift-w { font-size: .85rem; color: var(--ink-soft); }
   .dates-k {
     font-size: .74rem; letter-spacing: .14em; text-transform: uppercase;
     color: var(--ink-mute);
@@ -1726,7 +1753,14 @@ const OFFER = {
      строкой значит не ответить ни на один. */
   dates: "11–13 сентября",
   datesKey: "пятница, суббота, воскресенье",
-  lead: "<span class=\"hl\">Все участники получают скидку 3 000 ₽ на практикум «Прикладная эмпатия», который стартует 1 октября.</span>",
+  /* Подарок разложен на поля, а не собран в одну строку прозой: так сумма
+     набирается крупно и читается за секунду, а не выуживается из предложения. */
+  gift: {
+    h: "Подарок всем участникам",
+    n: "−3 000 ₽",
+    t: "на практикум «Прикладная эмпатия»",
+    w: "Старт 1 октября"
+  },
   /* Тело экрана снято целиком 28.08. Последним там оставался абзац
      «Понимание у вас уже есть» — ответ бесплатным роликам. Продюсер
      убрал его: экран должен показывать, что человек получит, а не
@@ -2242,7 +2276,12 @@ function offer(r) {
         <span class="dates-n">${OFFER.dates}</span>
         <span class="dates-k">${OFFER.datesKey}</span>
       </div>
-      <p class="lede">${OFFER.lead}</p>
+      <div class="gift">
+        <div class="gift-h">${OFFER.gift.h}</div>
+        <div class="gift-n">${OFFER.gift.n}</div>
+        <div class="gift-t">${OFFER.gift.t}</div>
+        <div class="gift-w">${OFFER.gift.w}</div>
+      </div>
       <div class="inside">
         <div class="inside-h">${OFFER.insideHead}</div>
         <!-- Номер дня переехал из угла в шапку карточки. Водяным знаком
