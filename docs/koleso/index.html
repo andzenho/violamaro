@@ -2366,12 +2366,43 @@ function offer(r) {
    Нужна не ради контакта: оплата его и так соберёт. Нужна затем, чтобы команда
    знала, кого ждать, и заметила человека, у которого оплата прошла, а доступ нет.
    Поэтому здесь же и снимаются тревоги «а что после оплаты» и «а если не придёт». */
+/* ——— контакт человека, чтобы не набирать его дважды ———
+   Телеграм отдаёт имя и логин только внутри мини-аппа. По обычной ссылке
+   из браузера — а ею мы и делимся — не отдаёт ничего, и поля пустые.
+   Поэтому то, что человек ввёл сам, помним в его же браузере и
+   подставляем на следующем заходе. Данные никуда не уходят: это
+   localStorage, он живёт только на его устройстве. */
+const KONTAKT_KEY = "viola-kl-kontakt";
+
+function вспомнитьКонтакт_() {
+  try { return JSON.parse(localStorage.getItem(KONTAKT_KEY) || "{}") || {}; }
+  catch (e) { return {}; }
+}
+function запомнитьКонтакт_(имя, ник) {
+  try { localStorage.setItem(KONTAKT_KEY, JSON.stringify({ имя: имя, ник: ник })); }
+  catch (e) {}
+}
+
+/* Ник приводим к одному виду. Люди пишут «@name», «name» и целую ссылку
+   «t.me/name» — в таблице это три разных значения одного человека, и
+   команда потом ищет его руками. */
+function ник_(v) {
+  let x = String(v || "").trim();
+  if (!x) return "";
+  x = x.replace(/^https?:\/\//i, "").replace(/^t\.me\//i, "").replace(/^@+/, "");
+  x = x.split(/[?\/\s]/)[0];
+  return x ? "@" + x : "";
+}
+
 function lead(r) {
   stage = "lead";
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
-  const known = esc([u.first_name, u.last_name].filter(Boolean).join(" "));
-  const tgName = esc(u.username ? "@" + u.username : "");
+  /* Телеграм важнее памяти: он знает точно, память — то, что человек
+     ввёл когда-то сам и мог с тех пор поменять. */
+  const пам = вспомнитьКонтакт_();
+  const known = esc([u.first_name, u.last_name].filter(Boolean).join(" ") || пам.имя || "");
+  const tgName = esc(u.username ? "@" + u.username : (пам.ник || ""));
 
   const n = el(`
     <div class="card">
@@ -2437,7 +2468,8 @@ function lead(r) {
      из всех, и терять его контакт из-за лишнего экрана нельзя. */
   btn.addEventListener("click", () => {
     const name = (nameEl.value || "").trim();
-    const contact = (tgEl.value || "").trim();
+    const contact = ник_(tgEl.value);
+    if (contact && contact !== tgEl.value.trim()) tgEl.value = contact;
     if (!name || !contact) {
       if (!name) nameEl.classList.add("err");
       if (!contact) tgEl.classList.add("err");
@@ -2453,6 +2485,7 @@ function lead(r) {
     }
     clearWarn();
     btn.disabled = true;
+    запомнитьКонтакт_(name, contact);
     sendGo(r, name, contact, { pd: !!(pd && pd.checked), ads: !!(ads && ads.checked) });
     payway(r);
   });
