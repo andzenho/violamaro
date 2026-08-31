@@ -1,7 +1,102 @@
+<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#16121A">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<!-- Карточка ссылки. Телеграм берёт og:title и og:description; без них
+     ссылка в канале и в пересылке выглядит голым адресом. Картинки нет —
+     превью текстовое, по решению продюсера. -->
+<meta name="description" content="Эмпат вы или нет — и как именно это у вас устроено: что вы считываете и во что вам это обходится. Три минуты, 24 утверждения.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Виола Маро">
+<meta property="og:url" content="https://andzenho.github.io/violamaro/">
+<meta property="og:title" content="Есть у вас способности эмпата?">
+<meta property="og:description" content="Эмпат вы или нет — и как именно это у вас устроено: что вы считываете и во что вам это обходится. Три минуты, 24 утверждения.">
+<meta name="twitter:card" content="summary">
+<script>
+/* Страховка. Если основной скрипт не разберётся или упадёт на старом браузере,
+   человек увидит текст и объяснение, а не белый экран — и мы узнаем об этом.
+   Здесь намеренно только ES5: этот блок обязан работать даже там, где не работает остальное.
+
+   Стоит ВЫШЕ подключения Телеграма, и это важно. Пока тег telegram-web-app.js
+   был первым и обычным, он держал разбор страницы: провайдер, который на запрос
+   не отвечает отказом, а молчит, оставлял человека перед белым экраном сколько
+   угодно долго — эта страховка до себя не доходила, и таймер ниже не запускался. */
+(function () {
+  var shown = false;
+  function fallback(msg) {
+    if (shown) return;
+    shown = true;
+    /* Причиной падения могло быть само сохранённое прохождение: формат менялся,
+       а запись живёт в памяти браузера до суток. Пока её не убирали, человек
+       получал этот экран при каждом открытии — сутки подряд, и «открыть заново»
+       ему не помогало. Убираем сразу: перезагрузка после этого лечит. */
+    try { localStorage.removeItem("viola-state"); } catch (e) {}
+    var box = document.getElementById("screen") || document.body;
+    if (!box) return;
+    box.innerHTML =
+      '<div style="max-width:32rem;margin:1.5rem auto;padding:1.4rem;font:16px/1.55 system-ui,-apple-system,sans-serif;' +
+      'color:#241D28;background:#fff;border:1px solid #E0D6DD;border-radius:4px">' +
+      '<p style="margin:0 0 .9rem;font-size:1.2rem">Тест не открылся с первого раза</p>' +
+      '<p style="margin:0 0 .9rem;color:#5C5162">Так бывает: оборвалась связь или страница не догрузилась. ' +
+      'Нажмите «Открыть заново» — обычно этого хватает.</p>' +
+      '<p style="margin:0 0 .9rem"><button onclick="location.reload()" ' +
+      'style="font:inherit;padding:.7rem 1.1rem;color:#fff;background:#A2703C;border:0;border-radius:4px">' +
+      'Открыть заново</button></p>' +
+      '<p style="margin:0 0 .9rem;color:#5C5162">Не помогло — откройте ту же ссылку в обычном браузере: ' +
+      '<a href="https://andzenho.github.io/violamaro/" style="color:#A2703C">andzenho.github.io/violamaro</a></p>' +
+      '<p style="margin:0;font-size:.8rem;color:#8B7F92">Если и там не открылось, пришлите нам эту строку: ' +
+      String(msg).replace(/</g, "&lt;").slice(0, 200) + '</p></div>';
+  }
+  window.__fallback = fallback;
+  window.addEventListener("error", function (e) {
+    fallback(e && e.message ? e.message : "неизвестная ошибка");
+  });
+  /* Скрипт у нас встроенный, ему нечего ждать. Пусто через семь секунд — значит не доехал. */
+  setTimeout(function () {
+    var s = document.getElementById("screen");
+    if (s && !s.firstChild) fallback("пустой экран");
+  }, 7000);
+
+  /* ——— когда стартовать ———
+     Телеграм грузится фоном и держать страницу больше не может. Тест ждёт его
+     не дольше TG_WAIT: доехал раньше — стартуем сразу, не доехал — стартуем без
+     него. Обращения к Телеграму в основном скрипте и так идут через
+     window.Telegram && window.Telegram.WebApp, поэтому без SDK тест просто
+     работает как в обычном браузере: не будет разворота во весь экран
+     и телеграм-id в таблице. Это несравнимо лучше белого экрана. */
+  var TG_WAIT = 3000;
+  var tgSettled = false, appStart = null, launched = false;
+
+  function launch() {
+    if (launched || !tgSettled || !appStart) return;
+    launched = true;
+    appStart();
+  }
+
+  /* Телеграм опоздал к запуску — подхватываем его на ходу: развернуть окно
+     и выключить свайпы можно и после того, как человек увидел первый экран. */
+  function lateInit() {
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (!tg) return;
+    try {
+      tg.ready();
+      tg.expand();
+      if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+    } catch (e) {}
+  }
+
+  window.__tgSettled = function () {
+    if (tgSettled) return;
+    tgSettled = true;
+    if (launched) lateInit(); else launch();
+  };
+  window.__appStart = function (fn) { appStart = fn; launch(); };
+  setTimeout(window.__tgSettled, TG_WAIT);
+})();
+</script>
+<script async src="https://telegram.org/js/telegram-web-app.js"
+        onload="window.__tgSettled && window.__tgSettled()"
+        onerror="window.__tgSettled && window.__tgSettled()"></script>
 <title>Есть у вас способности эмпата?</title>
 <style>
   :root {
@@ -15,6 +110,7 @@
     --line-strong: #C9BBC6;
     --accent: #A2703C;
     --accent-soft: #E8D9C6;
+    --warn: #B03A26;
     --deep: #4B3556;
     --shadow: 0 1px 2px rgba(36, 29, 40, .06), 0 8px 24px -12px rgba(36, 29, 40, .18);
   }
@@ -31,6 +127,7 @@
       --line-strong: #473C50;
       --accent: #D9A163;
       --accent-soft: #3A2C22;
+      --warn: #F08A72;
       --deep: #C4A5D6;
       --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
     }
@@ -47,6 +144,7 @@
     --line-strong: #473C50;
     --accent: #D9A163;
     --accent-soft: #3A2C22;
+    --warn: #F08A72;
     --deep: #C4A5D6;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
   }
@@ -118,6 +216,29 @@
   }
   h1 { font-size: 1.9rem; line-height: 1.25; }
   h2 { font-size: 1.4rem; line-height: 1.35; }
+
+  /* Надзаголовок и заголовок держим одним блоком, чтобы между ними не влезал общий отступ карточки */
+  .title-block { display: flex; flex-direction: column; gap: .5rem; }
+  .title-block .step { color: var(--ink-soft); }
+  /* «Предзапись» — плашкой: это главное слово экрана, а не часть подписи.
+     Цвет текста берём от фона карточки, поэтому контраст держится в обеих темах. */
+  .step .tag {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--surface);
+    padding: .25em .6em;
+    border-radius: 3px;
+    font-weight: 700;
+  }
+  /* Плашка стоит своей строкой, поэтому между ней и подписью отбивка меньше общей. */
+  .title-block .step + .step { margin-top: -.15rem; }
+
+  /* Название программы на экране предзаписи — главный акцент страницы */
+  h2.offer-title {
+    font-size: 2.3rem; line-height: 1.1;
+    letter-spacing: .02em;
+    color: var(--accent);
+  }
 
   p { margin: 0; }
   .lede { color: var(--ink-soft); }
@@ -200,10 +321,25 @@
   }
   .fields input:focus { border-color: var(--accent); outline: none; }
 
-  .ask { display: flex; flex-direction: column; gap: .5rem; }
+  .ask {
+    display: flex; flex-direction: column; gap: .5rem;
+    border: 1px solid transparent; border-radius: 3px;
+    margin: 0 -.7rem; padding: .7rem;
+    transition: border-color .2s ease, background-color .2s ease;
+  }
+  /* Пока на вопрос не ответили, а записаться уже нажали — обводим сам вопрос.
+     Подсказки под кнопкой человек не видит: она ниже сгиба и набрана мелким. */
+  .ask.need {
+    border-color: var(--warn);
+    background: rgba(176, 58, 38, .07);   /* без color-mix: его нет на старых Android */
+  }
+  .ask-need-note { color: var(--warn); font-size: .88rem; font-weight: 600; line-height: 1.4; }
   .ask-q { font-size: 1rem; line-height: 1.4; }
   .ask-note { font-size: .86rem; color: var(--ink-mute); line-height: 1.45; }
   .chips { display: flex; gap: .5rem; margin-top: .2rem; }
+  /* Три варианта по-русски в строку не помещаются — столбиком и по левому краю. */
+  .chips-col { flex-direction: column; }
+  .chips-col .chip { text-align: left; }
   .chip {
     flex: 1; appearance: none; font: inherit; font-size: .95rem;
     color: var(--ink); background: var(--surface);
@@ -281,13 +417,85 @@
     font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
     color: var(--ink-mute);
   }
-  .inside ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .55rem; }
-  .inside li { position: relative; padding-left: 1.1rem; color: var(--ink); font-size: .97rem; line-height: 1.45; }
+  .inside ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .45rem; }
+  .inside li { position: relative; padding-left: 1.1rem; color: var(--ink); font-size: 1rem; line-height: 1.5; }
+  .inside li b { color: var(--ink-mute); font-weight: 400; margin-right: .35rem; }
   .inside li::before {
     content: ""; position: absolute; left: 0; top: .62em;
     width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
   }
   .inside .format { color: var(--ink-mute); font-size: .88rem; }
+  /* Вопрос недели — внутренний голос человека, поэтому курсив и отдельная строка. */
+  .inside li .wq {
+    display: block; margin-top: .18rem;
+    color: var(--ink-soft); font-size: .92rem; line-height: 1.4; font-style: italic;
+  }
+
+  .gets { display: flex; flex-direction: column; gap: .55rem; }
+  .gets-h {
+    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .gets ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .4rem; }
+  .gets li {
+    position: relative; padding-left: 1.05rem;
+    color: var(--ink-soft); font-size: .95rem; line-height: 1.45;
+  }
+  .gets li::before { content: "—"; position: absolute; left: 0; color: var(--ink-mute); }
+  /* Подарки за ранний вход — тот же список, но выделен фоном и своей отметкой. */
+  .gets.bonus {
+    background: var(--surface-2);
+    border-radius: 3px;
+    padding: 1.05rem 1.1rem;
+  }
+  .gets.bonus .gets-h { color: var(--accent); }
+  /* Подарки метим эмодзи: на длинном экране взгляд цепляется за него раньше, чем за текст. */
+  .gets.bonus li { color: var(--ink); padding-left: 1.75rem; }
+  .gets.bonus li::before { content: "🎁"; font-size: 1rem; top: .05em; }
+  .gets.bonus li b { font-weight: 600; }
+
+  .med { color: var(--ink-mute); font-size: .82rem; line-height: 1.45; }
+  .consents { display: flex; flex-direction: column; gap: .65rem; }
+  .cb {
+    display: grid; grid-template-columns: 20px 1fr; gap: .55rem; align-items: start;
+    font-size: .88rem; line-height: 1.45; color: var(--ink-soft); cursor: pointer;
+  }
+  .cb input { width: 18px; height: 18px; margin: .1rem 0 0; accent-color: var(--accent); }
+  .cb a { color: var(--accent); }
+  .cb.err span { color: var(--warn); }
+  .cb.err input { outline: 2px solid var(--warn); outline-offset: 2px; }
+
+  .before-cta { display: flex; flex-direction: column; gap: .6rem; color: var(--ink); font-size: .97rem; line-height: 1.5; }
+  .gets.bonus .bonus-note {
+    margin-top: .3rem; padding-top: .7rem;
+    border-top: 1px solid var(--line);
+    color: var(--ink); font-size: .92rem; line-height: 1.45;
+  }
+  .cta-note.err { color: var(--warn); font-weight: 600; }
+  .fields input.err { border-color: var(--warn); }
+
+  /* Подсветка решающих мест. Одно средство на весь экран и не больше одного
+     выделения на абзац — иначе подсветка перестаёт что-либо выделять.
+     Внутри плашки .status не используем: акцент по accent-soft даёт слабый контраст,
+     там роль подсветки играет <b>. */
+  .hl { color: var(--accent); font-weight: 600; }
+
+  /* Рамка экрана: человек должен сразу понять, что продажи ещё не идут,
+     иначе страница читается как обычный лендинг и кнопка пугает оплатой. */
+  .status {
+    background: var(--accent-soft);
+    border-radius: 3px;
+    padding: .75rem .9rem;
+    color: var(--ink);
+    font-size: .93rem; line-height: 1.5;
+  }
+  .status b { font-weight: 600; }
+
+  .perks-wrap { display: flex; flex-direction: column; gap: .7rem; }
+  .perks-h {
+    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-mute);
+  }
 
   .powers {
     background: var(--surface-2);
@@ -312,6 +520,12 @@
     display: block; margin-top: .7rem;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-size: .95rem; font-weight: 600; color: var(--ink);
+  }
+  /* Вторая строка якоря — про предзапись. Легче по весу, чтобы не спорить с первой. */
+  .bridge .anchor-2 {
+    display: block; margin-top: .35rem;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: .93rem; font-weight: 400; color: var(--ink-soft);
   }
 
   .perks {
@@ -370,10 +584,18 @@
    sheetUrl — адрес приёмника из skripty/test-empat-sheets.gs.
    Пусто — страница просто ничего никуда не шлёт, тест при этом работает. */
 const CONFIG = {
-  sheetUrl: "https://script.google.com/macros/s/AKfycbx-HmkA7u4MHNOe-rRMMyrU7s6-Hgo12WIAE83BeqkQROn4KIK05gvyG2c0UCzH3O7Bkw/exec",
+  sheetUrl: "https://script.google.com/macros/s/AKfycbzgho8KRyxxAoVrV2lkpS-2aCS4VjEbvzew1kaRjOQnx_X9qxtADNRQaNWQK-7GROkuUw/exec",
   channelUrl: "https://t.me/+ot1pJz8KHlo2YTky",   // закрытый — для записавшихся
   publicChannel: "https://t.me/violamaro1",        // открытый — для тех, кто не эмпат
-  botLink: ""       // https://t.me/имя_бота — возврат в чат
+  botLink: "",      // https://t.me/имя_бота — возврат в чат
+  /* Правовые страницы живут на сайте оплаты — тексты и редакции там одни на всё. */
+  docs: {
+    consent: "https://andzenho.github.io/Viola-Maro/consent",
+    privacy: "https://andzenho.github.io/Viola-Maro/privacy",
+    ads:     "https://andzenho.github.io/Viola-Maro/consent-ads"
+  },
+  /* Редакция согласия на момент акцепта — та же, что на сайте. Меняется вместе с текстом. */
+  docVersionConsent: "2026-08-10"
 };
 
 /* ——— вопросы ———
@@ -504,28 +726,77 @@ const RESULTS = {
   }
 };
 
+/* Под каждой неделей стоит вопрос — тот, которым человек сам про себя думает.
+   Формулировки взяты из программы; они же дословно звучат в комментариях канала,
+   поэтому работают на узнавание сильнее, чем описание содержания. */
 const OFFER = {
-  title: "Неудобные",
-  lead: "Терапевтический уикенд Виолы. Три дня, 11–13 сентября.",
+  tag: "Предзапись",
+  eyebrow: "6-недельный практикум Виолы Маро для эмпатов",
+  title: "Прикладная эмпатия",
+  lead: "Полностью обновлённая программа — с упором на практику и на реальные жизненные ситуации. <span class=\"hl\">Старт 1 октября.</span>",
+  status: "<b>Набор в первый поток уже открыт.</b> Место можно занять сейчас.",
   body: [
-    "Станьте неудобными. Перестаньте жить только для других и начните жить свою жизнь. Вы почувствуете, каково это.",
-    "Когда с вами считаются, ваш труд ценят, а силы остаются вам. Доброта при этом никуда не денется. Вы наконец станете собой и узнаете, чего хотите."
+    "Эмпатия — это способность. <span class=\"hl\">У вас она есть.</span> Пользоваться ей вас никто не учил.",
+    "Здесь вы научитесь пользоваться своей эмпатией во всех сферах жизни."
   ],
-  insideHead: "Как проходят три дня",
+  insideHead: "Шесть недель. Одна неделя — одна сфера вашей жизни",
   inside: [
-    "Пятница, в записи. Новая лекция о ролях, которые поглощают вашу жизнь. Та, что тащит на себе всех. Тот, кто всегда виноват. Тот, кого держат про запас на старость. Разбираем, какая ваша и кто вам её назначил.",
-    "Суббота, в записи. Медитация. Закрепляет ваше решение и возвращает вас к нему в любой день.",
-    "Воскресенье, живьём. Виола отвечает на ваши вопросы. Подряд, живьём."
+    "<b>Неделя 1.</b> Фигура эмпата<span class=\"wq\">Кто я такой? Это дар или со мной что-то не так?</span>",
+    "<b>Неделя 2.</b> Эмпат и отношения с людьми<span class=\"wq\">Почему мной пользуются? Как отказать и не чувствовать вину?</span>",
+    "<b>Неделя 3.</b> Эмпат-родители и эмпат-дети<span class=\"wq\">Как быть опорой родным и жить при этом свою жизнь?</span>",
+    "<b>Неделя 4.</b> Психосоматика у эмпата<span class=\"wq\">Почему всё время что-то болит, а врачи ничего не находят?</span>",
+    "<b>Неделя 5.</b> Самореализация при повышенной чувствительности<span class=\"wq\">Как найти своё место, когда внутри богато, а снаружи всё слишком грубо?</span>",
+    "<b>Неделя 6.</b> Психология наполненности и деньги<span class=\"wq\">Почему я не могу удержать деньги? В чём моя ценность?</span>"
   ],
-  format: "Всё в Telegram, в закрытом канале. Ставить ничего не нужно. Записи всех трёх дней и медитация остаются у вас навсегда.",
+  /* Формулировки взяты с сайта дословно, чтобы человек не сверял два разных списка.
+     Показываем максимум и по тарифам не размечаем — разметка живёт на сайте. */
+  getsHead: "Каждую неделю вы получаете",
+  gets: [
+    "Лекцию Виолы в прямом эфире",
+    "Вопросы и ответы в конце лекции",
+    "Вопрос Виоле на аудиоразбор",
+    "Три техники эмпата",
+    "Практическое задание",
+    "Запись и PDF-конспект"
+  ],
+  /* То, что не привязано к неделе. Отдельным списком, чтобы было видно: сверх недельного есть ещё. */
+  extraHead: "И сверх этого",
+  extra: [
+    "Чат потока",
+    "Мастер-класс в прямом эфире с ответами Виолы",
+    "Участие в финальной встрече",
+    "Разбор вас как эмпата, личный PDF",
+    "Большая методичка по итогам",
+    "Аудиомедитация на изобилие",
+    "<span class=\"hl\">Доступ навсегда</span>"
+  ],
+  med: "Практикум не заменяет обследование и лечение у врача.",
+  /* Отличие от бесплатного контента ставим после программы: сначала человек видит, что внутри, и уже потом — почему этого нет в роликах. */
+  afterInside: "Ролики в YouTube и в соцсетях Виола делает для широкой аудитории, там про людей вообще. Здесь всё собрано <span class=\"hl\">только под эмпатов</span>.",
+  perksHead: "Что даёт запись в список",
   perks: [
-    { h: "3 000 \u20BD", d: "За три дня." },
-    { h: "Подарок при оплате до 4 сентября", d: "Лекция «Любовь и деньги» в записи. С 5 сентября она в терапевтический уикенд не входит." },
-    { h: "Сто мест", d: "В воскресенье Виола отвечает на вопросы живьём: больше ста за вечер не разобрать.", wide: true }
+    { h: "Самая низкая цена", d: "Тем, кто в списке, практикум открывается по самой низкой цене." },
+    { h: "Закрытый канал Виолы", d: "Новое вы видите первыми, здесь лучшие условия, здесь подкасты и материалы, которых нет в открытом доступе." },
+    { h: "Право сказать, что включить", d: "В канале спросим, чего вам не хватает, и соберём из ваших ответов часть программы. Вы всю жизнь угадываете, что нужно другим. А тут спросят вас.", wide: true }
   ],
-  cta: "Занять место",
-  note: "Два поля: имя и телеграм. Двадцать секунд — остальное мы уже знаем из вашего теста.",
-  noteDirect: "Два поля: имя и телеграм. Двадцать секунд."
+  /* Бонусы за раннюю покупку — отдельно от того, что даёт сама запись в список.
+     Смешивать нельзя: одно получают за контакт, другое за вход в поток. */
+  bonusHead: "И три лекции в подарок тем, кто первыми оплатит программу",
+  /* Срок подарков снят 25.08. Поле оставлено пустым намеренно: вернуть
+     ограничение — одна строка, вёрстка ниже пустую подпись не рисует. */
+  bonusNote: "",
+  bonus: [
+    "<b>«Любовь и деньги».</b> Лекция Виолы о том, почему и любовь, и деньги — про одно и то же состояние наполненности.",
+    "<b>Разбор фильма «Догвиль».</b> Как эмпат оказывается в позиции жертвы, как устроена эмоциональная зависимость и как из неё выходят.",
+    "<b>Большой мастер-класс на узнавание себя.</b> Там подробно разобрано то, что тест показал вам коротко."
+  ],
+  /* Главное возражение перед кнопкой — «а что дальше?». Отвечаем до нажатия, а не после. */
+  beforeCta: [
+    "После заявки с вами свяжется команда Виолы Маро. Расскажут, как устроен практикум и какой тариф под вашу задачу, ответят на вопросы и помогут с оплатой — в том числе в рассрочку.",
+    "И закрепят за вами <b>вход по самой низкой цене</b> — она держится до 4 сентября."
+  ],
+  cta: "Оставить заявку",
+  ctaNote: "<span class=\"hl\">Платить сейчас ничего не нужно.</span> Два поля — имя и телеграм."
 };
 
 /* ——— «ваши суперспособности»: выводим из ответов, а не раздаём всем одинаково.
@@ -545,6 +816,9 @@ function powers(sc, v) {
   return list.sort((a, b) => b.w - a.w).slice(0, 3).map(x => x.t);
 }
 
+const ANCHOR = "1 октября у Виолы стартует практикум «Прикладная эмпатия» — про то, как пользоваться своей эмпатией во всех сферах жизни.";
+const ANCHOR_2 = "И сейчас открыта предзапись на него, чтобы получать актуальную информацию про программу.";
+
 const FON_NOTE = "Отдельно: часть того, что вас грузит, идёт не от людей, а от общего фона — шум, свет, слишком много всего. Это не про эмпатию, и в тесте оно не решается.";
 
 /* ——— состояние ——— */
@@ -553,6 +827,9 @@ let idx = 0;
 const answers = [];        // баллы 3..0 по каждому вопросу
 const forks = {};
 let startedAt = 0;   // засекаем на первом вопросе — чтобы отличить честное прохождение от прокликанного
+/* Посчитанный результат храним отдельно: если пороги когда-нибудь поменяются,
+   человек при возврате должен увидеть тот же тип, что и в первый раз. */
+let lastResult = null;
 
 const screen = document.getElementById("screen");
 const dial = document.getElementById("dial");
@@ -603,7 +880,11 @@ function score() {
   if (F >= 5 && L <= 1 && A <= 5) key = "other";
   else if (A <= 3 && C <= 4) key = "caring";
   else if (A >= 6 && P <= 3 && I <= 4 && B <= 3) key = "reader";
-  else if (I >= 6 && B / 9 < .5 && C / 12 < .5 && G <= 2 && K < 2) key = "awake";
+  /* Проснулся — это разрыв между историей и тем, на кого развёрнуты радары сейчас.
+     Шкала «тело» из условия убрана намеренно: дар остаётся, меняется адресат,
+     и телесный отклик у проснувшегося никуда не девается. Прежнее условие требовало
+     почти нулевого тела и идеальной гигиены — за 53 прохождения не сработало ни разу. */
+  else if (I >= 6 && (I - C) >= 1 && G <= 4 && K < 2) key = "awake";
   else {
     const b = B / 9, c = C / 12, g = G / 6;
     key = (c >= b && c >= g) ? "donor" : (b >= g ? "filter" : "sleeping");
@@ -621,10 +902,37 @@ function el(html) {
   return d;
 }
 
+/* Имя из Телеграма подставляется в разметку. Кавычка в имени рвала атрибут
+   value и оставляла поле пустым — а такие имена в Телеграме встречаются. */
+const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ESC[c]);
+}
+
+/* Без replaceChildren: он появился только в Chrome 86 (конец 2020),
+   а на неподновлённых Android его нет — и падал весь скрипт, экран оставался белым. */
 function render(node) {
-  screen.replaceChildren(node);
+  while (screen.firstChild) screen.removeChild(screen.firstChild);
+  linksThroughTelegram_(node);
+  screen.appendChild(node);
   paintDial();
   toTop();
+}
+
+/* Правовые страницы открываем средствами Телеграма: обычный target=_blank
+   внутри мини-аппа на части клиентов просто не срабатывает. Раньше это стояло
+   только на экране анкеты — а первая такая ссылка попадается человеку раньше,
+   на первом экране, под кнопкой «Начать».
+   Ссылки на t.me не трогаем: их уводит openTelegramLink, и у них свои
+   обработчики — перехватить здесь значило бы открыть канал дважды. */
+function linksThroughTelegram_(node) {
+  node.querySelectorAll("a").forEach(a => a.addEventListener("click", (e) => {
+    const href = a.getAttribute("href");
+    if (!href || href.indexOf("http") !== 0) return;
+    if (href.indexOf("https://t.me/") === 0) return;
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.openLink) { e.preventDefault(); tg.openLink(href); }
+  }));
 }
 
 /* Каждый новый экран показываем с начала — иначе человек попадает
@@ -650,8 +958,9 @@ function intro() {
       </div>
       <p class="quiet">Это не диагностика и не диагноз. Это способ посмотреть на себя со стороны.</p>
       <button class="go" id="start">Начать</button>
+      <p class="quiet">Нажимая «Начать», вы соглашаетесь с <a href="${CONFIG.docs.privacy}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>.</p>
     </div>`);
-  n.querySelector("#start").addEventListener("click", () => { idx = 0; startedAt = Date.now(); question(); });
+  n.querySelector("#start").addEventListener("click", () => { idx = 0; startedAt = Date.now(); stage = "q"; saveState(); question(); });
   render(n);
 }
 
@@ -672,10 +981,10 @@ function question() {
   n.querySelectorAll(".ans").forEach(b => b.addEventListener("click", () => {
     answers[idx] = Number(b.dataset.v);
     idx++;
-    if (idx < Q.length) question(); else { idx = 0; fork(); }
+    if (idx < Q.length) { saveState(); question(); } else { idx = 0; saveState(); fork(); }
   }));
   const back = n.querySelector("#back");
-  if (back) back.addEventListener("click", () => { idx--; answers.length = idx; question(); });
+  if (back) back.addEventListener("click", () => { idx--; answers.length = idx; saveState(); question(); });
   render(n);
 }
 
@@ -693,6 +1002,7 @@ function fork() {
   n.querySelectorAll(".ans").forEach(b => b.addEventListener("click", () => {
     const pick = f.a[Number(b.dataset.i)]; forks[f.k] = pick[1]; forks[f.k + "_text"] = pick[0];
     idx++;
+    saveState();
     if (idx < FORKS.length) fork(); else result();
   }));
   render(n);
@@ -701,6 +1011,7 @@ function fork() {
 function result(prev) {
   stage = "result";
   const r = prev || score();
+  lastResult = r;
   const t = RESULTS[r.key];
 
   const n = el(`
@@ -716,9 +1027,9 @@ function result(prev) {
           <ul>${powers(r.scales, answers).map(x => `<li>${x}</li>`).join("")}</ul>
         </div>` : ""}
       ${r.fon ? `<p class="addendum">${FON_NOTE}</p>` : ""}
-      ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}</p>` : ""}
+      ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}<span class="anchor">${ANCHOR}</span><span class="anchor-2">${ANCHOR_2}</span></p>` : ""}
       <div class="foot">
-        ${t.bridge ? `<button class="go big" id="offer">Что с этим делать <span aria-hidden="true">→</span></button>` : ""}
+        ${t.bridge ? `<button class="go big" id="offer">Что за программа? <span aria-hidden="true">→</span></button>` : ""}
         ${!t.bridge && CONFIG.publicChannel ? `<a class="go big" id="channel" href="${CONFIG.publicChannel}" target="_blank" rel="noopener">Читать Виолу в Телеграме <span aria-hidden="true">→</span></a>
         <p class="cta-note">Каждый день — про людей, границы и чувствительность.</p>` : ""}
         <button class="ghost" id="again">Пройти заново</button>
@@ -734,10 +1045,11 @@ function result(prev) {
     if (tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink(CONFIG.publicChannel); }
   });
 
-  n.querySelector("#again").addEventListener("click", () => { answers.length = 0; flush();   // если в прошлый раз что-то не ушло
+  n.querySelector("#again").addEventListener("click", () => { answers.length = 0; clearState(); flush();   // если в прошлый раз что-то не ушло
 intro(); });
 
   if (!prev) send(r);
+  saveState();          // чтобы перезагрузка вернула человека на результат, а не в начало
   render(n);
 }
 
@@ -751,44 +1063,65 @@ function open_(url) {
 function offer(r) {
   const n = el(`
     <div class="card">
-      ${r ? `<div class="step">Что дальше</div>` : ""}
-      <h2>${OFFER.title}</h2>
+      <div class="title-block">
+        <div class="step"><span class="tag">${OFFER.tag}</span></div>
+        <div class="step">${OFFER.eyebrow}</div>
+        <h2 class="offer-title">${OFFER.title}</h2>
+      </div>
       <p class="lede">${OFFER.lead}</p>
+      <p class="status">${OFFER.status}</p>
       <div class="body-copy">${OFFER.body.map(p => `<p>${p}</p>`).join("")}</div>
       <div class="inside">
         <div class="inside-h">${OFFER.insideHead}</div>
         <ul>${OFFER.inside.map(i => `<li>${i}</li>`).join("")}</ul>
-        <p class="format">${OFFER.format}</p>
       </div>
-      <div class="perks">
-        ${OFFER.perks.map(p => `<div class="perk${p.wide ? " wide" : ""}"><div class="perk-h">${p.h}</div><p>${p.d}</p></div>`).join("")}
+      <div class="gets">
+        <div class="gets-h">${OFFER.getsHead}</div>
+        <ul>${OFFER.gets.map(i => `<li>${i}</li>`).join("")}</ul>
+      </div>
+      <div class="gets">
+        <div class="gets-h">${OFFER.extraHead}</div>
+        <ul>${OFFER.extra.map(i => `<li>${i}</li>`).join("")}</ul>
+      </div>
+      <div class="body-copy"><p>${OFFER.afterInside}</p></div>
+      <p class="med">${OFFER.med}</p>
+      <div class="perks-wrap">
+        <div class="perks-h">${OFFER.perksHead}</div>
+        <div class="perks">
+          ${OFFER.perks.map(p => `<div class="perk${p.wide ? " wide" : ""}"><div class="perk-h">${p.h}</div><p>${p.d}</p></div>`).join("")}
+        </div>
+      </div>
+      <div class="gets bonus">
+        <div class="gets-h">${OFFER.bonusHead}</div>
+        <ul>${OFFER.bonus.map(i => `<li>${i}</li>`).join("")}</ul>
+        ${OFFER.bonusNote ? `<p class="bonus-note">${OFFER.bonusNote}</p>` : ""}
       </div>
       <div class="foot">
+        <div class="before-cta">${OFFER.beforeCta.map(t => `<p>${t}</p>`).join("")}</div>
         <button class="go big" id="form">${OFFER.cta} <span aria-hidden="true">→</span></button>
-        <p class="cta-note">${r ? OFFER.note : OFFER.noteDirect}</p>
-        ${r ? `<button class="ghost" id="back-res">← Вернуться к результату</button>` : ""}
+        <p class="cta-note">${OFFER.ctaNote}</p>
+        <button class="ghost" id="back-res">← Вернуться к результату</button>
       </div>
     </div>`);
   n.querySelector("#form").addEventListener("click", () => lead(r));
-  const back = n.querySelector("#back-res");
-  if (back) back.addEventListener("click", () => result(r));
+  n.querySelector("#back-res").addEventListener("click", () => result(r));
   render(n);
 }
 
-/* ——— бронь места: имя и телеграм берём у Телеграма, если он их знает ——— */
+/* ——— запись в первый поток: имя и телеграм берём у Телеграма, если он их знает ——— */
 function lead(r) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
-  const known = [u.first_name, u.last_name].filter(Boolean).join(" ");
-  const tgName = u.username ? "@" + u.username : "";
+  const known = esc([u.first_name, u.last_name].filter(Boolean).join(" "));
+  const tgName = esc(u.username ? "@" + u.username : "");
 
   const n = el(`
     <div class="card">
-      <div class="step">Запись</div>
-      <h2>Занимаю ваше место</h2>
+      <div class="step">Предзапись</div>
+      <h2>Записываю вас в предзапись</h2>
       ${known && tgName ? `
         <p class="lede">Записываю как <b>${known}</b>, ${tgName}. Если что-то не так — поправьте.</p>` : `
-        <p class="lede">Оставьте, как к вам обращаться и куда прислать ссылку.</p>`}
+        <p class="lede">Оставьте, как к вам обращаться и куда написать приглашение.</p>`}
       <div class="fields">
         <label>Как вас зовут
           <input id="f-name" type="text" value="${known}" placeholder="Имя" autocomplete="name">
@@ -797,10 +1130,32 @@ function lead(r) {
           <input id="f-tg" type="text" value="${tgName}" placeholder="@имя" autocomplete="off">
         </label>
       </div>
-      <p class="promise">Сразу после записи откроем закрытый канал Виолы. Там всё про уикенд и ссылка на оплату.</p>
+      <div class="ask" id="ask">
+        <div class="ask-q">Насколько вы готовы занять место на «Прикладной эмпатии»?</div>
+        <p class="ask-note">Ответ ни к чему не обязывает. Он нужен, чтобы мы понимали, с чего начать разговор.</p>
+        <div class="chips chips-col">
+          <button class="chip" data-v="готов сейчас">Готов(-а) занять сейчас</button>
+          <button class="chip" data-v="остались вопросы">Почти решаю, остались вопросы</button>
+          <button class="chip" data-v="присматриваюсь">Пока присматриваюсь</button>
+        </div>
+        <p class="ask-need-note" id="ask-need" hidden>Выберите один из вариантов — и нажмите кнопку ниже.</p>
+      </div>
+      <div class="consents">
+        <label class="cb" id="cb-pd-l">
+          <input type="checkbox" id="cb-pd">
+          <span>Я даю <a href="${CONFIG.docs.consent}" target="_blank" rel="noopener">согласие</a> на обработку моих персональных данных и ознакомлен(а) с <a href="${CONFIG.docs.privacy}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>.</span>
+        </label>
+        <label class="cb">
+          <input type="checkbox" id="cb-ads">
+          <span>Я хочу получать письма и сообщения о программах и эфирах. Отписаться можно в один клик. <a href="${CONFIG.docs.ads}" target="_blank" rel="noopener">Условия рассылки</a></span>
+        </label>
+      </div>
+      <p class="promise">Сразу после записи откроем закрытый канал Виолы. Новое вы увидите там первыми, там же лучшие условия, подкасты и материалы, которых нет в открытом доступе.</p>
       <div class="foot">
-        <button class="go big" id="send">Записаться <span aria-hidden="true">→</span></button>
-        <p class="cta-note" id="hint">Дальше всё в канале.</p>
+        <button class="go big" id="send">Отправить заявку <span aria-hidden="true">→</span></button>
+        <p class="cta-note" id="hint">Команда Виолы напишет вам в Телеграм.</p>
+        <!-- Отдельным абзацем: подсказки валидации перетирают #hint, а это обещание должно оставаться на экране. -->
+        <p class="cta-note">После записи вас перекинет в обещанный Телеграм-канал.</p>
         <button class="ghost" id="back-offer">← Назад</button>
       </div>
     </div>`);
@@ -809,20 +1164,78 @@ function lead(r) {
   const tgEl = n.querySelector("#f-tg");
   const btn = n.querySelector("#send");
   const hint = n.querySelector("#hint");
+  const ask = n.querySelector("#ask");
+  const pd = n.querySelector("#cb-pd");
+  const pdLabel = n.querySelector("#cb-pd-l");
+  const ads = n.querySelector("#cb-ads");
+  const askNote = n.querySelector("#ask-need");
+  const hintText = hint ? hint.textContent : "";
   let talk = "";
+
+  /* Снимаем предупреждение молча, как только человек исправил. */
+  function clearWarn() {
+    if (ask) ask.classList.remove("need");
+    if (askNote) askNote.hidden = true;
+    if (hint) { hint.classList.remove("err"); hint.textContent = hintText; }
+    nameEl.classList.remove("err");
+    tgEl.classList.remove("err");
+    if (pdLabel) pdLabel.classList.remove("err");
+  }
+
+  function warn(msg) {
+    if (!hint) return;
+    hint.textContent = msg;
+    hint.classList.add("err");
+  }
+
+  n.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
+    talk = c.dataset.v;
+    n.querySelectorAll(".chip").forEach(x => x.className = "chip");
+    c.className = "chip on";
+    clearWarn();
+  }));
+  if (pd) pd.addEventListener("change", () => { if (pd.checked) clearWarn(); });
+  [nameEl, tgEl].forEach(f => f.addEventListener("input", () => {
+    if (f.value.trim()) f.classList.remove("err");
+  }));
 
   btn.addEventListener("click", () => {
     const name = (nameEl.value || "").trim();
     const contact = (tgEl.value || "").trim();
     if (!name || !contact) {
-      hint.textContent = "Заполните оба поля — иначе не сможем вас позвать.";
+      if (!name) nameEl.classList.add("err");
+      if (!contact) tgEl.classList.add("err");
+      warn("Заполните оба поля — иначе не сможем вас позвать.");
+      (name ? tgEl : nameEl).focus();
       return;
     }
+    if (!talk) {
+      /* Главная причина «нажал, и ничего не происходит»: вопрос выше кнопки,
+         человек его пролистал. Поэтому подсвечиваем сам вопрос и подводим к нему экран. */
+      if (ask) {
+        ask.classList.add("need");
+        if (askNote) askNote.hidden = false;
+        if (ask.scrollIntoView) ask.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      warn("Сначала ответьте на вопрос выше.");
+      return;
+    }
+    if (pd && !pd.checked) {
+      /* Без согласия на обработку данных заявку принимать нельзя. */
+      pdLabel.classList.add("err");
+      if (pdLabel.scrollIntoView) pdLabel.scrollIntoView({ behavior: "smooth", block: "center" });
+      warn("Отметьте согласие на обработку персональных данных.");
+      return;
+    }
+    clearWarn();
     btn.disabled = true;
-    btn.textContent = "Записываю…";
-    sendLead(r, name, contact, talk);
-    openChannel();   // обещали «сразу после записи» — открываем сами
+    btn.textContent = "Отправляю…";
+    sendLead(r, name, contact, talk, { pd: !!(pd && pd.checked), ads: !!(ads && ads.checked) });
+    /* Сначала рисуем «Готово», потом уводим в канал: на клиентах Телеграма
+       старше Bot API 7.0 openTelegramLink закрывает мини-апп, и экран
+       подтверждения человек бы не увидел вовсе. */
     done();
+    openChannel();   // обещали «сразу после записи» — открываем сами
   });
   n.querySelector("#back-offer").addEventListener("click", () => offer(r));
   render(n);
@@ -842,12 +1255,12 @@ function openChannel() {
 function done() {
   const n = el(`
     <div class="card">
-      <h2>Место за вами</h2>
-      <p class="lede">Открываем закрытый канал Виолы. Там всё про уикенд и ссылка на оплату.</p>
+      <h2>Готово. Вы в списке первых.</h2>
+      <p class="lede">Когда откроем набор, напишем вам раньше остальных и по самой низкой цене.</p>
       ${CONFIG.channelUrl ? `
         <div class="foot">
           <a class="go big" id="ch" href="${CONFIG.channelUrl}" target="_blank" rel="noopener">Забрать доступ в канал Виолы <span aria-hidden="true">→</span></a>
-          <p class="cta-note">Там же ответим на вопросы про уикенд.</p>
+          <p class="cta-note">Новое видите первыми, лучшие условия, подкасты и материалы, которых нет в открытом доступе.</p>
         </div>` : ""}
     </div>`);
   const ch = n.querySelector("#ch");
@@ -866,19 +1279,28 @@ function send_(payload) {
   return fetch(CONFIG.sheetUrl + "?payload=" + encodeURIComponent(JSON.stringify(payload)));
 }
 
-/* Запись сначала кладём в буфер, потом отправляем. Не дошло — полежит
-   и уйдёт при следующем открытии страницы. Иначе обрыв связи = потерянный лид. */
-function sendLead(r, name, contact, talk) {
+/* Кладём в буфер и пробуем отправить. Не дошло — полежит и уйдёт
+   при следующем открытии страницы. Иначе обрыв связи = потерянный лид. */
+function queue(item) {
+  buffer(item);
+  flush();
+}
+
+function sendLead(r, name, contact, talk, consent) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
   const lead = {
     type: "lead",
-    name: name, contact: contact, talk: talk || "",
-    rank: r ? r.key : "direct", percent: r ? r.pct : "",
-    userId: u.id || "", forks: forks
+    name: name, contact: contact, ready: talk || "",
+    rank: r.key, percent: r.pct,
+    userId: u.id || "", forks: forks,
+    /* Акцепт фиксируем так же, как на сайте: сами галочки, время и редакция документа. */
+    accept_pd: consent && consent.pd ? "да" : "",
+    accept_ads: consent && consent.ads ? "да" : "",
+    consent_ts: new Date().toISOString(),
+    doc_version_consent: CONFIG.docVersionConsent || ""
   };
-  buffer(lead);
-  flush();
+  queue(lead);
 }
 
 function buffer(item) {
@@ -889,28 +1311,59 @@ function buffer(item) {
   } catch (e) {}
 }
 
+/* Вынимаем из буфера ровно одну запись — ту, что подтвердил приёмник. */
+function unbuffer(item) {
+  try {
+    const s = JSON.stringify(item);
+    const all = JSON.parse(localStorage.getItem(BUFFER_KEY) || "[]");
+    const i = all.findIndex(x => JSON.stringify(x) === s);
+    if (i !== -1) {
+      all.splice(i, 1);
+      localStorage.setItem(BUFFER_KEY, JSON.stringify(all));
+    }
+  } catch (e) {}
+}
+
+const inFlight = new Set();
+
+/* Буфер чистим ТОЛЬКО после подтверждения от приёмника.
+   Раньше буфер очищался до отправки — и если Телеграм выгружал вкладку,
+   пока запрос в пути (а он уходит ровно тогда, когда человека уводит в канал),
+   лид пропадал молча. Дубль в таблице пережить можно, потерю контакта — нет. */
 function flush() {
   if (!CONFIG.sheetUrl) return;
   let all = [];
   try { all = JSON.parse(localStorage.getItem(BUFFER_KEY) || "[]"); } catch (e) { return; }
   if (!all.length) return;
-  try { localStorage.removeItem(BUFFER_KEY); } catch (e) {}
-  all.forEach(item => {
-    send_(item)
-      .then(res => res.text())
-      .then(txt => {
-        /* Приёмник отвечает {"ok":true}. Если вместо этого прилетела страница
-           входа Google — значит развёртывание закрыто, и запись НЕ сохранилась.
-           Возвращаем её в буфер, иначе потеряем молча. */
-        if (txt.indexOf('"ok"') === -1) buffer(item);
-      })
-      .catch(() => buffer(item));
-  });
+  /* Обёртка не про сеть, а про сам вызов: fetch есть не в каждом вебвью,
+     и на телефоне без него исключение уходило вверх — в boot(). Человек
+     вместо теста получал экран отказа из-за одной недоставленной заявки. */
+  try {
+    all.forEach(item => {
+      const key = JSON.stringify(item);
+      if (inFlight.has(key)) return;     // тот же элемент уже летит — второй раз не шлём
+      inFlight.add(key);
+      send_(item)
+        .then(res => res.text())
+        .then(txt => {
+          /* Приёмник отвечает {"ok":true}. Если вместо этого прилетела страница
+             входа Google — значит развёртывание закрыто, и запись НЕ сохранилась.
+             Оставляем её в буфере до следующего раза. */
+          if (txt.indexOf('"ok"') !== -1) unbuffer(item);
+        })
+        .catch(() => {})
+        .then(() => { inFlight.delete(key); });
+    });
+  } catch (e) {}
 }
 
 /* ——— отправка результата ———
-   Два адресата, разные задачи:
-   таблица получает всё сырьё для калибровки, бот — ранг и процент для сегментов. */
+   Адресат один: таблица. Она получает всё сырьё для калибровки.
+
+   Бота отсюда НЕ трогаем. Telegram.WebApp.sendData по документации
+   «отправляет служебное сообщение боту, и мини-апп закрывается» — то есть
+   человек, открывший тест кнопкой клавиатуры, вылетал в чат ровно на переходе
+   к результату и своего типа не видел. Ранг и процент берём из таблицы. */
 function send(r) {
   const tg = window.Telegram && window.Telegram.WebApp;
   const user = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
@@ -932,29 +1385,109 @@ function send(r) {
   };
   window.__result = payload;
 
-  if (CONFIG.sheetUrl) send_(payload);
+  /* Через буфер, как и лид: обрыв связи на этом шаге раньше терял прохождение молча. */
+  if (CONFIG.sheetUrl) queue(payload);
+}
 
+/* ——— сохранение прогресса ———
+   Мини-апп внутри Телеграма может перезагрузиться сам: свернули и вернулись,
+   система выгрузила вкладку из памяти, сработал жест закрытия. Страница при этом
+   стартует заново, и без сохранения человек оказывается в начале теста.
+   Держим ответы в памяти браузера и возвращаем его на то же место. */
+const STATE_KEY = "viola-state";
+const TTL_MID = 3 * 3600e3;    // недопройденный тест живёт три часа
+const TTL_DONE = 24 * 3600e3;  // готовый результат — сутки
+
+function saveState() {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify({
+      t: Date.now(), stage: stage, idx: idx,
+      answers: answers.slice(), forks: forks, startedAt: startedAt,
+      res: lastResult
+    }));
+  } catch (e) {}
+}
+
+function clearState() {
+  try { localStorage.removeItem(STATE_KEY); } catch (e) {}
+}
+
+/* Шкалы, без которых экран результата не построить: powers() читает их
+   напрямую. Раньше запись без них роняла запуск. */
+const SCALES_NEEDED = ["A", "P", "I", "B", "C", "G", "L"];
+
+/* Сохранённое прохождение могло остаться от прежней версии теста: вопросы
+   и способ хранения результата менялись, а запись живёт до суток. Такое
+   состояние роняло boot(), и человек при каждом открытии видел экран
+   «тест не открылся» — весь срок хранения. Не сошлось — молча начинаем
+   заново: потерять полтора экрана ответов не так дорого, как сутки не мочь
+   войти. Проходящему сейчас это ничем не грозит — его запись форме отвечает. */
+function stateOk_(s) {
+  const a = s.answers;
+  if (!Array.isArray(a) || a.length > Q.length) return false;
+  if (!a.every(v => typeof v === "number" && v >= 0 && v <= 3)) return false;
+  if (s.res) {
+    if (!RESULTS[s.res.key]) return false;
+    const sc = s.res.scales;
+    if (!sc || typeof sc !== "object") return false;
+    if (!SCALES_NEEDED.every(k => typeof sc[k] === "number")) return false;
+  }
+  return true;
+}
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
+    if (!s || !s.t) return null;
+    const done = (s.answers || []).length === Q.length;
+    if (Date.now() - s.t > (done ? TTL_DONE : TTL_MID)) { clearState(); return null; }
+    if (!stateOk_(s)) { clearState(); return null; }
+    return s;
+  } catch (e) { return null; }
+}
+
+function boot() {
+  const tg = window.Telegram && window.Telegram.WebApp;
   if (tg) {
-    try { tg.sendData(JSON.stringify({ rank: r.key, percent: r.pct })); } catch (e) {}
+    tg.ready();
+    tg.expand();
+    /* Экран результата длинный. Пока листаешь его вниз, Телеграм может принять
+       прокрутку за жест «свернуть» и утащить приложение. Bot API 7.7+ */
+    if (tg.disableVerticalSwipes) { try { tg.disableVerticalSwipes(); } catch (e) {} }
+  }
+
+  flush();   // всё, что не ушло в прошлый раз, отправляем при каждом открытии
+
+  const s = loadState();
+  if (!s) { intro(); return; }
+
+  (s.answers || []).forEach(v => answers.push(v));
+  Object.keys(s.forks || {}).forEach(k => { forks[k] = s.forks[k]; });
+  startedAt = s.startedAt || 0;
+
+  if (answers.length === Q.length) {
+    if (s.stage === "fork" && (s.idx || 0) < FORKS.length) { idx = s.idx || 0; fork(); return; }
+    /* Аргумент обязателен: без него result() отправит прохождение в таблицу второй раз.
+       Берём сохранённый вердикт, если он есть, — тогда тип не переиграется. */
+    result(s.res || score());
+    return;
+  }
+  if (s.stage === "q" && answers.length) { idx = Math.min(s.idx || 0, Q.length - 1); question(); return; }
+
+  answers.length = 0;
+  intro();
+}
+
+/* Стартуем не сразу: страховка наверху дождётся Телеграма — или того, что его
+   не будет, — и позовёт сама. Прямой вызов оставлен на случай, если верхний
+   блок почему-то не отработал: без запуска тест не оставляем ни при каких условиях. */
+function run() {
+  try {
+    boot();
+  } catch (e) {
+    if (window.__fallback) window.__fallback(e && e.message ? e.message : e);
   }
 }
 
-if (window.Telegram && window.Telegram.WebApp) {
-  window.Telegram.WebApp.ready();
-  window.Telegram.WebApp.expand();
-}
-
-/* ——— прямой вход сразу на оффер, минуя тест ———
-   Три способа, чтобы ссылка работала и в браузере, и как мини-апп:
-   #neudobnye · ?p=neudobnye · Телеграм startapp=neudobnye */
-function pryamoyVhod() {
-  const tg = window.Telegram && window.Telegram.WebApp;
-  const sp = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || "";
-  const h = (location.hash || "").replace("#", "");
-  let q = "";
-  try { q = new URLSearchParams(location.search).get("p") || ""; } catch (e) {}
-  return sp === "neudobnye" || h === "neudobnye" || q === "neudobnye";
-}
-
-if (pryamoyVhod()) offer(null); else intro();
+if (window.__appStart) window.__appStart(run); else run();
 </script>
