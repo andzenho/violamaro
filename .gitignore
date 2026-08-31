@@ -35,3 +35,6 @@ analitika/kommentarii/**/*.jsonl
 analitika/kommentarii/**/*.txt
 analitika/kommentarii/*.json
 analitika/kommentarii/**/*.json
+
+# Node-зависимости
+node_modules/
