@@ -123,6 +123,7 @@ def parse_post_file(path):
         head, body = raw, ""
 
     tema = ""
+    den = ""
     fmt = ""
     status = ""
     for line in head.splitlines():
@@ -132,14 +133,18 @@ def parse_post_file(path):
         key = norm(m.group(1))
         if key == "тема":
             tema = m.group(2).strip()
+        elif key == "день":
+            den = m.group(2).strip()
         elif key == "формат":
             fmt = m.group(2).strip()
         elif key == "статус":
             status = m.group(2).strip().lower()
         # прочие поля читаем, но в таблицу не пишем.
 
+    # В таблицу идёт человеческая строка 'день', если она есть: таблицу
+    # читают Виола и команда, техническим заметкам из 'тема' там не место.
     return {
-        "тема": tema,
+        "тема": den or tema,
         "формат": fmt,
         "текст": body.strip("\n"),
         "статус": norm(status),
