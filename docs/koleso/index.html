@@ -1139,8 +1139,10 @@
   .check-i { flex: none; display: inline-flex; margin-top: .22rem; color: var(--ink); }
   .fit-no .check-i { color: var(--ink-mute); }
   .checks b, .fit-list b { font-weight: 600; color: var(--ink); }
-  .calm-line { margin: 1.4rem 0 0; font-size: 1.02rem; line-height: 1.5; color: var(--ink-soft); }
-  .calm-line b { color: var(--ink); font-weight: 600; }
+  .meaning { margin: 1.7rem 0 0; padding-top: 1.3rem; border-top: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: .7rem; }
+  .meaning-h { font-size: 1.2rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
+  .meaning p { margin: 0; font-size: 1.02rem; line-height: 1.55; color: var(--ink-soft); }
   /* Мост с результата на событие: жирная линия сверху и крупный
      заголовок-вопрос. Бежевую плашку тут не ставим — она уже занята
      вердиктом выше, и две подряд перестают выделять что-либо. */
@@ -1950,10 +1952,16 @@ const OFFER = {
     "Почувствуете, что вам можно — и это состояние останется с вами в записи, на случай когда снова начнёте растворяться в чужом",
     "Перестанете полночи прокручивать разговоры. Внутри становится тихо, а силы остаются вам"
   ],
-  /* Снятие главного барьера до кнопки: их страх не цена, а то, что после
-     покупки придётся идти на конфликт («одни бурно отвечают на отказ,
-     другие ледяным холодом», кабинет 31.08). */
-  calm: "<b>Ставить кого-то на место в эти выходные не придётся.</b> Сначала имя роли и состояние — отказы приходят потом, сами и спокойно.",
+  /* 03.09: снятие главного барьера отдано её собственным словам из текста
+     02.09. Прежняя наша строка («ставить кого-то на место не придётся»)
+     отрицала опасение, а её текст переопределяет само название: неудобный
+     это тот, кто вышел из борьбы, а не пошёл в неё. Заодно закрывает
+     вопрос «что это вообще значит», которого на витрине не было. */
+  meaningHead: "Что значит «неудобные»",
+  meaning: [
+    "Вы перестаёте доказывать. Перестаёте ввязываться в ссоры, споры и сражения, которые стоят вам вашего покоя. Ваше молчание, ваша пауза становятся вашей бронёй.",
+    "Неудобными вы становитесь для тех, кто любил вас покорными. А для себя — спокойными, лёгкими и уверенными."
+  ],
 
   /* Блок «Как это выглядит потом» снят продюсером 28.08: оффер и
      подзаголовок говорят то же самое, а пять сцен растягивали экран
@@ -2502,7 +2510,10 @@ function offer(r) {
            аудитории решает здесь и дальше не листает. -->
       <div class="checks-h">${OFFER.checksHead}</div>
       <ul class="checks">${OFFER.checks.map(c => `<li><span class="check-i" aria-hidden="true">${CHECK_ICO}</span><span>${c}</span></li>`).join("")}</ul>
-      <p class="calm-line">${OFFER.calm}</p>
+      <div class="meaning">
+        <div class="meaning-h">${OFFER.meaningHead}</div>
+        ${OFFER.meaning.map(x => `<p>${x}</p>`).join("")}
+      </div>
       <button class="go big cta-top" id="pay-top"><span>${OFFER.ctaTop}</span><span aria-hidden="true">→</span></button>
       <p class="under-cta">${CONFIG.price} или ${CONFIG.priceUsd} по 6 сентября включительно</p>
       <div class="why">
