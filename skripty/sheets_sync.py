@@ -123,7 +123,9 @@ def parse_post_file(path):
         head, body = raw, ""
 
     tema = ""
+    den = ""
     fmt = ""
+    status = ""
     for line in head.splitlines():
         m = re.match(r"^([A-Za-zА-Яа-яЁё ]+?)\s*:\s*(.*)$", line)
         if not m:
@@ -131,11 +133,22 @@ def parse_post_file(path):
         key = norm(m.group(1))
         if key == "тема":
             tema = m.group(2).strip()
+        elif key == "день":
+            den = m.group(2).strip()
         elif key == "формат":
             fmt = m.group(2).strip()
-        # 'статус' и прочее читаем, но в таблицу не пишем.
+        elif key == "статус":
+            status = m.group(2).strip().lower()
+        # прочие поля читаем, но в таблицу не пишем.
 
-    return {"тема": tema, "формат": fmt, "текст": body.strip("\n")}
+    # В таблицу идёт человеческая строка 'день', если она есть: таблицу
+    # читают Виола и команда, техническим заметкам из 'тема' там не место.
+    return {
+        "тема": den or tema,
+        "формат": fmt,
+        "текст": body.strip("\n"),
+        "статус": norm(status),
+    }
 
 
 def load_tab_source(folder):
@@ -306,7 +319,9 @@ def plan_updates(title, kp, posts_by_date):
     rows = kp["rows"]
 
     for date_key in sorted(posts_by_date):
-        posts = posts_by_date[date_key]
+        # Снятые посты строк не занимают: то, что решено не выпускать,
+        # в витрине не показываем, а освободившиеся строки чистим ниже.
+        posts = [p for p in posts_by_date[date_key] if p.get("статус") != "снят"]
         row_nums = kp["dates"].get(date_key, [])
         ds = "%02d.%02d.%04d" % (date_key[2], date_key[1], date_key[0])
 
@@ -322,14 +337,31 @@ def plan_updates(title, kp, posts_by_date):
                 "пропущены. Добавь строки в таблице вручную." % (title, ds, len(posts), len(row_nums))
             )
 
+        # Строки, оставшиеся без поста (все посты дня сняты либо их стало
+        # меньше), очищаем — иначе в таблице висит снятый текст.
+        for row_num in row_nums[len(posts):]:
+            cols = [(kp["col_theme"], ""), (kp["col_text"], "")]
+            if kp.get("col_format") is not None:
+                cols.append((kp["col_format"], ""))
+            for col_idx, value in cols:
+                old = cell_current(rows, row_num, col_idx)
+                if not (old or ""):
+                    continue
+                addr = "%s!%s%d" % (a1_quote(title), col_letter(col_idx), row_num)
+                updates.append({"range": addr, "values": [[value]],
+                                "_old": old, "_new": value, "_date": ds})
+
         for post, row_num in zip(posts, row_nums):
             cols = [
                 (kp["col_theme"], post.get("тема", "")),
                 (kp["col_text"], post.get("текст", "")),
             ]
-            # 'Формат' — только если колонка есть в шапке и поле задано в файле
-            if kp.get("col_format") is not None and post.get("формат"):
-                cols.append((kp["col_format"], post["формат"]))
+            # 'Формат' — если колонка есть в шапке и поле задано; у снятого
+            # поста поле пустое и колонка тоже очищается.
+            if kp.get("col_format") is not None and (
+                post.get("формат") or post.get("статус") == "снят"
+            ):
+                cols.append((kp["col_format"], post.get("формат", "")))
             for col_idx, value in cols:
                 old = cell_current(rows, row_num, col_idx)
                 if (old or "") == (value or ""):
