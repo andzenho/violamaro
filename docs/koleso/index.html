@@ -1137,6 +1137,17 @@
   .checks b, .fit-list b { font-weight: 600; color: var(--ink); }
   .calm-line { margin: 1.4rem 0 0; font-size: 1.02rem; line-height: 1.5; color: var(--ink-soft); }
   .calm-line b { color: var(--ink); font-weight: 600; }
+  /* Мост с результата на событие: жирная линия сверху и крупный
+     заголовок-вопрос. Бежевую плашку тут не ставим — она уже занята
+     вердиктом выше, и две подряд перестают выделять что-либо. */
+  .jump-block {
+    margin-top: 1.9rem; padding-top: 1.6rem; border-top: 2px solid var(--ink);
+    display: flex; flex-direction: column; gap: .9rem;
+  }
+  .jump-h { margin: 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -.025em; line-height: 1.08; }
+  .jump-t { margin: 0; font-size: 1.06rem; line-height: 1.6; color: var(--ink); }
+  .jump-t b { font-weight: 600; }
+
   /* ⚠️ Класс называется cta-top, а не top: имя .top уже занято шапкой
      страницы, и у неё flex-direction: column. Кнопка подхватывала чужое
      правило и ставила стрелку под текстом. */
@@ -2065,8 +2076,8 @@ const OFFER = {
   ],
   /* Верхняя кнопка зовёт занять место, нижняя — оплатить: наверху человек
      ещё выбирает, внизу уже решил. */
-  ctaTop: "Забрать место",
-  cta: "Приобрести билет"
+  ctaTop: "Получить билет",
+  cta: "Получить билет"
 };
 
 /* Прямой вердикт. Человек только что увидел свою фигуру и разбор по сферам,
@@ -2407,9 +2418,18 @@ function result(prev) {
         }).join("")}
       </div>` : ""}
       <p class="bridge">${verdict(r, sag)}</p>
-      <p class="jump">Если вы прошли полностью этот тест, то скорее всего вас заинтересует новый терапевтический онлайн-уикенд Виолы Маро «Неудобные». Сейчас открыта возможность приобрести билет по лучшим ценам.<span class="jump-q">Хотите узнать подробнее?</span></p>
+      <!-- Мост с результата на событие. Отбит жирной линией и крупным
+           заголовком-вопросом: люди писали, что события просто не замечали.
+           Текст опирается на то, что человек только что увидел на колесе,
+           а не начинает разговор с нуля. -->
+      <div class="jump-block">
+        <h2 class="jump-h">Что с этим делать?</h2>
+        <p class="jump-t">Колесо показало, где у вас пусто. Само оно не наполняется: <b>пока роль, в которой вы живёте, не названа, силы будут уходить туда же, куда уходили.</b></p>
+        <p class="jump-t">С этого и начинается уикенд «Неудобные». Три дня, 11–13 сентября. В пятницу Виола называет роли и показывает, кто их на вас надел, в субботу медитация «Мне можно», в воскресенье живой эфир с ответами на ваши вопросы.</p>
+      </div>
       <div class="foot">
-        <button class="go big" id="offer">Хочу узнать про «Неудобные»&nbsp;<span aria-hidden="true">→</span></button>
+        <button class="go big cta-top" id="offer">${OFFER.cta}&nbsp;<span aria-hidden="true">→</span></button>
+        <p class="under-cta">11–13 сентября · ${CONFIG.price} по 6 сентября</p>
         <button class="ghost" id="share">Поделиться колесом</button>
         <button class="ghost" id="again">Пройти заново</button>
       </div>
