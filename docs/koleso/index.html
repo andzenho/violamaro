@@ -1137,13 +1137,14 @@
   .checks b, .fit-list b { font-weight: 600; color: var(--ink); }
   .calm-line { margin: 1.4rem 0 0; font-size: 1.02rem; line-height: 1.5; color: var(--ink-soft); }
   .calm-line b { color: var(--ink); font-weight: 600; }
-  /* Флекс-строка, а не блок: текст и стрелка держатся на одной линии
-     и центрируются вместе. nowrap страхует на узких экранах. */
-  button.go.big.top {
-    display: flex; align-items: center; justify-content: center; gap: .35rem;
-    width: 100%; margin-top: 1.4rem; white-space: nowrap;
+  /* ⚠️ Класс называется cta-top, а не top: имя .top уже занято шапкой
+     страницы, и у неё flex-direction: column. Кнопка подхватывала чужое
+     правило и ставила стрелку под текстом. */
+  button.go.big.cta-top {
+    display: flex; flex-direction: row; align-items: center; justify-content: center;
+    gap: .35rem; width: 100%; margin-top: 1.4rem; white-space: nowrap;
   }
-  button.go.big.top span { margin-left: 0; }
+  button.go.big.cta-top span { margin-left: 0; }
   .under-cta { margin: .55rem 0 0; text-align: center; font-size: .85rem; color: var(--ink-mute); }
   .why { display: flex; flex-direction: column; }
   .why-h { margin: 2rem 0 .2rem; padding-top: 1.4rem; border-top: 1px solid var(--line);
@@ -2477,7 +2478,7 @@ function offer(r) {
       <div class="checks-h">${OFFER.checksHead}</div>
       <ul class="checks">${OFFER.checks.map(c => `<li><span class="check-i" aria-hidden="true">${CHECK_ICO}</span><span>${c}</span></li>`).join("")}</ul>
       <p class="calm-line">${OFFER.calm}</p>
-      <button class="go big top" id="pay-top"><span>${OFFER.ctaTop}</span><span aria-hidden="true">→</span></button>
+      <button class="go big cta-top" id="pay-top"><span>${OFFER.ctaTop}</span><span aria-hidden="true">→</span></button>
       <p class="under-cta">${CONFIG.price} или ${CONFIG.priceUsd} по 6 сентября включительно</p>
       <div class="why">
         <div class="why-h">${OFFER.whyHead}</div>
