@@ -1137,7 +1137,7 @@
   .checks b, .fit-list b { font-weight: 600; color: var(--ink); }
   .calm-line { margin: 1.4rem 0 0; font-size: 1.02rem; line-height: 1.5; color: var(--ink-soft); }
   .calm-line b { color: var(--ink); font-weight: 600; }
-  button.go.big.top { width: 100%; margin-top: 1.4rem; }
+  button.go.big.top { display: block; width: 100%; margin-top: 1.4rem; }
   .under-cta { margin: .55rem 0 0; text-align: center; font-size: .85rem; color: var(--ink-mute); }
   .why { display: flex; flex-direction: column; }
   .why-h { margin: 2rem 0 .2rem; padding-top: 1.4rem; border-top: 1px solid var(--line);
@@ -2056,6 +2056,9 @@ const OFFER = {
     { q: "Я уже проходила её программы. Чем это отличается?", a: "Лекция новая, её не было ни в одном потоке, и медитация записана специально под этот уикенд. Метод тот же, поэтому многие возвращаются — обычно за тем, что в прошлый раз не успели сделать." },
     { q: "Мне неловко рассказывать о себе при всех.", a: "Вопрос можно прислать заранее, без имени и без подробностей. В эфире прозвучит только суть." }
   ],
+  /* Верхняя кнопка зовёт занять место, нижняя — оплатить: наверху человек
+     ещё выбирает, внизу уже решил. */
+  ctaTop: "Забрать место",
   cta: "Приобрести билет"
 };
 
@@ -2468,7 +2471,7 @@ function offer(r) {
       <div class="checks-h">${OFFER.checksHead}</div>
       <ul class="checks">${OFFER.checks.map(c => `<li><span class="check-i" aria-hidden="true">${CHECK_ICO}</span><span>${c}</span></li>`).join("")}</ul>
       <p class="calm-line">${OFFER.calm}</p>
-      <button class="go big top" id="pay-top">${OFFER.cta}&nbsp;<span aria-hidden="true">→</span></button>
+      <button class="go big top" id="pay-top">${OFFER.ctaTop}&nbsp;<span aria-hidden="true">→</span></button>
       <p class="under-cta">${CONFIG.price} или ${CONFIG.priceUsd} по 6 сентября включительно</p>
       <div class="why">
         <div class="why-h">${OFFER.whyHead}</div>
