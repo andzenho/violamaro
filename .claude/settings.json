@@ -42,7 +42,10 @@
       "Bash(python3 skripty/kontrast.py:*)",
       "Read(//home/user/violamaro/**)",
       "Glob(//home/user/violamaro/**)",
-      "Grep(//home/user/violamaro/**)"
+      "Grep(//home/user/violamaro/**)",
+      "Bash(python3 skripty/karta.py:*)",
+      "Bash(python3 skripty/oglavlenie.py:*)",
+      "Bash(python3 skripty/sheets_sync.py:*)"
     ]
   },
   "hooks": {
@@ -52,6 +55,17 @@
           {
             "type": "command",
             "command": "sh \"$CLAUDE_PROJECT_DIR/skripty/session_pull.sh\" 2>/dev/null"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/strazh_chteniya.py\""
           }
         ]
       }
