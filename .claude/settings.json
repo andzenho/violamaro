@@ -59,6 +59,16 @@
         ]
       }
     ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/skripty/avtosohran.sh\" 2>/dev/null"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Read",
