@@ -12,7 +12,7 @@
 ## Корень
 | Файл | Ток. | Суть |
 |---|---:|---|
-| `CLAUDE.md` | 2 360 | Проект «Виола Маро» |
+| `CLAUDE.md` | 2 452 | Проект «Виола Маро» |
 | `README.md` | 1 195 | Виола Маро — рабочий репозиторий |
 
 ## `baza/` — 10 файл., 49 031 ток.
@@ -31,21 +31,20 @@
 | `tehniki-viola.md` | 3 502 | Техники Виолы. Сквозной каталог |
 | `zhurnal-resheniy.md` | 2 833 | Журнал решений |
 
-## `produkt/` — 31 файл., 210 744 ток.
+## `produkt/` — 28 файл., 202 422 ток.
 *Программы, цены, условия*
 
 | Файл | Ток. | Суть |
 |---|---:|---|
 | `README.md` | 2 542 | produkt/ |
 | `dengi-dlya-empata-razbor.md` | 2 358 | Деньги как средство самореализации и благополучия для эмпата — разбор |
-| `efir-2-voprosy.md` | 3 075 | Эфир 2 (22.08) — вопросы для Виолы |
 | `efir-lyubov-i-dengi-razbor.md` | 3 002 | Эфир «Любовь и деньги» — разбор (скелет флагмана) |
 | `fakty-viola.md` | 2 466 | Факты и решения от Виолы (рабочий чат, 08.2026) |
 | `karta-smyslov-i-argumentov.md` | 6 113 | Карта смыслов ЦА → аргументы к покупке. И симуляция продаж |
-| `lending-palitra.html` | 8 883 | — |
-| `lending-promt-dizayn.md` | 6 904 | Промпт для Claude Design — лендинг «Практическая эмпатия 4.0» |
+| `lending-palitra.html` | 8 880 | — |
+| `lending-promt-dizayn.md` | 6 902 | Промпт для Claude Design — лендинг «Прикладная эмпатия» |
 | `lending-promt-gotovyy.md` | 12 670 ⚠️ | ТЕКСТ СТРАНИЦЫ — ДОСЛОВНО |
-| `lending-strategiya-dizayna.md` | 8 074 | Лендинг «Практическая эмпатия 4.0» — стратегия дизайна |
+| `lending-strategiya-dizayna.md` | 8 072 | Лендинг «Прикладная эмпатия» — стратегия дизайна |
 | `marafon-po-sferam.md` | 12 484 ⚠️ | Календарь запуска и пять эфиров |
 | `neudobnye-lending.md` | 13 311 ⚠️ | Текст лендинга «Неудобные» |
 | `neudobnye-promt-dizayn.md` | 10 196 ⚠️ | Промпт для Claude Design — лендинг «Неудобные» |
@@ -56,12 +55,10 @@
 | `praktikum-vnutrennie-zametki.md` | 30 703 ⚠️ | Практикум «Прикладная эмпатия» — внутренние заметки |
 | `produkty-viola-staryye.md` | 2 051 | Старые продукты Виолы — разбор для контекста |
 | `programma-otnosheniya-razbor.md` | 3 543 | Внутрянка Виолы по отношениям — разбор и сведение с нашей программой |
-| `skript-prodazh-kontekst.md` | 9 849 | Скрипт продаж: контекст и фреймворки под сборку |
+| `skript-prodazh-kontekst.md` | 9 844 | Скрипт продаж: контекст и фреймворки под сборку |
 | `skript-prodazh-sozvon.md` | 5 636 | Скрипт созвона |
 | `strategiya.md` | 2 637 | Стратегия запуска «Виола Маро» |
-| `test-empat-chatplace.md` | 2 500 | Сборка теста в ChatPlace — карта для конструктора |
 | `test-empat-chistovik.md` | 4 636 | Тест «Есть у вас способности эмпата?» — чистовик под сборку |
-| `test-empat-lite.md` | 2 735 | Тест эмпата — облегчённая версия под быструю сборку |
 | `test-empat.md` | 8 989 | *[**черновик под сборку в боте**. Строки голосом Виолы — на её визирование.]* Тест «Есть у вас способности эмпата?» — конструкция, вопросы, ответы |
 | `transformatsii.md` | 2 778 | Канон трансформаций «Виола» |
 | `transformatsiya-za-dengi.md` | 3 011 | Трансформация за деньги: какую метаморфозу продавать для максимальной в… |
@@ -161,7 +158,7 @@
 Правила по папкам (грузятся сами): `analitika.md`, `arhiv.md`, `baza.md`, `docs.md`, `kontent.md`, `korpus.md`, `produkt.md`
 Команды: `/den`, `/dyrki`, `/post`, `/proverka`, `/sait`, `/strateg`, `/transkript`
 
-## `arhiv/` — 23 файл., 94 179 ток.
+## `arhiv/` — 26 файл., 102 672 ток.
 *⚠️ Устаревшее и противоречащее курсу. Открывать только по прямой просьбе.*
 
 - `README.md`
@@ -177,8 +174,11 @@
 - `ofery-promezhutochnye/ofer-flagman-empat.md`
 - `ofery-promezhutochnye/ofer-lyubov-i-dengi-sborka.md`
 - `praktikum-snyatye-zametki.md`
+- `tehnicheskoe/efir-2-voprosy.md`
 - `tehnicheskoe/perenos-v-claude-code.md`
 - `tehnicheskoe/sozvon-11.08-agenda.md`
+- `tehnicheskoe/test-empat-chatplace.md`
+- `tehnicheskoe/test-empat-lite.md`
 - `vina-staryy-flagman/anketa-pervye-dannye.md`
 - `vina-staryy-flagman/anketa-predzapisi.md`
 - `vina-staryy-flagman/ca-analiz-v1.1.md`
@@ -189,4 +189,4 @@
 - `vina-staryy-flagman/vozrazheniya-i-prodazhi.md`
 
 ---
-**Всего 196 файлов, ~989 753 токенов.** Весь репозиторий в один контекст не влезает и не должен.
+**Всего 196 файлов, ~990 312 токенов.** Весь репозиторий в один контекст не влезает и не должен.
