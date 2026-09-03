@@ -112,29 +112,14 @@ def otchet(text):
     # 1. Объём и средняя длина
     hr()
     print("1. ОБЪЁМ")
-    print(f"  Знаков:      {n_znakov}")
-    print(f"  Слов:        {n_slov}")
-    print(f"  Предложений: {n_predl}")
-    print(f"  Средняя длина предложения: {sr_dlina:.1f} слов "
-          f"(норма {SR_DLINA_NORMA[0]}-{SR_DLINA_NORMA[1]})")
-    predupr(sr_dlina and sr_dlina < SR_DLINA_MIN,
-            f"средняя длина меньше {SR_DLINA_MIN} — речь рубленая")
-    predupr(sr_dlina > SR_DLINA_MAX,
-            f"средняя длина больше {SR_DLINA_MAX} — предложения тяжёлые")
-
-    # 2. Доля коротких предложений
+    print(f"  Знаков: {n_znakov} · слов: {n_slov} · предложений: {n_predl}")
+    СПРАВКА = []
+    СПРАВКА.append(f"средняя длина фразы {sr_dlina:.1f}")
     hr()
     korotkie = [d for d in dliny if 0 < d <= KOROTKIE_POROG]
     dolya_kor = (len(korotkie) / n_predl * 100) if n_predl else 0
-    print("2. КОРОТКИЕ ПРЕДЛОЖЕНИЯ (до 5 слов)")
-    print(f"  Доля: {dolya_kor:.0f}% "
-          f"(норма {KOROTKIE_NORMA[0]}-{KOROTKIE_NORMA[1]}%)")
-    predupr(dolya_kor < KOROTKIE_MIN,
-            f"коротких меньше {KOROTKIE_MIN}% — не хватает её ритма")
-
-    # 3. Длинные предложения
-    hr()
-    print(f"3. ДЛИННЫЕ ПРЕДЛОЖЕНИЯ (больше {DLINNOE_POROG} слов) — норма 0")
+    СПРАВКА.append(f"коротких {dolya_kor:.0f}%")
+    print(f"2. ДЛИННЫЕ ПРЕДЛОЖЕНИЯ (больше {DLINNOE_POROG} слов) — норма 0")
     dlinnye = [(d, p) for d, p in zip(dliny, predlozheniya) if d > DLINNOE_POROG]
     if not dlinnye:
         print("  Нет.")
@@ -147,15 +132,8 @@ def otchet(text):
     hr()
     n_vot = chastota_slova(slova_lower, "вот")
     vot_na_1000 = (n_vot / n_slov * 1000) if n_slov else 0
-    print("4. СЛОВО «вот»")
-    print(f"  Найдено: {n_vot}. На 1000 слов: {vot_na_1000:.1f} "
-          f"(норма около {VOT_NORMA})")
-    predupr(vot_na_1000 < VOT_MIN,
-            f"«вот» меньше {VOT_MIN} на 1000 — недостаёт её интонации")
-
-    # 5. Запрещённые слова
-    hr()
-    print("5. ЗАПРЕЩЁННЫЕ СЛОВА (она их вычищает сама)")
+    СПРАВКА.append(f"«вот» на 1000 — {vot_na_1000:.1f}")
+    print("3. ЗАПРЕЩЁННЫЕ СЛОВА (она их вычищает сама)")
     nashli = False
     for z in ZAPRESCHENNYE:
         for m in re.finditer(r"(?<![0-9A-Za-zА-Яа-яЁё])" + re.escape(z) +
@@ -172,15 +150,8 @@ def otchet(text):
     hr()
     n_ochen = chastota_slova(slova_lower, "очень")
     ochen_na_1000 = (n_ochen / n_slov * 1000) if n_slov else 0
-    print("6. СЛОВО «очень»")
-    print(f"  Найдено: {n_ochen}. На 1000 слов: {ochen_na_1000:.1f} "
-          f"(норма до {OCHEN_NORMA_MAX})")
-    predupr(ochen_na_1000 > OCHEN_NORMA_MAX,
-            f"«очень» больше {OCHEN_NORMA_MAX} на 1000 — усилитель приелся")
-
-    # 7. Конструкция «не ..., а ...»
-    hr()
-    print("7. КОНСТРУКЦИЯ «не ..., а ...» (в продающем тексте запрещена)")
+    СПРАВКА.append(f"«очень» на 1000 — {ochen_na_1000:.1f}")
+    print("4. КОНСТРУКЦИЯ «не ..., а ...» (в продающем тексте запрещена)")
     ne_a = re.findall(r"\bне\s+[^,.;!?]{1,40}?,\s*а\s+[^,.;!?]{1,40}",
                       text, flags=re.IGNORECASE)
     if not ne_a:
@@ -194,7 +165,7 @@ def otchet(text):
 
     # 8. Лимиты Telegram
     hr()
-    print("8. ЛИМИТЫ TELEGRAM")
+    print("5. ЛИМИТЫ TELEGRAM")
     print(f"  Знаков в тексте: {n_znakov}")
     znak_podpis = "OK" if n_znakov <= TG_PODPIS else f"ПРЕВЫШЕН на {n_znakov - TG_PODPIS}"
     znak_post = "OK" if n_znakov <= TG_POST else f"ПРЕВЫШЕН на {n_znakov - TG_POST}"
@@ -205,6 +176,10 @@ def otchet(text):
     hr()
     sverka_s_korpusom(predlozheniya)
 
+    hr()
+    print("СПРАВОЧНО — речевой профиль. Для письменных текстов он не действует")
+    print("(`golos §8`): в письме фразы длиннее и «вот» необязателен.")
+    print("  " + " · ".join(СПРАВКА))
     print("=" * 60)
     print()
 
