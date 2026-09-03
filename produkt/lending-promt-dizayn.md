@@ -1,4 +1,4 @@
-# Промпт для Claude Design — лендинг «Практическая эмпатия 4.0»
+# Промпт для Claude Design — лендинг «Прикладная эмпатия»
 
 *Это бриф. Готовый промпт для вставки собирается скриптом:* `python3 skripty/lending_promt.py --apply` *→* `produkt/lending-promt-gotovyy.md`.
 *Обоснование решений — `lending-strategiya-dizayna.md`. Текст и структура — `praktikum-dlya-empatov.md`.*
