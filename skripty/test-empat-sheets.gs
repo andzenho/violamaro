@@ -463,14 +463,13 @@ function getSheet2_(name, headers) {
   return sheet;
 }
 
+/* Раньше эта функция подписывала шапку только у пустого листа: колонка,
+   добавленная в HEADERS позже, получала данные, но оставалась без заголовка.
+   На «Источнике» 06.09 это и всплыло. Отдаём работу getSheet2_ — он дописывает
+   только пустые ячейки шапки, названия, поставленные руками, не трогает,
+   строки с данными не трогает никогда. */
 function getSheet_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(HEADERS);
-    sheet.setFrozenRows(1);
-  }
-  return sheet;
+  return getSheet2_(SHEET_NAME, HEADERS);
 }
 
 function rankName_(key) {
