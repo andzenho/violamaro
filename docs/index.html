@@ -598,7 +598,7 @@ const CONFIG = {
      «Предзапись с теста» и различаются колонкой «Откуда заявка».
      Прежний адрес жив и отвечает старой версией — по нему доедут заявки,
      оставшиеся недоставленными в буферах браузеров. */
-  sheetUrl: "https://script.google.com/macros/s/AKfycbzudwMkxUvpyGRGTd6IFJBSXFa4qAa6kVv0obADMByD-0IgYrX5HTQMQR1l9FgwW77zXA/exec",
+  sheetUrl: "https://script.google.com/macros/s/AKfycbztCnivCg9TMiNVH6GcS1uxwha-ZP0rXtGPskr7500ffailDdy2vGKRBN-j4VBKxWVs/exec",
   channelUrl: "https://t.me/+ot1pJz8KHlo2YTky",   // закрытый — для записавшихся
   publicChannel: "https://t.me/violamaro1",        // открытый — для тех, кто не эмпат
   botLink: "",      // https://t.me/имя_бота — возврат в чат
@@ -1051,7 +1051,9 @@ function result(prev) {
         <p class="next-2">${NEXT_2}</p>
       </div>` : ""}
       <div class="foot">
-        ${t.bridge ? `<button class="go big" id="offer">Как этому научиться <span aria-hidden="true">→</span></button>
+        ${/* Стрелки здесь нет намеренно: с ней текст не встаёт в строку и она
+              повисает на второй одна. Вопрос читается как кнопка и без неё. */""}
+        ${t.bridge ? `<button class="go big" id="offer">Что за Прикладная эмпатия?</button>
         <p class="cta-note">Бесплатно и ни к чему не обязывает.</p>` : ""}
         ${!t.bridge && CONFIG.publicChannel ? `<a class="go big" id="channel" href="${CONFIG.publicChannel}" target="_blank" rel="noopener">Читать Виолу в Телеграме <span aria-hidden="true">→</span></a>
         <p class="cta-note">Каждый день — про людей, границы и чувствительность.</p>` : ""}
