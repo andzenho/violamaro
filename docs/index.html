@@ -516,14 +516,21 @@
 
   .intro-voice p { font-size: 1.02rem; }
 
-  .bridge .anchor {
-    display: block; margin-top: .7rem;
+  /* Переход на предзапись. Раньше был хвостом моста и читался как продолжение
+     текста; отдельный блок с подзаголовком читается как следующий шаг.
+     Визуальный язык тот же, что у «суперспособностей», — без рамок и фонов. */
+  .next { margin-top: 1.35rem; }
+  /* Заголовок-вопрос, а не мелкий надзаголовок: человек на этом экране сам
+     себя спрашивает ровно это, и блок отвечает. Гарнитура и кегль — общие
+     для заголовков файла, своих не заводим. */
+  .next-1 {
+    margin-top: .7rem;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-size: .95rem; font-weight: 600; color: var(--ink);
   }
-  /* Вторая строка якоря — про предзапись. Легче по весу, чтобы не спорить с первой. */
-  .bridge .anchor-2 {
-    display: block; margin-top: .35rem;
+  /* Вторая строка — про предзапись. Легче по весу, чтобы не спорить с первой. */
+  .next-2 {
+    margin-top: .35rem;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-size: .93rem; font-weight: 400; color: var(--ink-soft);
   }
@@ -800,7 +807,7 @@ const OFFER = {
   /* Главное возражение перед кнопкой — «а что дальше?». Отвечаем до нажатия, а не после. */
   beforeCta: [
     "После заявки с вами свяжется команда Виолы Маро. Расскажут, как устроен практикум и какой тариф под вашу задачу, ответят на вопросы и помогут с оплатой — в том числе в рассрочку.",
-    "И закрепят за вами <b>вход по самой низкой цене</b> — она держится до 4 сентября."
+    "И закрепят за вами <b>вход по самой низкой цене</b>."
   ],
   cta: "Оставить заявку",
   ctaNote: "<span class=\"hl\">Платить сейчас ничего не нужно.</span> Два поля — имя и телеграм."
@@ -823,8 +830,11 @@ function powers(sc, v) {
   return list.sort((a, b) => b.w - a.w).slice(0, 3).map(x => x.t);
 }
 
-const ANCHOR = "1 октября у Виолы стартует практикум «Прикладная эмпатия» — про то, как пользоваться своей эмпатией во всех сферах жизни.";
-const ANCHOR_2 = "И сейчас открыта предзапись на него, чтобы получать актуальную информацию про программу.";
+/* Экран результата — самый читаемый экран теста: человек только что узнал свой
+   тип и здесь же спрашивает «а как конкретно?». Отвечаем отдельным блоком, а не
+   хвостом моста: что, когда и на каких условиях. Новых обещаний не даём. */
+const NEXT_1 = "1 октября у Виолы Маро стартует практикум для эмпатов «Прикладная эмпатия». Шесть недель о том, как пользоваться своей чувствительностью себе на пользу: в отношениях, в семье, в работе, в деньгах.";
+const NEXT_2 = "Сейчас идёт предзапись. Кто в списке, заходит на лучших условиях.";
 
 const FON_NOTE = "Отдельно: часть того, что вас грузит, идёт не от людей, а от общего фона — шум, свет, слишком много всего. Это не про эмпатию, и в тесте оно не решается.";
 
@@ -1034,9 +1044,15 @@ function result(prev) {
           <ul>${powers(r.scales, answers).map(x => `<li>${x}</li>`).join("")}</ul>
         </div>` : ""}
       ${r.fon ? `<p class="addendum">${FON_NOTE}</p>` : ""}
-      ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}<span class="anchor">${ANCHOR}</span><span class="anchor-2">${ANCHOR_2}</span></p>` : ""}
+      ${t.bridge ? `<p class="bridge">${t.bridge}${forks.zapros && ZAPROS_LINE[forks.zapros] ? " " + ZAPROS_LINE[forks.zapros] : ""}</p>
+      <div class="next">
+        <h2>Что с этим делать?</h2>
+        <p class="next-1">${NEXT_1}</p>
+        <p class="next-2">${NEXT_2}</p>
+      </div>` : ""}
       <div class="foot">
-        ${t.bridge ? `<button class="go big" id="offer">Что за программа? <span aria-hidden="true">→</span></button>` : ""}
+        ${t.bridge ? `<button class="go big" id="offer">Как этому научиться <span aria-hidden="true">→</span></button>
+        <p class="cta-note">Бесплатно и ни к чему не обязывает.</p>` : ""}
         ${!t.bridge && CONFIG.publicChannel ? `<a class="go big" id="channel" href="${CONFIG.publicChannel}" target="_blank" rel="noopener">Читать Виолу в Телеграме <span aria-hidden="true">→</span></a>
         <p class="cta-note">Каждый день — про людей, границы и чувствительность.</p>` : ""}
         <button class="ghost" id="again">Пройти заново</button>
@@ -1305,7 +1321,10 @@ function sendLead(r, name, contact, talk, consent) {
     accept_pd: consent && consent.pd ? "да" : "",
     accept_ads: consent && consent.ads ? "да" : "",
     consent_ts: new Date().toISOString(),
-    doc_version_consent: CONFIG.docVersionConsent || ""
+    doc_version_consent: CONFIG.docVersionConsent || "",
+    /* Та же метка, что у прохождения: по ней видно, какой трафик даёт заявки,
+       а не только прохождения. */
+    istochnik: (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || ""
   };
   queue(lead);
 }
@@ -1388,7 +1407,11 @@ function send(r) {
     forks: forks,
     answers: answers.slice(),
     userId: user.id || "",
-    userName: [user.first_name, user.last_name].filter(Boolean).join(" ")
+    userName: [user.first_name, user.last_name].filter(Boolean).join(" "),
+    /* Откуда человек пришёл на сам тест. Приходит из ссылки вида
+       t.me/…?startapp=reels — без этого не отличить трафик с рилсов от
+       трафика с канала, а конверсия у них разная в два раза. */
+    istochnik: (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || ""
   };
   window.__result = payload;
 
