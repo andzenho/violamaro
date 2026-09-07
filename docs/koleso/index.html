@@ -3272,11 +3272,17 @@ function sendWay(way) {
   });
 }
 
-/* Откуда человек пришёл на тест. Телеграм кладёт сюда то, что стояло
-   в ?startapp=… у ссылки бота. Пусто, если мини-апп открыли не по ней. */
+/* Откуда человек пришёл на тест. Меткой трафика считается только то, что
+   пришло с префиксом src_ — ?startapp=src_kanal даёт «kanal». Всё остальное
+   в «Источник» не идёт: тот же start_param в колесе читает pryamoyVhod()
+   как ключ витрины (neudobnye, ap, praktikum), и без префикса витрина
+   записывалась бы в колонку вместо канала трафика.
+   ⚠️ Пока ссылки в боте не переведены на src_, метка будет пустой.
+   Это ожидаемо, а не поломка. */
 function istochnik_() {
   const tg = window.Telegram && window.Telegram.WebApp;
-  return (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || "";
+  const p = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || "";
+  return p.indexOf("src_") === 0 ? p.slice(4) : "";
 }
 
 /* Пинг «открыл первый вопрос». Бот по нему отличает «не открывал тест»
@@ -3391,11 +3397,11 @@ function send(r) {
     userLogin: user.username ? "@" + user.username : "",
     userName: [user.first_name, user.last_name].filter(Boolean).join(" "),
     /* Откуда человек пришёл на сам тест. Приходит из ссылки вида
-       t.me/…?startapp=reels — без этого не отличить трафик с рилсов от
+       t.me/…?startapp=src_reels — без этого не отличить трафик с рилсов от
        трафика с канала, а конверсия у них разная в два раза.
-       ⚠️ Тот же start_param читает pryamoyVhod() как ключ витрины
-       (neudobnye, ap, praktikum). Пока метки трафика с этими тремя
-       словами не совпадают, смысла они друг другу не портят. */
+       Тот же start_param читает pryamoyVhod() как ключ витрины
+       (neudobnye, ap, praktikum) — смыслы разведены префиксом src_
+       в istochnik_(), витрина в эту колонку больше не попадёт. */
     istochnik: istochnik_()
   };
   window.__result = payload;
