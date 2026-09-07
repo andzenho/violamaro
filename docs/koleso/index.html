@@ -1230,7 +1230,7 @@
    карточки, одинаковые кнопки, ни одного визуального намёка, что рублями
    «правильнее». */
 const CONFIG = {
-  sheetUrl: "https://script.google.com/macros/s/AKfycbztCnivCg9TMiNVH6GcS1uxwha-ZP0rXtGPskr7500ffailDdy2vGKRBN-j4VBKxWVs/exec",
+  sheetUrl: "https://script.google.com/macros/s/AKfycby9mT6xeswcfCPpjKhEu6VyMyKbCWUTPcO4FkYy0OoGwFNzGRb069TF8VNvyxaUKo9U2w/exec",
   payUrl: "https://anny-nizh.getplatinum.ru/payment/VyfTEMo",
   payUrlUsd: "https://app.lava.top/products/b307a68e-b477-4396-add9-c340b3445088",
   teamChat: "https://t.me/m/LEHK_cjeNGU1",
@@ -2355,7 +2355,7 @@ function intro() {
       <button class="go" id="start">Начать</button>
       <p class="quiet">Нажимая «Начать», вы соглашаетесь с <a href="${CONFIG.docs.privacy}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>.</p>
     </div>`);
-  n.querySelector("#start").addEventListener("click", () => { idx = 0; startedAt = Date.now(); stage = "q"; saveState(); question(); });
+  n.querySelector("#start").addEventListener("click", () => { idx = 0; startedAt = Date.now(); pingStart_(); stage = "q"; saveState(); question(); });
   linksThroughTelegram_(n);
   render(n);
 }
@@ -3264,6 +3264,28 @@ function sendWay(way) {
   });
 }
 
+/* Откуда человек пришёл на тест. Телеграм кладёт сюда то, что стояло
+   в ?startapp=… у ссылки бота. Пусто, если мини-апп открыли не по ней. */
+function istochnik_() {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  return (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || "";
+}
+
+/* Пинг «открыл первый вопрос». Бот по нему отличает «не открывал тест»
+   от «начал и бросил» и шлёт разный текст. Один раз за жизнь страницы
+   и мимо буфера: потеряется — не страшно, это не лид, а лид буфер и так
+   держит. Человек, вернувшийся к незаконченному тесту, попадает сразу
+   на вопрос, кнопку «Начать» не жмёт, второго пинга не будет. */
+let pinged = false;
+function pingStart_() {
+  if (pinged) return;
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+  if (!u.id || !CONFIG.sheetUrl) return;
+  pinged = true;
+  send_({ type: "start", test: "koleso", userId: u.id, istochnik: istochnik_() }).catch(() => {});
+}
+
 function send_(payload) {
   return fetch(CONFIG.sheetUrl + "?payload=" + encodeURIComponent(JSON.stringify(payload)));
 }
@@ -3359,7 +3381,14 @@ function send(r) {
     /* Логин отдельным полем: по нему команда пишет человеку первой.
        Имя из Телеграма для этого не годится, тёзок много. */
     userLogin: user.username ? "@" + user.username : "",
-    userName: [user.first_name, user.last_name].filter(Boolean).join(" ")
+    userName: [user.first_name, user.last_name].filter(Boolean).join(" "),
+    /* Откуда человек пришёл на сам тест. Приходит из ссылки вида
+       t.me/…?startapp=reels — без этого не отличить трафик с рилсов от
+       трафика с канала, а конверсия у них разная в два раза.
+       ⚠️ Тот же start_param читает pryamoyVhod() как ключ витрины
+       (neudobnye, ap, praktikum). Пока метки трафика с этими тремя
+       словами не совпадают, смысла они друг другу не портят. */
+    istochnik: istochnik_()
   };
   window.__result = payload;
 
@@ -3373,7 +3402,10 @@ function send(r) {
    стартует заново, и без сохранения человек оказывается в начале теста.
    Держим ответы в памяти браузера и возвращаем его на то же место. */
 const STATE_KEY = "viola-kl-state";
-const TTL_MID = 3 * 3600e3;    // недопройденный тест живёт три часа
+const TTL_MID = 24 * 3600e3;   // недопройденный тест живёт сутки
+/* Сутки, а не три часа: первое касание бота уходит через три часа и говорит
+   «там осталось буквально три минуты». Если прогресс к этому моменту стёрт,
+   человек начинает с нуля, и текст врёт. */
 const TTL_DONE = 24 * 3600e3;  // готовый результат — сутки
 
 function saveState() {

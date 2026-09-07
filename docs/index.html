@@ -598,7 +598,7 @@ const CONFIG = {
      «Предзапись с теста» и различаются колонкой «Откуда заявка».
      Прежний адрес жив и отвечает старой версией — по нему доедут заявки,
      оставшиеся недоставленными в буферах браузеров. */
-  sheetUrl: "https://script.google.com/macros/s/AKfycbztCnivCg9TMiNVH6GcS1uxwha-ZP0rXtGPskr7500ffailDdy2vGKRBN-j4VBKxWVs/exec",
+  sheetUrl: "https://script.google.com/macros/s/AKfycby9mT6xeswcfCPpjKhEu6VyMyKbCWUTPcO4FkYy0OoGwFNzGRb069TF8VNvyxaUKo9U2w/exec",
   channelUrl: "https://t.me/+ot1pJz8KHlo2YTky",   // закрытый — для записавшихся
   publicChannel: "https://t.me/violamaro1",        // открытый — для тех, кто не эмпат
   botLink: "",      // https://t.me/имя_бота — возврат в чат
@@ -977,7 +977,7 @@ function intro() {
       <button class="go" id="start">Начать</button>
       <p class="quiet">Нажимая «Начать», вы соглашаетесь с <a href="${CONFIG.docs.privacy}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>.</p>
     </div>`);
-  n.querySelector("#start").addEventListener("click", () => { idx = 0; startedAt = Date.now(); stage = "q"; saveState(); question(); });
+  n.querySelector("#start").addEventListener("click", () => { idx = 0; startedAt = Date.now(); pingStart_(); stage = "q"; saveState(); question(); });
   render(n);
 }
 
@@ -1299,6 +1299,28 @@ const BUFFER_KEY = "viola-pending";
 
 /* Данные уходят обычным GET с параметром: POST на веб-приложение Apps Script
    у анонимных запросов упирается в редирект и не доходит. Проверено. */
+/* Откуда человек пришёл на тест. Телеграм кладёт сюда то, что стояло
+   в ?startapp=… у ссылки бота. Пусто, если мини-апп открыли не по ней. */
+function istochnik_() {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  return (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || "";
+}
+
+/* Пинг «открыл первый вопрос». Бот по нему отличает «не открывал тест»
+   от «начал и бросил» и шлёт разный текст. Один раз за жизнь страницы
+   и мимо буфера: потеряется — не страшно, это не лид, а лид буфер и так
+   держит. Человек, вернувшийся к незаконченному тесту, попадает сразу
+   на вопрос, кнопку «Начать» не жмёт, второго пинга не будет. */
+let pinged = false;
+function pingStart_() {
+  if (pinged) return;
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+  if (!u.id || !CONFIG.sheetUrl) return;
+  pinged = true;
+  send_({ type: "start", test: "empat", userId: u.id, istochnik: istochnik_() }).catch(() => {});
+}
+
 function send_(payload) {
   return fetch(CONFIG.sheetUrl + "?payload=" + encodeURIComponent(JSON.stringify(payload)));
 }
@@ -1325,7 +1347,7 @@ function sendLead(r, name, contact, talk, consent) {
     doc_version_consent: CONFIG.docVersionConsent || "",
     /* Та же метка, что у прохождения: по ней видно, какой трафик даёт заявки,
        а не только прохождения. */
-    istochnik: (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || ""
+    istochnik: istochnik_()
   };
   queue(lead);
 }
@@ -1412,7 +1434,7 @@ function send(r) {
     /* Откуда человек пришёл на сам тест. Приходит из ссылки вида
        t.me/…?startapp=reels — без этого не отличить трафик с рилсов от
        трафика с канала, а конверсия у них разная в два раза. */
-    istochnik: (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || ""
+    istochnik: istochnik_()
   };
   window.__result = payload;
 
@@ -1426,7 +1448,10 @@ function send(r) {
    стартует заново, и без сохранения человек оказывается в начале теста.
    Держим ответы в памяти браузера и возвращаем его на то же место. */
 const STATE_KEY = "viola-state";
-const TTL_MID = 3 * 3600e3;    // недопройденный тест живёт три часа
+const TTL_MID = 24 * 3600e3;   // недопройденный тест живёт сутки
+/* Сутки, а не три часа: первое касание бота уходит через три часа и говорит
+   «там осталось буквально три минуты». Если прогресс к этому моменту стёрт,
+   человек начинает с нуля, и текст врёт. */
 const TTL_DONE = 24 * 3600e3;  // готовый результат — сутки
 
 function saveState() {
