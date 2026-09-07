@@ -1295,8 +1295,6 @@ function done() {
 
 const BUFFER_KEY = "viola-pending";
 
-/* Данные уходят обычным GET с параметром: POST на веб-приложение Apps Script
-   у анонимных запросов упирается в редирект и не доходит. Проверено. */
 /* Откуда человек пришёл на тест. Телеграм кладёт сюда то, что стояло
    в ?startapp=… у ссылки бота. Пусто, если мини-апп открыли не по ней. */
 function istochnik_() {
@@ -1319,6 +1317,8 @@ function pingStart_() {
   send_({ type: "start", test: "empat", userId: u.id, istochnik: istochnik_() }).catch(() => {});
 }
 
+/* Данные уходят обычным GET с параметром: POST на веб-приложение Apps Script
+   у анонимных запросов упирается в редирект и не доходит. Проверено. */
 function send_(payload) {
   return fetch(CONFIG.sheetUrl + "?payload=" + encodeURIComponent(JSON.stringify(payload)));
 }
